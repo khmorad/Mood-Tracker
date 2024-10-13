@@ -1,5 +1,3 @@
-
-//src/app/components/FeatureCard.tsx
 "use client";
 import React, { useState } from 'react';
 
@@ -47,14 +45,14 @@ const styles = {
     margin: '0 auto',
   },
   iconContainer: {
-    textAlign: 'center' as 'center',
+    textAlign: 'center' as const, // Ensure 'center' is treated as a literal
     marginBottom: '15px',
   },
   icon: {
     fontSize: '3rem',
   },
   content: {
-    textAlign: 'center' as 'center',
+    textAlign: 'center' as const, // Ensure 'center' is treated as a literal
   },
   title: {
     fontSize: '1.5rem',
