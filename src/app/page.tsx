@@ -1,101 +1,132 @@
-import Image from "next/image";
+// src/app/page.tsx
+"use client";
 
-export default function Home() {
+import { useEffect, useState } from 'react';
+import Layout from './layout';
+import NavItem from './components/NavItem';
+import FeatureCard from './components/FeatureCard';
+import { emojiButtonStyles } from './styles/emojiButtonStyles';
+
+const Page: React.FC = () => {
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true); // Ensures that certain content is only rendered on the client
+  }, []);
+
+  if (!isClient) {
+    return null; // Avoid rendering if it's on the server
+  }
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+    <Layout>
+      <div className="relative z-10" style={styles.container}>
+        {/* Inject Emoji Button Styles */}
+        <style>{emojiButtonStyles}</style>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+        {/* Emoji Mini Navbar */}
+        <nav style={styles.navbar}>
+          <NavItem
+            emoji="📊"
+            title="Track Your Moods"
+            onClick={() => scrollToSection('moods')}
+          />
+          <NavItem
+            emoji="💡"
+            title="Daily Tips"
+            onClick={() => scrollToSection('tips')}
+          />
+          <NavItem
+            emoji="🤝"
+            title="Community Support"
+            onClick={() => scrollToSection('community')}
+          />
+          <NavItem
+            emoji="🚨"
+            title="Emergency Resources"
+            onClick={() => scrollToSection('resources')}
+          />
+        </nav>
+
+        {/* Main Content */}
+        <div id="moods" className="mt-16">
+          <h1 className="text-4xl font-bold text-center">Welcome to the BPD Support App</h1>
+          <p className="text-lg text-gray-600 mt-4 text-center">
+            A safe space to help you manage your mental health journey.
+          </p>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+
+        <div className="features-section mt-10">
+          <FeatureCard
+            title="Track Your Moods"
+            description="Monitor your mood swings and patterns with our mood tracking feature."
+            icon="📊"
+            id="moods"
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
+          <FeatureCard
+            title="Daily Tips"
+            description="Receive personalized tips on how to handle difficult emotions."
+            icon="💡"
+            id="tips"
           />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
+          <FeatureCard
+            title="Community Support"
+            description="Connect with others who understand and share similar experiences."
+            icon="🤝"
+            id="community"
           />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+          <FeatureCard
+            title="Emergency Resources"
+            description="Access helpful resources and contacts for when you need immediate support."
+            icon="🚨"
+            id="resources"
+          />
+        </div>
+
+        <div className="cta mt-16 text-center">
+          <button
+            className="bg-blue-500 hover:bg-blue-600 text-white py-3 px-8 rounded-full shadow-lg transition duration-300 transform hover:scale-105"
+            onClick={() => console.log('Start Now')}
+          >
+            Get Started
+          </button>
+        </div>
+      </div>
+    </Layout>
   );
-}
+};
+
+// Scroll to Section
+const scrollToSection = (sectionId: string) => {
+  const element = document.getElementById(sectionId);
+  if (element) {
+    element.scrollIntoView({ behavior: 'smooth' });
+  }
+};
+
+const styles = {
+  container: {
+    boxShadow: 'rgba(100, 100, 111, 0.2) 0px 7px 29px 0px',
+    justifyContent: 'center',
+    alignItems: 'center',
+    display: 'flex',
+    flexDirection: 'column' as 'column',
+    marginTop: '9%',
+    marginLeft: '2%',
+    marginRight: '2%',
+  },
+  navbar: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: '1rem',
+    backgroundColor: '#f8f8f8',
+    position: 'sticky' as 'sticky',
+    top: 0,
+    zIndex: 10,
+    width: '100%',
+    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+  },
+};
+
+export default Page;
