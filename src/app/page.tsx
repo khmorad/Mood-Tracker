@@ -1,4 +1,3 @@
-// src/app/page.tsx
 "use client";
 
 import { useEffect, useState } from 'react';
@@ -26,11 +25,12 @@ const Page: React.FC = () => {
 
         {/* Emoji Mini Navbar */}
         <nav style={styles.navbar}>
-          <NavItem
-            emoji="📊"
-            title="Track Your Moods"
-            onClick={() => scrollToSection('moods')}
-          />
+        <NavItem
+          emoji="📊"
+          title="Track Your Moods"
+          onClick={() => window.location.href = '/mood-tracking'} // Navigate to the new page
+        />
+
           <NavItem
             emoji="💡"
             title="Daily Tips"
@@ -49,43 +49,44 @@ const Page: React.FC = () => {
         </nav>
 
         {/* Main Content */}
-        <div id="moods" className="mt-16">
+        <div id="moods" className="mt-16" style={styles.section}>
           <h1 className="text-4xl font-bold text-center">Welcome to the BPD Support App</h1>
-          <p className="text-lg text-gray-600 mt-4 text-center">
-            A safe space to help you manage your mental health journey.
+          <p className="text-lg text-gray-600 mt-4 text-center" style={styles.description}>
+            A safe space to help you manage your mental health journey with personalized resources and tools.
           </p>
         </div>
 
-        <div className="features-section mt-10">
+        <div className="features-section mt-10" style={styles.featuresContainer}>
           <FeatureCard
             title="Track Your Moods"
-            description="Monitor your mood swings and patterns with our mood tracking feature."
+            description="Monitor your mood swings and patterns with our comprehensive mood tracking feature. Log your emotions daily, analyze patterns, and track improvements over time."
             icon="📊"
             id="moods"
           />
           <FeatureCard
             title="Daily Tips"
-            description="Receive personalized tips on how to handle difficult emotions."
+            description="Receive personalized tips on how to handle difficult emotions and mental health challenges. Daily advice tailored to your mood patterns and mental state."
             icon="💡"
             id="tips"
           />
           <FeatureCard
             title="Community Support"
-            description="Connect with others who understand and share similar experiences."
+            description="Connect with others who understand and share similar experiences. Our community support feature enables you to seek advice, share stories, and connect with supportive peers."
             icon="🤝"
             id="community"
           />
           <FeatureCard
             title="Emergency Resources"
-            description="Access helpful resources and contacts for when you need immediate support."
+            description="Access helpful resources and contacts for when you need immediate support. Crisis lines, helplines, and professional mental health services are just a click away."
             icon="🚨"
             id="resources"
           />
         </div>
 
-        <div className="cta mt-16 text-center">
+        <div className="cta mt-16 text-center" style={styles.cta}>
           <button
-            className="bg-blue-500 hover:bg-blue-600 text-white py-3 px-8 rounded-full shadow-lg transition duration-300 transform hover:scale-105"
+            className="bg-blue-500 hover:bg-blue-600 text-white py-3 px-10 rounded-full shadow-lg transition duration-300 transform hover:scale-110"
+            style={styles.button}
             onClick={() => console.log('Start Now')}
           >
             Get Started
@@ -111,9 +112,9 @@ const styles = {
     alignItems: 'center',
     display: 'flex',
     flexDirection: 'column' as 'column',
-    marginTop: '9%',
-    marginLeft: '2%',
-    marginRight: '2%',
+    marginTop: '20%',
+    marginLeft: '5%',
+    marginRight: '5%',
   },
   navbar: {
     display: 'flex',
@@ -126,6 +127,37 @@ const styles = {
     zIndex: 10,
     width: '100%',
     boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+  },
+  section: {
+    textAlign: 'center' as 'center',
+    marginBottom: '2rem',
+  },
+  description: {
+    fontSize: '18px',
+    color: '#666',
+  },
+  featuresContainer: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(2, 1fr)',
+    gap: '2rem',
+    marginTop: '2rem',
+    marginLeft: 'auto',
+    marginRight: 'auto',
+    maxWidth: '900px',
+  },
+  cta: {
+    marginTop: '3rem',
+  },
+  button: {
+    padding: '1rem 2rem',
+    borderRadius: '50px',
+    backgroundColor: '#3B82F6',
+    color: '#fff',
+    fontSize: '1.2rem',
+    fontWeight: 'bold',
+    border: 'none',
+    cursor: 'pointer',
+    transition: 'all 0.3s ease',
   },
 };
 

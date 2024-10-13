@@ -1,4 +1,5 @@
 // src/app/components/Background.tsx
+"use client";
 import React from 'react';
 
 const Background: React.FC = () => {
@@ -28,3 +29,7 @@ const Background: React.FC = () => {
 };
 
 export default Background;
+
+
+
+//
