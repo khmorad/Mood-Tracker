@@ -5,13 +5,14 @@ import Layout from "../layout";
 import axios from "axios"; // To make API requests
 
 const MoodTrackingPage: React.FC = () => {
+  const [isHovering, setIsHovering] = useState(false);
   const [journal, setJournal] = useState(""); // State for journal input
   const [journalEntries, setJournalEntries] = useState<string[]>([]); // Stores all journal entries
-  const [aiResponses, setAiResponses] = useState<string[]>([]); // Stores AI responses
+  const [aiResponses, setAiResponses] = useState<string[]>(["How can I help you today?"]); // Stores AI responses
   const [conversation, setConversation] = useState(null); // Stores conversation object
   const [isLoading, setIsLoading] = useState(false); // Loading state for API call
+  const [errorMessage, setErrorMessage] = useState<string | null>(null); // Error state
   const [isClient, setIsClient] = useState(false);
-  const [isHovering, setIsHovering] = useState(false);
   const journalInputRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -26,17 +27,27 @@ const MoodTrackingPage: React.FC = () => {
   const getGeminiResponse = async (entry: string) => {
     try {
       setIsLoading(true); // Show loading spinner
+      setErrorMessage(null); // Clear any previous error messages
+
+      // Client-side log: Sending request to API
+      console.log("CLIENT: Sending request to API with message:", entry);
+      console.log("CLIENT: Current conversation state:", conversation);
 
       const response = await axios.post("/api/generate", {
         message: entry,
         conversation: conversation || null,
       });
 
+      // Client-side log: API response received
+      console.log("CLIENT: API response received:", response.data);
+
       const aiResponse = response.data.message;
       setConversation(response.data.conversation); // Save the updated conversation
+
       return aiResponse;
     } catch (error) {
-      console.error("Error getting AI response:", error);
+      console.error("CLIENT: Error getting AI response:", error);
+      setErrorMessage("An error occurred while processing your entry."); // Set error message
       return "An error occurred while processing your entry.";
     } finally {
       setIsLoading(false); // Hide loading spinner
@@ -45,11 +56,16 @@ const MoodTrackingPage: React.FC = () => {
 
   const handleSubmit = async () => {
     if (journal.trim()) {
+      // Client-side log: User submitted journal entry
+      console.log("CLIENT: User submitted journal entry:", journal);
+
       // Save the journal entry
       setJournalEntries((prevEntries) => [...prevEntries, journal]);
 
       // Fetch AI response
       const aiResponse = await getGeminiResponse(journal);
+      
+      // Update AI responses only after receiving the response
       setAiResponses((prevResponses) => [...prevResponses, aiResponse]);
 
       // Clear the journal input
@@ -69,21 +85,29 @@ const MoodTrackingPage: React.FC = () => {
       <div style={styles.container}>
         <h1>Track Your Moods</h1>
 
-        {/* Only show the entries list if there are entries */}
-        {journalEntries.length > 0 && (
-          <div style={styles.entriesList}>
-            {journalEntries.map((entry, index) => (
-              <div key={index}>
-                <p>
-                  <strong>You:</strong> {entry}
-                </p>
-                <p style={styles.aiMessage}>
-                  <strong>AI:</strong> {isLoading ? "(Loading...)" : aiResponses[index] || "(Pending AI response...)"}
-                </p>
-              </div>
-            ))}
+        {errorMessage && <p style={styles.error}>{errorMessage}</p>}
+
+        {/* Display the AI and journal entries */}
+        <div style={styles.entriesList}>
+          {/* Initial AI Message from aiResponses[0] */}
+          <div>
+            <p style={styles.aiMessage}>
+              <strong>AI:</strong> {aiResponses[0]}
+            </p>
           </div>
-        )}
+
+          {/* Display user entries and AI responses */}
+          {journalEntries.map((entry, index) => (
+            <div key={index}>
+              <p>
+                <strong>You:</strong> {entry}
+              </p>
+              <p style={styles.aiMessage}>
+                <strong>AI:</strong> {isLoading ? "(Loading...)" : aiResponses[index + 1] || "(Pending AI response...)"}
+              </p>
+            </div>
+          ))}
+        </div>
 
         <div style={styles.journalWrapper}>
           <div
@@ -97,8 +121,12 @@ const MoodTrackingPage: React.FC = () => {
           {journal === "" && <div style={styles.placeholder}>How are you feeling today?</div>}
         </div>
 
-        <button style={styles.sub_button} onClick={handleSubmit}>
-          Submit
+        <button 
+          style={styles.sub_button} 
+          onClick={handleSubmit}
+          disabled={isLoading || !journal.trim()} // Disable button if loading or input is empty
+        >
+          {isLoading ? "Loading..." : "Submit"}
         </button>
         <button
           style={{
@@ -108,6 +136,7 @@ const MoodTrackingPage: React.FC = () => {
           onMouseEnter={() => setIsHovering(true)}
           onMouseLeave={() => setIsHovering(false)}
           onClick={handleSubmit}
+          disabled={isLoading || !journal.trim()} // Disable button if loading or input is empty
         >
           Analyze
         </button>
@@ -167,6 +196,9 @@ const styles = {
     border: "none",
     cursor: "pointer",
     transition: "background-color 0.3s ease",
+    disabled: {
+      backgroundColor: "#ccc", // Style for disabled state
+    },
   },
   analyze_button: {
     padding: "0.55rem 1.5rem",
@@ -183,6 +215,11 @@ const styles = {
     color: "#888",
     fontStyle: "italic",
   },
+  error: {
+    color: "red",
+    marginBottom: "1rem",
+    fontStyle: "italic",
+  }
 };
 
 export default MoodTrackingPage;

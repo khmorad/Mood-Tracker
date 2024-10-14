@@ -1,61 +1,83 @@
+// src/app/api/generate/route.ts
+
+
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from "next/server";
 
 // Initialize Google Generative AI with your API key
-const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY as string); // Ensure the API key is defined as a string
-
+const genAI = new GoogleGenerativeAI("");
 // Initialize the chat model
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 export async function POST(req: Request) {
   try {
-    // Parse request body to extract message and conversation
     const { message, conversation } = await req.json();
-    
+
+    // Log the incoming request data
+    console.log("SERVER: Incoming request data:", { message, conversation });
+
     // Handle undefined message with a safe fallback
     const safeMessage = message || "No message provided";
 
-    // Check if conversation exists
     if (!conversation) {
-      // Start a new conversation
-      const chat = model.startChat({
+      console.log("SERVER: Starting a new conversation with message:", safeMessage);
+
+      const chat = await model.startChat({
         history: [
           {
             role: "user",
-            parts: [safeMessage], // Ensuring the message part is an array of strings (as expected by Gemini API)
+            parts: [safeMessage], // Message part is an array of strings
           },
         ],
         generationConfig: {
-          maxOutputTokens: 350,
+          maxOutputTokens: 350, // This is correctly placed inside startChat's generationConfig
         },
       });
 
-      // Return a response indicating the conversation started
+      console.log("SERVER: New conversation started:", chat);
+
       return NextResponse.json({
         message: "Conversation started.",
-        conversation: chat, // Return the chat object so the client can continue the conversation
+        conversation: chat, // Return the chat object for future use
       });
     } else {
-      // Continue an existing conversation
-      const response = await conversation.sendMessage(safeMessage);
+      console.log("SERVER: Continuing conversation with message:", safeMessage);
 
-      // Extract the response text
-      const textResponse = response.messages?.[0]?.content?.parts?.join(" ") || "Sorry, no response.";
+      // Update conversation history manually
+      const updatedHistory = [
+        ...conversation._history,
+        {
+          role: "user",
+          parts: [safeMessage],
+        },
+      ];
 
-      // Return the AI response and conversation object
+      // Pass the history as the input to generateContent, concatenated into a single string
+      const inputText = updatedHistory.map((entry) => entry.parts.join(' ')).join('\n');
+
+      // Call the API with the inputText and remove `maxOutputTokens` from the second argument
+      const chatResponse = await model.generateContent(inputText);
+
+      console.log("SERVER: Gemini API response:", chatResponse);
+
+      const textResponse = chatResponse?.response?.text || "Sorry, no response.";
+
+      console.log("SERVER: Extracted text response:", textResponse);
+
       return NextResponse.json({
         message: textResponse,
-        conversation, // Return updated conversation for future interactions
+        conversation: {
+          ...conversation,
+          _history: updatedHistory,
+        }, // Return updated conversation
       });
     }
-  } catch (error: unknown) { // Error type set to unknown to avoid `any`
-    // Improved error handling
-    if (error instanceof Error) {
-      console.error("Error communicating with Gemini API:", error.message);
-      return NextResponse.json({ message: "Error occurred.", error: error.message });
-    } else {
-      console.error("Unknown error:", error);
-      return NextResponse.json({ message: "Unknown error occurred." });
-    }
+  } catch (error: unknown) {
+    console.error("SERVER: Error communicating with Gemini API:", error instanceof Error ? error.message : error);
+
+    return NextResponse.json({
+      message: "Error occurred.",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
   }
 }
