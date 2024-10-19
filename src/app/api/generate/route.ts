@@ -1,83 +1,43 @@
-// src/app/api/generate/route.ts
-
-
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from "next/server";
 
-// Initialize Google Generative AI with your API key
-const genAI = new GoogleGenerativeAI("");
-// Initialize the chat model
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
+// Create an asynchronous function POST to handle POST requests
 export async function POST(req: Request) {
   try {
-    const { message, conversation } = await req.json();
-
-    // Log the incoming request data
-    console.log("SERVER: Incoming request data:", { message, conversation });
-
-    // Handle undefined message with a safe fallback
-    const safeMessage = message || "No message provided";
-
-    if (!conversation) {
-      console.log("SERVER: Starting a new conversation with message:", safeMessage);
-
-      const chat = await model.startChat({
-        history: [
-          {
-            role: "user",
-            parts: [safeMessage], // Message part is an array of strings
-          },
-        ],
-        generationConfig: {
-          maxOutputTokens: 350, // This is correctly placed inside startChat's generationConfig
-        },
-      });
-
-      console.log("SERVER: New conversation started:", chat);
-
-      return NextResponse.json({
-        message: "Conversation started.",
-        conversation: chat, // Return the chat object for future use
-      });
-    } else {
-      console.log("SERVER: Continuing conversation with message:", safeMessage);
-
-      // Update conversation history manually
-      const updatedHistory = [
-        ...conversation._history,
-        {
-          role: "user",
-          parts: [safeMessage],
-        },
-      ];
-
-      // Pass the history as the input to generateContent, concatenated into a single string
-      const inputText = updatedHistory.map((entry) => entry.parts.join(' ')).join('\n');
-
-      // Call the API with the inputText and remove `maxOutputTokens` from the second argument
-      const chatResponse = await model.generateContent(inputText);
-
-      console.log("SERVER: Gemini API response:", chatResponse);
-
-      const textResponse = chatResponse?.response?.text || "Sorry, no response.";
-
-      console.log("SERVER: Extracted text response:", textResponse);
-
-      return NextResponse.json({
-        message: textResponse,
-        conversation: {
-          ...conversation,
-          _history: updatedHistory,
-        }, // Return updated conversation
-      });
+    // Access your API key by creating an instance of GoogleGenerativeAI
+    const apiKey = process.env.REACT_APP_GEMINI_APIKEY;
+    if (!apiKey) {
+      throw new Error("REACT_APP_GEMINI_APIKEY is not defined");
     }
-  } catch (error: unknown) {
-    console.error("SERVER: Error communicating with Gemini API:", error instanceof Error ? error.message : error);
+    const genAI = new GoogleGenerativeAI(apiKey);
+    console.log("SERVER: GoogleGenerativeAI initialized");
 
+    // Initialize the generative model
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    console.log("SERVER: Generative model initialized");
+
+    // Retrieve the data from the request body
+    const data = await req.json();
+    console.log("SERVER: Request body:", data);
+
+    // Define a prompt variable, assuming the prompt is provided in the 'message' field
+    const prompt = data.message;
+    console.log("SERVER: Using prompt:", prompt);
+
+    // Pass the prompt to the model and retrieve the output
+    const result = await model.generateContent(prompt);
+    console.log("SERVER: Response from Gemini API:", result);
+
+    // Extract the response text from the result directly without using candidates
+    const output = result.response?.text() || "No valid response from the AI.";
+    console.log("SERVER: Output from AI:", output);
+
+    // Send the output as a server response object
+    return NextResponse.json({ message: output }); // Changed from 'output' to 'message'
+  } catch (error) {
+    console.error("SERVER: Error communicating with Gemini API:", error);
     return NextResponse.json({
-      message: "Error occurred.",
-      error: error instanceof Error ? error.message : "Unknown error",
+      error: "An error occurred while processing your request.",
     });
   }
 }

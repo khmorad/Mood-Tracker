@@ -1,3 +1,4 @@
+//src/app/components/Navbar.tsx
 "use client";
 
 import Link from 'next/link';
@@ -7,7 +8,7 @@ import bpdLogo from '../assets/bpdLogo.png'; // Import your logo
 
 const EnhancedNavbar: React.FC = () => {
   const [hovered, setHovered] = useState<string | null>(null);
-
+  const [loading, setLoading] = useState<boolean>(false);
   const handleMouseEnter = (link: string) => setHovered(link);
   const handleMouseLeave = () => setHovered(null);
 

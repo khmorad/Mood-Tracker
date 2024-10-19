@@ -1,3 +1,4 @@
+//src/app/mood-tracking/page.tsx
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
@@ -6,9 +7,9 @@ import axios from "axios"; // To make API requests
 
 const MoodTrackingPage: React.FC = () => {
   const [isHovering, setIsHovering] = useState(false);
-  const [journal, setJournal] = useState(""); // State for journal input
-  const [journalEntries, setJournalEntries] = useState<string[]>([]); // Stores all journal entries
-  const [aiResponses, setAiResponses] = useState<string[]>(["How can I help you today?"]); // Stores AI responses
+  const [journal, setJournal] = useState(""); 
+  const [journalEntries, setJournalEntries] = useState<string[]>([]); 
+  const [aiResponses, setAiResponses] = useState<string[]>(["How can I help you today?"]); 
   const [conversation, setConversation] = useState(null); // Stores conversation object
   const [isLoading, setIsLoading] = useState(false); // Loading state for API call
   const [errorMessage, setErrorMessage] = useState<string | null>(null); // Error state
@@ -23,27 +24,27 @@ const MoodTrackingPage: React.FC = () => {
     setJournal(e.currentTarget.textContent || "");
   };
 
-  // Function to make a POST request to the API
   const getGeminiResponse = async (entry: string) => {
     try {
       setIsLoading(true); // Show loading spinner
       setErrorMessage(null); // Clear any previous error messages
-
+  
       // Client-side log: Sending request to API
       console.log("CLIENT: Sending request to API with message:", entry);
       console.log("CLIENT: Current conversation state:", conversation);
-
+  
       const response = await axios.post("/api/generate", {
         message: entry,
         conversation: conversation || null,
       });
-
+  
       // Client-side log: API response received
       console.log("CLIENT: API response received:", response.data);
-
+  
+      // Use 'message' instead of 'output' to access the AI response
       const aiResponse = response.data.message;
       setConversation(response.data.conversation); // Save the updated conversation
-
+  
       return aiResponse;
     } catch (error) {
       console.error("CLIENT: Error getting AI response:", error);

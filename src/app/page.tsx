@@ -144,6 +144,7 @@ const styles = {
     marginLeft: 'auto',
     marginRight: 'auto',
     maxWidth: '900px',
+    padding: '1rem',  
   },
   cta: {
     marginTop: '3rem',
