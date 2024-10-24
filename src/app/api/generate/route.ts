@@ -1,34 +1,44 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from "next/server";
 
-// Create an asynchronous function POST to handle POST requests
+// create an asynchronous function POST to handle POST requests **used by mood-tracking/page.tsx**
 export async function POST(req: Request) {
   try {
-    // Access your API key by creating an instance of GoogleGenerativeAI
     const apiKey = process.env.REACT_APP_GEMINI_APIKEY;
     if (!apiKey) {
       throw new Error("REACT_APP_GEMINI_APIKEY is not defined");
     }
     const genAI = new GoogleGenerativeAI(apiKey);
     console.log("SERVER: GoogleGenerativeAI initialized");
-
-    // Initialize the generative model
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
     console.log("SERVER: Generative model initialized");
-
-    // Retrieve the data from the request body
+    // retrieve the data from the request body
+    //SERVER: Request body: { message: 'hello :D', conversation: null }
     const data = await req.json();
     console.log("SERVER: Request body:", data);
-
-    // Define a prompt variable, assuming the prompt is provided in the 'message' field
+    // prompt created by the user (need to make this more effective)
     const prompt = data.message;
     console.log("SERVER: Using prompt:", prompt);
-
     // Pass the prompt to the model and retrieve the output
     const result = await model.generateContent(prompt);
     console.log("SERVER: Response from Gemini API:", result);
 
-    // Extract the response text from the result directly without using candidates
+    /*
+    SERVER: Response from Gemini API: {
+  response: {
+    candidates: [ [Object] ],
+    usageMetadata: {
+      promptTokenCount: 4,
+      candidatesTokenCount: 237,
+      totalTokenCount: 241
+    },
+    modelVersion: 'gemini-1.5-flash-001',
+    text: [Function (anonymous)],
+    functionCall: [Function (anonymous)],
+    functionCalls: [Function (anonymous)]
+  }
+}
+    */
     const output = result.response?.text() || "No valid response from the AI.";
     console.log("SERVER: Output from AI:", output);
 

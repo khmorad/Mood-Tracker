@@ -1,16 +1,17 @@
-//src/app/mood-tracking/page.tsx
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
 import Layout from "../layout";
 import axios from "axios"; // To make API requests
+import { TypeAnimation } from 'react-type-animation'; // Import the correct component
+import ReactMarkdown from 'react-markdown'; // Import ReactMarkdown for Markdown rendering
 
 const MoodTrackingPage: React.FC = () => {
   const [isHovering, setIsHovering] = useState(false);
   const [journal, setJournal] = useState(""); 
   const [journalEntries, setJournalEntries] = useState<string[]>([]); 
   const [aiResponses, setAiResponses] = useState<string[]>(["How can I help you today?"]); 
-  const [conversation, setConversation] = useState(null); // Stores conversation object
+  const [conversation, setConversation] = useState<any[]>([]); // Stores conversation object as an array
   const [isLoading, setIsLoading] = useState(false); // Loading state for API call
   const [errorMessage, setErrorMessage] = useState<string | null>(null); // Error state
   const [isClient, setIsClient] = useState(false);
@@ -28,22 +29,17 @@ const MoodTrackingPage: React.FC = () => {
     try {
       setIsLoading(true); // Show loading spinner
       setErrorMessage(null); // Clear any previous error messages
-  
-      // Client-side log: Sending request to API
-      console.log("CLIENT: Sending request to API with message:", entry);
-      console.log("CLIENT: Current conversation state:", conversation);
+
+      // Build a conversation history to send to the API
+      const conversationHistory = [...conversation, { user: entry }];
   
       const response = await axios.post("/api/generate", {
         message: entry,
-        conversation: conversation || null,
+        conversation: conversationHistory || null,
       });
   
-      // Client-side log: API response received
-      console.log("CLIENT: API response received:", response.data);
-  
-      // Use 'message' instead of 'output' to access the AI response
       const aiResponse = response.data.message;
-      setConversation(response.data.conversation); // Save the updated conversation
+      setConversation([...conversationHistory, { ai: aiResponse }]); // Update conversation state
   
       return aiResponse;
     } catch (error) {
@@ -57,9 +53,6 @@ const MoodTrackingPage: React.FC = () => {
 
   const handleSubmit = async () => {
     if (journal.trim()) {
-      // Client-side log: User submitted journal entry
-      console.log("CLIENT: User submitted journal entry:", journal);
-
       // Save the journal entry
       setJournalEntries((prevEntries) => [...prevEntries, journal]);
 
@@ -87,13 +80,21 @@ const MoodTrackingPage: React.FC = () => {
         <h1>Track Your Moods</h1>
 
         {errorMessage && <p style={styles.error}>{errorMessage}</p>}
-
-        {/* Display the AI and journal entries */}
         <div style={styles.entriesList}>
-          {/* Initial AI Message from aiResponses[0] */}
           <div>
             <p style={styles.aiMessage}>
-              <strong>AI:</strong> {aiResponses[0]}
+              <strong>AI:</strong> 
+              <TypeAnimation
+                sequence={[
+                  aiResponses[0], // Initial AI response
+                  1000, // Wait for 1 second
+                ]}
+                wrapper="span"
+                speed={90} // Typing speed
+                cursor={false} // Remove the cursor
+                repeat={0} // Do not repeat the animation
+                style={{ display: 'inline-block' }}
+              />
             </p>
           </div>
 
@@ -104,7 +105,26 @@ const MoodTrackingPage: React.FC = () => {
                 <strong>You:</strong> {entry}
               </p>
               <p style={styles.aiMessage}>
-                <strong>AI:</strong> {isLoading ? "(Loading...)" : aiResponses[index + 1] || "(Pending AI response...)"}
+                <strong>AI:</strong> 
+                {index === journalEntries.length - 1 && !isLoading ? (
+                  // Apply typing animation only to the latest response
+                  <TypeAnimation
+                    sequence={[
+                      aiResponses[index + 1] || "(Pending AI response...)", // AI Response or pending
+                      1000, // Wait for 1 second
+                    ]}
+                    wrapper="span"
+                    speed={90} // Typing speed
+                    cursor={false} // Remove the cursor
+                    repeat={0} // No repetition
+                    style={{ display: 'inline-block' }}
+                  />
+                ) : (
+                  // Render previous AI responses using ReactMarkdown
+                  <ReactMarkdown>
+                    {aiResponses[index + 1] || "(Pending AI response...)"}
+                  </ReactMarkdown>
+                )}
               </p>
             </div>
           ))}
@@ -198,18 +218,18 @@ const styles = {
     cursor: "pointer",
     transition: "background-color 0.3s ease",
     disabled: {
-      backgroundColor: "#ccc", // Style for disabled state
+      backgroundColor: "#ccc", 
     },
   },
   analyze_button: {
     padding: "0.55rem 1.5rem",
     background: "linear-gradient(135deg, #FF7E79, #FFD700, #FF69B4)",
-    backgroundSize: "200% 200%", // Set the initial background size
+    backgroundSize: "200% 200%", 
     color: "#fff",
     borderRadius: "8px",
     border: "none",
     cursor: "pointer",
-    transition: "background-size 0.6s ease", // Smooth transition for the background
+    transition: "background-size 0.6s ease", 
     marginLeft: "1rem",
   },
   aiMessage: {

@@ -123,7 +123,7 @@ const styles = {
     padding: '1rem',
     backgroundColor: '#f8f8f8',
     position: 'sticky' as const,
-    top: 0,
+    top: '40px',
     zIndex: 10,
     width: '100%',
     boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
