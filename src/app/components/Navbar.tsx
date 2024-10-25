@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import React, { CSSProperties, useState } from 'react';
 import bpdLogo from '../assets/bpdLogo.png'; // Import your logo
+import '../styles/Navbar.css'; // Import your custom CSS
 
 const EnhancedNavbar: React.FC = () => {
   const [hovered, setHovered] = useState<string | null>(null);
@@ -60,10 +61,10 @@ const EnhancedNavbar: React.FC = () => {
           </li>
         </ul>
 
-        {/* Login Button on the Right */}
+        {/* Login Button with custom styles */}
         <div style={styles.loginButtonWrapper}>
           <Link href="/login">
-            <button style={styles.loginButton}>Login</button>
+            <button className="button-29">Login</button>
           </Link>
         </div>
       </div>
@@ -110,7 +111,7 @@ const styles: { [key: string]: CSSProperties } = {
     listStyleType: 'none',
     margin: 0,
     padding: 0,
-    flexGrow: 1, // Allow space between logo and login
+    flexGrow: 1,
     textAlign: 'center',
   },
   li: {
@@ -127,19 +128,6 @@ const styles: { [key: string]: CSSProperties } = {
   loginButtonWrapper: {
     display: 'flex',
     alignItems: 'center',
-  },
-  loginButton: {
-    backgroundColor: '#3B82F6',
-    color: '#fff',
-    border: 'none',
-    padding: '0.5rem 1rem',
-    borderRadius: '0.375rem',
-    cursor: 'pointer',
-    fontSize: '1rem',
-    fontWeight: '500',
-    transition: 'background-color 0.3s ease',
-    outline: 'none',
-    marginRight: '30px',
   },
 };
 
