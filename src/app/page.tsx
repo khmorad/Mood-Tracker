@@ -5,6 +5,7 @@ import Layout from './layout';
 import NavItem from './components/NavItem';
 import FeatureCard from './components/FeatureCard';
 import { emojiButtonStyles } from './styles/emojiButtonStyles';
+import { TypeAnimation } from 'react-type-animation'; // Import the correct component
 
 const Page: React.FC = () => {
   const [isClient, setIsClient] = useState(false);
@@ -52,8 +53,23 @@ const Page: React.FC = () => {
         <div id="moods" className="mt-16" style={styles.section}>
           <h1 className="text-4xl font-bold text-center">Welcome to the BPD Support App</h1>
           <p className="text-lg text-gray-600 mt-4 text-center" style={styles.description}>
-            A safe space to help you manage your mental health journey with personalized resources and tools.
-          </p>
+          <TypeAnimation
+      sequence={[
+        // Same substring at the start will only be typed out once, initially
+        'A safe space to help you manage your mental health journey with personalized resources and tools.',
+        1000, // wait 1s before replacing "Mice" with "Hamsters"
+        'Navigating BPD with Understanding: A Compassionate Guide for Your Mental Health Journey',
+        1000,
+        'Supporting You Every Day: Tools, Tips, and Community for Living with BPD',
+        1000,
+        'Focus on Progress: Your Personalized Guide to Managing BPD with Confidence',
+        1000
+      ]}
+      wrapper="span"
+      speed={70}
+      
+      repeat={Infinity}
+    />          </p>
         </div>
 
         <div className="features-section mt-10" style={styles.featuresContainer}>

@@ -1,26 +1,26 @@
-//src/app/components/Navbar.tsx
 "use client";
 
 import Link from 'next/link';
-import Image from 'next/image'; // Import Image from Next.js
+import Image from 'next/image';
 import React, { CSSProperties, useState } from 'react';
 import bpdLogo from '../assets/bpdLogo.png'; // Import your logo
 
 const EnhancedNavbar: React.FC = () => {
   const [hovered, setHovered] = useState<string | null>(null);
-  const [loading, setLoading] = useState<boolean>(false);
   const handleMouseEnter = (link: string) => setHovered(link);
   const handleMouseLeave = () => setHovered(null);
 
   return (
     <nav style={styles.nav}>
       <div style={styles.container}>
-        <div style={styles.logo}>
+        {/* Logo */}
+        <div style={styles.logoWrapper}>
           <Link href="/" style={styles.logoLink}>
-            {/* Use the Image component */}
-            <Image style={styles.logo} src={bpdLogo} alt="BPD Logo" width={30} height={30} />
+            <Image style={styles.logo} src={bpdLogo} alt="BPD Logo" width={40} height={40} />
           </Link>
         </div>
+
+        {/* Centered Navigation Links */}
         <ul style={styles.ul}>
           <li
             style={{
@@ -59,6 +59,13 @@ const EnhancedNavbar: React.FC = () => {
             </Link>
           </li>
         </ul>
+
+        {/* Login Button on the Right */}
+        <div style={styles.loginButtonWrapper}>
+          <Link href="/login">
+            <button style={styles.loginButton}>Login</button>
+          </Link>
+        </div>
       </div>
     </nav>
   );
@@ -67,7 +74,7 @@ const EnhancedNavbar: React.FC = () => {
 const styles: { [key: string]: CSSProperties } = {
   nav: {
     backgroundColor: '#0d1117',
-    padding:  '8px',
+    padding: '8px',
     boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
     position: 'fixed',
     width: '100%',
@@ -79,14 +86,18 @@ const styles: { [key: string]: CSSProperties } = {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    maxWidth: '1200px',
+    maxWidth: '1800px',
     width: '100%',
     margin: '0 auto',
   },
+  logoWrapper: {
+    display: 'flex',
+    alignItems: 'center',
+  },
   logo: {
-    fontSize: '1.5rem',
-    fontWeight: '700',
-    borderRadius: '0.375rem',
+    borderRadius: '10%',
+    width: '34px',
+    height: '34px',
   },
   logoLink: {
     color: '#58a6ff',
@@ -94,13 +105,15 @@ const styles: { [key: string]: CSSProperties } = {
   },
   ul: {
     display: 'flex',
+    justifyContent: 'center',
     gap: '1.5rem',
     listStyleType: 'none',
     margin: 0,
     padding: 0,
+    flexGrow: 1, // Allow space between logo and login
+    textAlign: 'center',
   },
   li: {
-    margin: '0',
     padding: '0.5rem 1rem',
     borderRadius: '0.375rem',
     transition: 'background-color 0.3s ease',
@@ -110,6 +123,23 @@ const styles: { [key: string]: CSSProperties } = {
     textDecoration: 'none',
     fontSize: '1rem',
     fontWeight: '500',
+  },
+  loginButtonWrapper: {
+    display: 'flex',
+    alignItems: 'center',
+  },
+  loginButton: {
+    backgroundColor: '#3B82F6',
+    color: '#fff',
+    border: 'none',
+    padding: '0.5rem 1rem',
+    borderRadius: '0.375rem',
+    cursor: 'pointer',
+    fontSize: '1rem',
+    fontWeight: '500',
+    transition: 'background-color 0.3s ease',
+    outline: 'none',
+    marginRight: '30px',
   },
 };
 

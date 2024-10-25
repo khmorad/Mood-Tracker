@@ -19,7 +19,8 @@
     "react-dom": "^18",
     "react-markdown": "^9.0.1",
     "react-type-animation": "^3.2.0",
-    "react-typer": "^0.0.2"
+    "react-typer": "^0.0.2",
+    "remark-gfm": "^4.0.0"
   },
   "devDependencies": {
     "@types/node": "^20",
