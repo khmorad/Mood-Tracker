@@ -57,13 +57,13 @@ const Page: React.FC = () => {
       sequence={[
         // Same substring at the start will only be typed out once, initially
         'A safe space to help you manage your mental health journey with personalized resources and tools.',
-        1000, // wait 1s before replacing "Mice" with "Hamsters"
+        2000, // wait 1s before replacing "Mice" with "Hamsters"
         'Navigating BPD with Understanding: A Compassionate Guide for Your Mental Health Journey',
-        1000,
+        2000,
         'Supporting You Every Day: Tools, Tips, and Community for Living with BPD',
-        1000,
+        2000,
         'Focus on Progress: Your Personalized Guide to Managing BPD with Confidence',
-        1000
+        2000
       ]}
       wrapper="span"
       speed={70}
