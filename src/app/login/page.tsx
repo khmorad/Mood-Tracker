@@ -1,5 +1,4 @@
 // src/app/login/page.tsx
-
 "use client";
 
 import React, { useState } from 'react';
@@ -25,13 +24,14 @@ const Login: React.FC = () => {
             <input type="text" placeholder="Name" className={styles.inputField} />
             <input type="email" placeholder="Email" className={styles.inputField} />
             <input type="password" placeholder="Password" className={styles.inputField} />
-            <button className={styles.button}>Sign Up</button>
+            <button type="button" className={styles.button}>Sign Up</button>
           </form>
         </div>
 
         {/* Sign In Form */}
         <div className={`${styles.formContainer} ${styles.signInContainer}`}>
           <form>
+
             <h1>Sign In</h1>
             <div className={styles.socialContainer}>
               <a href="#" className={styles.social}><i className="fab fa-facebook-f"></i></a>
@@ -42,7 +42,9 @@ const Login: React.FC = () => {
             <input type="email" placeholder="Email" className={styles.inputField} />
             <input type="password" placeholder="Password" className={styles.inputField} />
             <Link href="#" className={styles.switchText}>Forgot your password?</Link>
-            <button className={styles.button}>Sign In</button>
+            <div><button type="button" className={styles.button}>Sign In</button></div>
+            
+            
           </form>
         </div>
 
@@ -56,7 +58,7 @@ const Login: React.FC = () => {
             </div>
             <div className={`${styles.overlayPanel} ${styles.overlayRight}`}>
               <h1>Hello, Friend!</h1>
-              <p>Enter your personal details and start your journey with us</p>
+              <p>Enter details and start your journey with us</p>
               <button className={`${styles.button} ${styles.ghost}`} onClick={() => setRightPanelActive(true)}>Sign Up</button>
             </div>
           </div>
