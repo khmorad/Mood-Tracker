@@ -1,6 +1,5 @@
 "use client";
 
-import Link from 'next/link';
 import Image from 'next/image';
 import React, { CSSProperties, useState } from 'react';
 import bpdLogo from '../assets/bpdLogo.png'; // Import your logo
@@ -8,17 +7,22 @@ import '../styles/Navbar.css'; // Import your custom CSS
 
 const EnhancedNavbar: React.FC = () => {
   const [hovered, setHovered] = useState<string | null>(null);
+
   const handleMouseEnter = (link: string) => setHovered(link);
   const handleMouseLeave = () => setHovered(null);
+
+  const navigateToLogin = () => {
+    window.location.href = '/login';
+  };
 
   return (
     <nav style={styles.nav}>
       <div style={styles.container}>
         {/* Logo */}
         <div style={styles.logoWrapper}>
-          <Link href="/" style={styles.logoLink}>
+          <button onClick={() => (window.location.href = '/')} style={styles.logoLink}>
             <Image style={styles.logo} src={bpdLogo} alt="BPD Logo" width={40} height={40} />
-          </Link>
+          </button>
         </div>
 
         {/* Centered Navigation Links */}
@@ -31,9 +35,9 @@ const EnhancedNavbar: React.FC = () => {
             onMouseEnter={() => handleMouseEnter('home')}
             onMouseLeave={handleMouseLeave}
           >
-            <Link href="/" style={styles.link}>
+            <button onClick={() => (window.location.href = '/')} style={styles.link}>
               Home
-            </Link>
+            </button>
           </li>
           <li
             style={{
@@ -43,9 +47,9 @@ const EnhancedNavbar: React.FC = () => {
             onMouseEnter={() => handleMouseEnter('about')}
             onMouseLeave={handleMouseLeave}
           >
-            <Link href="/about" style={styles.link}>
+            <button onClick={() => (window.location.href = '/about')} style={styles.link}>
               About
-            </Link>
+            </button>
           </li>
           <li
             style={{
@@ -55,17 +59,15 @@ const EnhancedNavbar: React.FC = () => {
             onMouseEnter={() => handleMouseEnter('contact')}
             onMouseLeave={handleMouseLeave}
           >
-            <Link href="/contact" style={styles.link}>
+            <button onClick={() => (window.location.href = '/contact')} style={styles.link}>
               Contact
-            </Link>
+            </button>
           </li>
         </ul>
 
-        {/* Login Button with custom styles */}
+        {/* Login and Mood Tracking Buttons with custom styles */}
         <div style={styles.loginButtonWrapper}>
-          <Link href="/login">
-            <button className="button-29">Login</button>
-          </Link>
+          <button onClick={navigateToLogin} className="button-29">Login</button>
         </div>
       </div>
     </nav>
@@ -87,7 +89,7 @@ const styles: { [key: string]: CSSProperties } = {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    maxWidth: '1800px',
+    maxWidth: '1900px',
     width: '100%',
     margin: '0 auto',
   },
@@ -101,8 +103,9 @@ const styles: { [key: string]: CSSProperties } = {
     height: '34px',
   },
   logoLink: {
-    color: '#58a6ff',
-    textDecoration: 'none',
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
   },
   ul: {
     display: 'flex',
@@ -120,14 +123,18 @@ const styles: { [key: string]: CSSProperties } = {
     transition: 'background-color 0.3s ease',
   },
   link: {
+    background: 'none',
+    border: 'none',
     color: '#c9d1d9',
     textDecoration: 'none',
     fontSize: '1rem',
     fontWeight: '500',
+    cursor: 'pointer',
   },
   loginButtonWrapper: {
     display: 'flex',
     alignItems: 'center',
+    gap: '10px',
   },
 };
 

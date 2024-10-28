@@ -5,7 +5,7 @@ import Layout from "../layout";
 import axios from "axios";
 import { TypeAnimation } from "react-type-animation"; 
 import ReactMarkdown from "react-markdown";
-
+import '../styles/mood.tracking.css';
 const MoodTrackingPage: React.FC = () => {
   const [isHovering, setIsHovering] = useState(false);
   const [journal, setJournal] = useState(""); 
@@ -143,12 +143,8 @@ const MoodTrackingPage: React.FC = () => {
           {isLoading ? "Loading..." : "Submit"}
         </button>
         <button
-          style={{
-            ...styles.analyze_button,
-            backgroundSize: isHovering ? "100% 100%" : "200% 200%", 
-          }}
-          onMouseEnter={() => setIsHovering(true)}
-          onMouseLeave={() => setIsHovering(false)}
+          style={{...styles.analyze_button}}
+
           onClick={handleSubmit}
           disabled={isLoading || !journal.trim()}
         >
