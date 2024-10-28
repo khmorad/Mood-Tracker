@@ -6,7 +6,7 @@ import NavItem from './components/NavItem';
 import FeatureCard from './components/FeatureCard';
 import { emojiButtonStyles } from './styles/emojiButtonStyles';
 import { TypeAnimation } from 'react-type-animation'; // Import the correct component
-
+import Footer from './components/Footer';
 const Page: React.FC = () => {
   const [isClient, setIsClient] = useState(false);
 
@@ -57,13 +57,13 @@ const Page: React.FC = () => {
       sequence={[
         // Same substring at the start will only be typed out once, initially
         'A safe space to help you manage your mental health journey with personalized resources and tools.',
-        1000, // wait 1s before replacing "Mice" with "Hamsters"
+        2000, // wait 1s before replacing "Mice" with "Hamsters"
         'Navigating BPD with Understanding: A Compassionate Guide for Your Mental Health Journey',
-        1000,
+        2000,
         'Supporting You Every Day: Tools, Tips, and Community for Living with BPD',
-        1000,
+        2000,
         'Focus on Progress: Your Personalized Guide to Managing BPD with Confidence',
-        1000
+        2000
       ]}
       wrapper="span"
       speed={70}
@@ -73,42 +73,71 @@ const Page: React.FC = () => {
         </div>
 
         <div className="features-section mt-10" style={styles.featuresContainer}>
-          <FeatureCard
+        <FeatureCard
             title="Track Your Moods"
             description="Monitor your mood swings and patterns with our comprehensive mood tracking feature. Log your emotions daily, analyze patterns, and track improvements over time."
             icon="📊"
             id="moods"
           />
-          <FeatureCard
-            title="Daily Tips"
-            description="Receive personalized tips on how to handle difficult emotions and mental health challenges. Daily advice tailored to your mood patterns and mental state."
-            icon="💡"
-            id="tips"
-          />
-          <FeatureCard
-            title="Community Support"
-            description="Connect with others who understand and share similar experiences. Our community support feature enables you to seek advice, share stories, and connect with supportive peers."
-            icon="🤝"
-            id="community"
-          />
-          <FeatureCard
-            title="Emergency Resources"
-            description="Access helpful resources and contacts for when you need immediate support. Crisis lines, helplines, and professional mental health services are just a click away."
-            icon="🚨"
-            id="resources"
-          />
-        </div>
+  <FeatureCard
+    title="Daily Tips"
+    description="Receive personalized tips on how to handle difficult emotions and mental health challenges. Daily advice tailored to your mood patterns and mental state."
+    icon="💡"
+    id="tips"
+  />
+  <FeatureCard
+    title="Community Support"
+    description="Connect with others who understand and share similar experiences. Our community support feature enables you to seek advice, share stories, and connect with supportive peers."
+    icon="🤝"
+    id="community"
+  />
+  <FeatureCard
+    title="Emergency Resources"
+    description="Access helpful resources and contacts for when you need immediate support. Crisis lines, helplines, and professional mental health services are just a click away."
+    icon="🚨"
+    id="resources"
+  />
+  <FeatureCard
+    title="Personalized Insights"
+    description="Gain insights into your mental health with analytics based on your mood tracking. Discover patterns, triggers, and progress to better understand your mental journey."
+    icon="📈"
+    id="insights"
+  />
+  <FeatureCard
+    title="Mindfulness Exercises"
+    description="Access a variety of guided mindfulness exercises designed to help you stay grounded and focused. Perfect for moments when you need calm and clarity."
+    icon="🧘"
+    id="mindfulness"
+  />
+  <FeatureCard
+    title="Goal Setting"
+    description="Set and track personal goals to improve your mental health. Create achievable goals, track your progress, and celebrate milestones along the way."
+    icon="🎯"
+    id="goals"
+  />
+  <FeatureCard
+    title="Resource Library"
+    description="Explore a library of articles, videos, and exercises on mental health topics. Find reliable information and tools to empower your mental wellness journey."
+    icon="📚"
+    id="library"
+  />
+  <FeatureCard
+    title="Sleep Tracker"
+    description="Track and improve your sleep patterns with our integrated sleep tracker. Analyze your sleep quality and receive tips to help you rest better."
+    icon="🌙"
+    id="sleep"
+  />
+    <FeatureCard
+    title="Breathing Exercises"
+    description="Practice guided breathing exercises to help manage stress and anxiety. Use these exercises anytime you need a quick relaxation tool."
+    icon="🌬️"
+    id="breathing"
+  />
+</div>
 
-        <div className="cta mt-16 text-center" style={styles.cta}>
-          <button
-            className="bg-blue-500 hover:bg-blue-600 text-white py-3 px-10 rounded-full shadow-lg transition duration-300 transform hover:scale-110"
-            style={styles.button}
-            onClick={() => console.log('Start Now')}
-          >
-            Get Started
-          </button>
-        </div>
+
       </div>
+      <Footer />
     </Layout>
   );
 };
@@ -128,7 +157,7 @@ const styles = {
     alignItems: 'center',
     display: 'flex',
     flexDirection: 'column' as const,
-    marginTop: '20%',
+    marginTop: '10%',
     marginLeft: '5%',
     marginRight: '5%',
   },
@@ -160,7 +189,7 @@ const styles = {
     marginLeft: 'auto',
     marginRight: 'auto',
     maxWidth: '900px',
-    padding: '1rem',  
+    padding: '2rem',  
   },
   cta: {
     marginTop: '3rem',
