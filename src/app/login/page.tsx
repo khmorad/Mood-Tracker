@@ -2,7 +2,6 @@
 "use client";
 
 import React, { useState } from 'react';
-import Link from 'next/link';
 import styles from '../styles/Auth.module.css';
 
 const Login: React.FC = () => {
