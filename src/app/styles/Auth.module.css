@@ -80,7 +80,7 @@
 }
 
 .authContainer .overlay {
-  background: linear-gradient(to right, #FF4B2B, #FF416C);
+  background: linear-gradient(to right, #267ffb, #e641ff);
   position: relative;
   left: -100%;
   height: 100%;
@@ -151,7 +151,7 @@
   border: 1px solid #ddd;
   padding: 12px 15px;
   margin: 8px 0;
-  width: 40%;
+  width: 90%;
   border-radius: 5px;
   font-size: 14px;
 }

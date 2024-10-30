@@ -7,11 +7,16 @@ import { TypeAnimation } from "react-type-animation";
 import ReactMarkdown from "react-markdown";
 import '../styles/mood.tracking.css';
 const MoodTrackingPage: React.FC = () => {
-  const [isHovering, setIsHovering] = useState(false);
+  //const [isHovering, setIsHovering] = useState(false);
   const [journal, setJournal] = useState(""); 
   const [journalEntries, setJournalEntries] = useState<string[]>([]); 
   const [aiResponses, setAiResponses] = useState<string[]>(["How can I help you today?"]); 
-  const [conversation, setConversation] = useState<any[]>([]); 
+  interface Conversation {
+    user: string;
+    ai: string;
+}
+
+const [conversation, setConversation] = useState<Conversation[]>([]);
   const [isLoading, setIsLoading] = useState(false); 
   const [errorMessage, setErrorMessage] = useState<string | null>(null); 
   const [isClient, setIsClient] = useState(false);
@@ -30,7 +35,7 @@ const MoodTrackingPage: React.FC = () => {
       setIsLoading(true); 
       setErrorMessage(null); 
 
-      const conversationHistoryString = conversation.map((conv, index) => {
+      const conversationHistoryString = conversation.map((conv) => {
         const userMessage = `User message: ${conv.user || ''}`;
         const aiMessage = `AI response: ${conv.ai || ''}`;
         return `${userMessage}, ${aiMessage}`;
@@ -47,10 +52,10 @@ const MoodTrackingPage: React.FC = () => {
       setConversation([...conversation, { user: entry, ai: aiResponse }]); 
     
       return aiResponse;
-    } catch (error) {
+    } catch {
       setErrorMessage("An error occurred while processing your entry.");
       return "An error occurred while processing your entry.";
-    } finally {
+  } finally {
       setIsLoading(false);
     }
   };
@@ -95,32 +100,33 @@ const MoodTrackingPage: React.FC = () => {
             </p>
           </div>
 
-          {journalEntries.map((entry, index) => (
-            <div key={index}>
-              <p><strong>You:</strong> {entry}</p>
-              <p style={styles.aiMessage}>
-                <strong>AI:</strong>
-                {index === journalEntries.length - 1 && !isLoading ? (
-                  <TypeAnimation
-                    sequence={[aiResponses[index + 1] || "(Pending AI response...)", 1000]}
+          {journalEntries.map((entry) => (
+    <div key={entry}>
+        <p><strong>You:</strong> {entry}</p>
+        <p style={styles.aiMessage}>
+            <strong>AI:</strong>
+            {aiResponses[journalEntries.indexOf(entry) + 1] ? (
+                <TypeAnimation
+                    sequence={[aiResponses[journalEntries.indexOf(entry) + 1], 1000]}
                     wrapper="span"
                     speed={90}
                     cursor={false}
                     repeat={0}
                     style={{ display: "inline-block" }}
-                  />
-                ) : (
-                  <div>
+                />
+            ) : (
+                <div>
                     <ReactMarkdown>
-                      {aiResponses[index + 1]
-                        ?.replace(/\* /g, "\n- ") // Ensure markdown bullet points are rendered correctly
-                        .trim()}
+                        {aiResponses[journalEntries.indexOf(entry) + 1]
+                            ?.replace(/\* /g, "\n- ") // Ensure markdown bullet points are rendered correctly
+                            .trim()}
                     </ReactMarkdown>
-                  </div>
-                )}
-              </p>
-            </div>
-          ))}
+                </div>
+            )}
+        </p>
+    </div>
+))}
+
         </div>
 
         <div style={styles.journalWrapper}>
