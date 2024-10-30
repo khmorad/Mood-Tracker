@@ -21,7 +21,7 @@ const EnhancedNavbar: React.FC = () => {
         {/* Logo */}
         <div style={styles.logoWrapper}>
           <button onClick={() => (window.location.href = '/')} style={styles.logoLink}>
-            <Image style={styles.logo} src={bpdLogo} alt="BPD Logo" width={40} height={40} />
+            <Image style={styles.logo} src={bpdLogo} alt="BPD Logo" width={40} height={40} priority />
           </button>
         </div>
 
