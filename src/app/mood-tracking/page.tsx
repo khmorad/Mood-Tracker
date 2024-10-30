@@ -5,7 +5,7 @@ import Layout from "../layout";
 import axios from "axios";
 import { TypeAnimation } from "react-type-animation"; 
 import ReactMarkdown from "react-markdown";
-import '../styles/mood.tracking.css';
+import '../styles/mood-tracking.css';
 const MoodTrackingPage: React.FC = () => {
   //const [isHovering, setIsHovering] = useState(false);
   const [journal, setJournal] = useState(""); 

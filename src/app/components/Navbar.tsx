@@ -2,8 +2,8 @@
 
 import Image from 'next/image';
 import React, { CSSProperties, useState } from 'react';
-import bpdLogo from '../assets/bpdLogo.png'; // Import your logo
-import '../styles/Navbar.css'; // Import your custom CSS
+import bpdLogo from '../assets/bpdLogo.png'; 
+import '../styles/NavBar.css';
 
 const EnhancedNavbar: React.FC = () => {
   const [hovered, setHovered] = useState<string | null>(null);
