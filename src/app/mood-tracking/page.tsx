@@ -3,22 +3,23 @@
 import React, { useState, useEffect, useRef } from "react";
 import Layout from "../layout";
 import axios from "axios";
-import { TypeAnimation } from "react-type-animation"; 
+import { TypeAnimation } from "react-type-animation";
 import ReactMarkdown from "react-markdown";
 import '../styles/mood-tracking.css';
+
 const MoodTrackingPage: React.FC = () => {
-  //const [isHovering, setIsHovering] = useState(false);
-  const [journal, setJournal] = useState(""); 
-  const [journalEntries, setJournalEntries] = useState<string[]>([]); 
-  const [aiResponses, setAiResponses] = useState<string[]>(["How can I help you today?"]); 
+  const [journal, setJournal] = useState("");
+  const [journalEntries, setJournalEntries] = useState<string[]>([]);
+  const [aiResponses, setAiResponses] = useState<string[]>(["How can I help you today?"]);
+  
   interface Conversation {
     user: string;
     ai: string;
-}
+  }
 
-const [conversation, setConversation] = useState<Conversation[]>([]);
-  const [isLoading, setIsLoading] = useState(false); 
-  const [errorMessage, setErrorMessage] = useState<string | null>(null); 
+  const [conversation, setConversation] = useState<Conversation[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isClient, setIsClient] = useState(false);
   const journalInputRef = useRef<HTMLDivElement>(null);
 
@@ -32,8 +33,8 @@ const [conversation, setConversation] = useState<Conversation[]>([]);
 
   const getGeminiResponse = async (entry: string) => {
     try {
-      setIsLoading(true); 
-      setErrorMessage(null); 
+      setIsLoading(true);
+      setErrorMessage(null);
 
       const conversationHistoryString = conversation.map((conv) => {
         const userMessage = `User message: ${conv.user || ''}`;
@@ -44,18 +45,18 @@ const [conversation, setConversation] = useState<Conversation[]>([]);
       const combinedEntry = `User message: ${entry}, Previous messages: ${conversationHistoryString}`;
 
       const response = await axios.post("/api/generate", {
-        message: combinedEntry, 
+        message: combinedEntry,
         conversation: conversation || null,
       });
 
       const aiResponse = response.data.message;
-      setConversation([...conversation, { user: entry, ai: aiResponse }]); 
+      setConversation([...conversation, { user: entry, ai: aiResponse }]);
     
       return aiResponse;
     } catch {
       setErrorMessage("An error occurred while processing your entry.");
       return "An error occurred while processing your entry.";
-  } finally {
+    } finally {
       setIsLoading(false);
     }
   };
@@ -85,6 +86,7 @@ const [conversation, setConversation] = useState<Conversation[]>([]);
         <h1>Track Your Moods</h1>
 
         {errorMessage && <p style={styles.error}>{errorMessage}</p>}
+        
         <div style={styles.entriesList}>
           <div>
             <p style={styles.aiMessage}>
@@ -100,42 +102,45 @@ const [conversation, setConversation] = useState<Conversation[]>([]);
             </p>
           </div>
 
-          {journalEntries.map((entry) => (
-    <div key={entry}>
-        <p><strong>You:</strong> {entry}</p>
-        <p style={styles.aiMessage}>
-            <strong>AI:</strong>
-            {aiResponses[journalEntries.indexOf(entry) + 1] ? (
-                <TypeAnimation
-                    sequence={[aiResponses[journalEntries.indexOf(entry) + 1], 1000]}
+          {journalEntries.map((entry, index) => (
+            <div key={index}>
+              <p><strong>You:</strong> {entry}</p>
+              <p style={styles.aiMessage}>
+                <strong>AI:</strong>
+                {aiResponses[index + 1] ? (
+                  <TypeAnimation
+                    sequence={[aiResponses[index + 1], 1000]}
                     wrapper="span"
                     speed={90}
                     cursor={false}
                     repeat={0}
                     style={{ display: "inline-block" }}
-                />
-            ) : (
-                <div>
+                  />
+                ) : (
+                  <div>
                     <ReactMarkdown>
-                        {aiResponses[journalEntries.indexOf(entry) + 1]
-                            ?.replace(/\* /g, "\n- ") // Ensure markdown bullet points are rendered correctly
-                            .trim()}
+                      {aiResponses[index + 1]
+                        ?.replace(/\* /g, "\n- ") // Ensure markdown bullet points are rendered correctly
+                        .trim()}
                     </ReactMarkdown>
-                </div>
-            )}
-        </p>
-    </div>
-))}
-
+                  </div>
+                )}
+              </p>
+            </div>
+          ))}
         </div>
 
         <div style={styles.journalWrapper}>
+          <label id="journalInputLabel" style={{ display: 'none' }}>
+            Journal Entry Input
+          </label>
           <div
             contentEditable
             onInput={handleInput}
             ref={journalInputRef}
             style={styles.journalInput}
             suppressContentEditableWarning={true}
+            aria-labelledby="journalInputLabel"  // Associates the div with an accessible label
           ></div>
 
           {journal === "" && <div style={styles.placeholder}>How are you feeling today?</div>}
@@ -145,14 +150,15 @@ const [conversation, setConversation] = useState<Conversation[]>([]);
           style={styles.sub_button} 
           onClick={handleSubmit}
           disabled={isLoading || !journal.trim()}
+          aria-label="Submit Journal Entry"
         >
           {isLoading ? "Loading..." : "Submit"}
         </button>
         <button
-          style={{...styles.analyze_button}}
-
+          style={styles.analyze_button}
           onClick={handleSubmit}
           disabled={isLoading || !journal.trim()}
+          aria-label="Analyze Journal Entry"
         >
           Analyze
         </button>
@@ -193,7 +199,6 @@ const styles = {
     outline: "none",
     transition: "border-color 0.3s ease",
     color: "#333",
-    zIndex: 1,
     overflowX: "hidden" as const,
   },
   placeholder: {
