@@ -2,7 +2,6 @@
 "use client";
 
 import React, { useState } from 'react';
-import Link from 'next/link';
 import styles from '../styles/Auth.module.css';
 
 const Login: React.FC = () => {
@@ -15,15 +14,10 @@ const Login: React.FC = () => {
         <div className={`${styles.formContainer} ${styles.signUpContainer}`}>
           <form>
             <h1>Create Account</h1>
-            <div className={styles.socialContainer}>
-              <a href="#" className={styles.social}><i className="fab fa-facebook-f"></i></a>
-              <a href="#" className={styles.social}><i className="fab fa-google-plus-g"></i></a>
-              <a href="#" className={styles.social}><i className="fab fa-linkedin-in"></i></a>
-            </div>
-            <span>or use your email for registration</span>
-            <input type="text" placeholder="Name" className={styles.inputField} />
-            <input type="email" placeholder="Email" className={styles.inputField} />
-            <input type="password" placeholder="Password" className={styles.inputField} />
+
+            <input type="text" placeholder="Name" className={styles.inputField} /><br></br>
+            <input type="email" placeholder="Email" className={styles.inputField} /><br></br>
+            <input type="password" placeholder="Password" className={styles.inputField} /><br></br>
             <button type="button" className={styles.button}>Sign Up</button>
           </form>
         </div>
@@ -33,16 +27,11 @@ const Login: React.FC = () => {
           <form>
 
             <h1>Sign In</h1>
-            <div className={styles.socialContainer}>
-              <a href="#" className={styles.social}><i className="fab fa-facebook-f"></i></a>
-              <a href="#" className={styles.social}><i className="fab fa-google-plus-g"></i></a>
-              <a href="#" className={styles.social}><i className="fab fa-linkedin-in"></i></a>
-            </div>
-            <span>or use your account</span>
-            <input type="email" placeholder="Email" className={styles.inputField} />
-            <input type="password" placeholder="Password" className={styles.inputField} />
-            <Link href="#" className={styles.switchText}>Forgot your password?</Link>
+
+            <input type="email" placeholder="Email" className={styles.inputField} /><br></br>
+            <input type="password" placeholder="Password" className={styles.inputField} /><br></br>
             <div><button type="button" className={styles.button}>Sign In</button></div>
+
             
             
           </form>
