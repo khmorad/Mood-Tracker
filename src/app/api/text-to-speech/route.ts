@@ -3,7 +3,7 @@ import { OpenAI } from "openai";
 import fs from "fs";
 import path from "path";
 
-const client = new OpenAI();
+const client = new OpenAI({ apiKey: process.env.REACT_APP_OPENAI_APIKEY });
 
 export async function POST(req: Request) {
   try {
