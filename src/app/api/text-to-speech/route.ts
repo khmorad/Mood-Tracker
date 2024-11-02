@@ -3,8 +3,10 @@ import { OpenAI } from "openai";
 import fs from "fs";
 import path from "path";
 
-const client = new OpenAI({ apiKey: process.env.REACT_APP_OPENAI_APIKEY });
-
+const client = new OpenAI({ apiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY  });
+if (!process.env.NEXT_PUBLIC_OPENAI_API_KEY) {
+  throw new Error("Environment variable NEXT_PUBLIC_OPENAI_API_KEY is missing");
+}
 export async function POST(req: Request) {
   try {
     const { text, voice = "alloy" } = await req.json();
