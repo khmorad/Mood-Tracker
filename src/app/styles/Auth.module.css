@@ -119,8 +119,8 @@
 /* Buttons */
 .authContainer .button {
   border-radius: 20px;
-  border: 1px solid #FF4B2B;
-  background-color: #FF4B2B;
+  border: 1px solid #dc23f4;
+  background-color: #dc23f4;
   color: #FFFFFF;
   font-size: 14px;
   font-weight: bold;
@@ -130,11 +130,16 @@
   transition: transform 80ms ease-in;
   cursor: pointer;
   margin-top: 10px;
+  transition: 0.3s;
 }
-
+.authContainer .button:hover {
+  background-color: #1da3f0;
+  color: #ffffff;
+}
 .authContainer .button.ghost {
   background-color: transparent;
   border-color: #FFFFFF;
+  
 }
 
 .authContainer .button:active {
