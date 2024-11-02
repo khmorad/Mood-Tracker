@@ -136,7 +136,10 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="container" style={{marginTop: '80px'}}>
+      <div style={{boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',maxWidth:'920px', margin:'auto', padding:'.002px', fontSize:'12px'}}>
       <h2>Journal Dashboard</h2>
+      </div>
+      
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', justifyContent: 'space-evenly', marginTop: '20px', maxWidth: '1000px', margin: '0 auto' }}>
         {[lineChartRef, barChartRef, pieChartRef, radarChartRef, doughnutChartRef, polarChartRef].map((ref, index) => (
           <div key={index} style={{ width: '250px', height: '200px', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)', padding: '10px', borderRadius: '8px', background: '#fff' }}>
