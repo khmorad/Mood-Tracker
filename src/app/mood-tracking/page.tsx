@@ -61,6 +61,19 @@ const MoodTrackingPage: React.FC = () => {
     }
   };
 
+  const playTTS = async (text: string) => {
+    try {
+      const response = await axios.post("/api/text-to-speech", { text });
+      const audioUrl = response.data.url;
+
+      const audio = new Audio(audioUrl);
+      audio.play();
+    } catch (error) {
+      console.error("Error playing TTS:", error);
+      setErrorMessage("Failed to play audio. Please try again.");
+    }
+  };
+
   const handleSubmit = async () => {
     if (journal.trim()) {
       setJournalEntries((prevEntries) => [...prevEntries, journal]);
@@ -68,6 +81,9 @@ const MoodTrackingPage: React.FC = () => {
       const aiResponse = await getGeminiResponse(journal);
       
       setAiResponses((prevResponses) => [...prevResponses, aiResponse]);
+
+      // Trigger TTS playback for AI response
+      playTTS(aiResponse);
 
       setJournal("");
       if (journalInputRef.current) {
@@ -125,6 +141,9 @@ const MoodTrackingPage: React.FC = () => {
                     </ReactMarkdown>
                   </div>
                 )}
+                <button onClick={() => playTTS(aiResponses[index + 1])} aria-label="Play AI Response">
+                  🔊
+                </button>
               </p>
             </div>
           ))}
