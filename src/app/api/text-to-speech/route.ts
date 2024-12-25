@@ -12,9 +12,18 @@ if (!process.env.NEXT_PUBLIC_OPENAI_API_KEY) {
 
 export async function POST(req: Request) {
   try {
-    const { text, voice = "alloy" } = await req.json();
+    const { text, voice = "onyx" } = await req.json();
     if (!text) {
       return NextResponse.json({ error: "Text input is required" }, { status: 400 });
+    }
+
+    // Define the file path for the audio file
+    const filePath = path.join(process.cwd(), "public", "speech.mp3");
+
+    // Delete the previous audio file if it exists, and add a delay to ensure it's released
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+      await new Promise((resolve) => setTimeout(resolve, 100)); // 100ms delay
     }
 
     // Generate the TTS response
@@ -28,15 +37,6 @@ export async function POST(req: Request) {
     if (!response || !response.body) {
       return NextResponse.json({ error: "No audio data received" }, { status: 500 });
     }
-
-    // Ensure the public directory exists
-    const publicDir = path.join(process.cwd(), "public");
-    if (!fs.existsSync(publicDir)) {
-      fs.mkdirSync(publicDir, { recursive: true });
-    }
-
-    // Set the file path for saving audio in the `public` folder
-    const filePath = path.join(publicDir, "speech.mp3");
 
     // Fetch the audio data as an ArrayBuffer and write it to a file
     const audioBuffer = Buffer.from(await response.arrayBuffer());
