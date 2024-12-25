@@ -5,15 +5,25 @@ import { OpenAI } from "openai";
 import fs from "fs";
 import path from "path";
 
-const client = new OpenAI({ apiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY  });
+const client = new OpenAI({ apiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY });
 if (!process.env.NEXT_PUBLIC_OPENAI_API_KEY) {
   throw new Error("Environment variable NEXT_PUBLIC_OPENAI_API_KEY is missing");
 }
+
 export async function POST(req: Request) {
   try {
-    const { text, voice = "alloy" } = await req.json();
+    const { text, voice = "onyx" } = await req.json();
     if (!text) {
       return NextResponse.json({ error: "Text input is required" }, { status: 400 });
+    }
+
+    // Define the file path for the audio file
+    const filePath = path.join(process.cwd(), "public", "speech.mp3");
+
+    // Delete the previous audio file if it exists, and add a delay to ensure it's released
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+      await new Promise((resolve) => setTimeout(resolve, 100)); // 100ms delay
     }
 
     // Generate the TTS response
@@ -24,40 +34,18 @@ export async function POST(req: Request) {
     });
 
     // Check if the response body exists
-    if (!response.body) {
+    if (!response || !response.body) {
       return NextResponse.json({ error: "No audio data received" }, { status: 500 });
     }
 
-    // Set the file path for saving audio
-    const filePath = path.join(process.cwd(), "public", "speech.mp3");
+    // Fetch the audio data as an ArrayBuffer and write it to a file
+    const audioBuffer = Buffer.from(await response.arrayBuffer());
+    fs.writeFileSync(filePath, audioBuffer);
 
-    // Create a writable stream
-    const fileStream = fs.createWriteStream(filePath);
-
-    // Process the stream to save audio data
-    await processStream(response.body, fileStream);
-
+    // Return the URL path to the saved file
     return NextResponse.json({ url: `/speech.mp3` });
   } catch (error) {
     console.error("Error generating speech:", error);
     return NextResponse.json({ error: "Failed to generate speech" }, { status: 500 });
-  }
-}
-
-// Function to handle the reading and writing of audio data
-async function processStream(readableStream: ReadableStream, fileStream: fs.WriteStream) {
-  const reader = readableStream.getReader();
-  
-  try {
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      fileStream.write(value);
-    }
-  } catch (error) {
-    console.error("Error while writing stream:", error);
-  } finally {
-    fileStream.end();
-    reader.releaseLock();
   }
 }
