@@ -151,6 +151,7 @@ const scrollToSection = (sectionId: string) => {
 };
 
 const styles = {
+  body: {background: 'linear-gradient(to bottom, #a2c5ff, #d4a6f7)'},
   container: {
     boxShadow: 'rgba(100, 100, 111, 0.2) 0px 7px 29px 0px',
     justifyContent: 'center',
