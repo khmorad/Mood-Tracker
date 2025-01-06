@@ -14,7 +14,12 @@ const Login: React.FC = () => {
   });
   const [signupError, setSignupError] = useState<string | null>(null);
   const [signupSuccess, setSignupSuccess] = useState<string | null>(null);
+  const [loginData, setLoginData] = useState({
+    email: "",
+    password: "",
+  });
 
+  const [loginError, setLoginError] = useState<string | null>(null);
   const handleSignupChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
 
@@ -74,6 +79,43 @@ const Login: React.FC = () => {
       });
     } catch (err: unknown) {
       setSignupError(
+        err instanceof Error ? err.message : "An unknown error occurred"
+      );
+    }
+  };
+  const handleLoginChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setLoginData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
+  };
+  const handleLoginSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoginError(null); // Reset the login error before the new login attempt
+
+    try {
+      const response = await fetch("/api/users/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: loginData.email,
+          password: loginData.password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to login");
+      }
+
+      // Handle successful login here, e.g., storing the returned data in local storage or context
+      console.log("Login successful:", data);
+    } catch (err: unknown) {
+      setLoginError(
         err instanceof Error ? err.message : "An unknown error occurred"
       );
     }
@@ -140,27 +182,32 @@ const Login: React.FC = () => {
 
         {/* Sign In Form */}
         <div className={`${styles.formContainer} ${styles.signInContainer}`}>
-          <form>
+          <form onSubmit={handleLoginSubmit}>
             <h1>Sign In</h1>
+            {loginError && <p className={styles.error}>{loginError}</p>}
             <input
               type="email"
+              name="email"
               placeholder="Email"
+              value={loginData.email}
+              onChange={handleLoginChange}
               className={styles.inputField}
               required
             />
             <br />
             <input
               type="password"
+              name="password"
               placeholder="Password"
+              value={loginData.password}
+              onChange={handleLoginChange}
               className={styles.inputField}
               required
             />
             <br />
-            <div>
-              <button type="button" className={styles.button}>
-                Sign In
-              </button>
-            </div>
+            <button type="submit" className={styles.button}>
+              Sign In
+            </button>
           </form>
         </div>
 
