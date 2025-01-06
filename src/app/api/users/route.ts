@@ -1,7 +1,10 @@
 import { pool } from "../../lib/mysql";
 import { NextResponse } from "next/server";
 import type { ResultSetHeader } from "mysql2";
+//import bcrypt from "bcrypt";
+//import jwt from "jsonwebtoken";
 
+//post for login
 // GET Request Handler for all users
 export async function GET(req: Request) {
   try {
@@ -21,7 +24,10 @@ export async function GET(req: Request) {
   } catch (error: unknown) {
     return error instanceof Error
       ? NextResponse.json({ error: error.message }, { status: 500 })
-      : NextResponse.json({ error: "Unknown error occurred." }, { status: 500 });
+      : NextResponse.json(
+          { error: "Unknown error occurred." },
+          { status: 500 }
+        );
   }
 }
 
@@ -37,7 +43,7 @@ export async function POST(req: Request) {
       gender,
       preferred_language,
       phone_number,
-      date_of_birth,
+      date_of_birth, // ISO 8601 format
       first_name,
       middle_name,
       last_name,
@@ -47,6 +53,15 @@ export async function POST(req: Request) {
     if (!user_id || !email || !password) {
       return NextResponse.json(
         { error: "Missing required fields: user_id, email, password" },
+        { status: 400 }
+      );
+    }
+    const formattedDate =
+      date_of_birth &&
+      new Date(date_of_birth).toISOString().slice(0, 19).replace("T", " ");
+    if (!formattedDate) {
+      return NextResponse.json(
+        { error: "Invalid date_of_birth format" },
         { status: 400 }
       );
     }
@@ -61,7 +76,7 @@ export async function POST(req: Request) {
         gender || null,
         preferred_language || null,
         phone_number || null,
-        date_of_birth || null,
+        formattedDate, // Pass as-is if valid
         first_name || null,
         middle_name || null,
         last_name || null,
@@ -76,6 +91,9 @@ export async function POST(req: Request) {
   } catch (error: unknown) {
     return error instanceof Error
       ? NextResponse.json({ error: error.message }, { status: 500 })
-      : NextResponse.json({ error: "Unknown error occurred." }, { status: 500 });
+      : NextResponse.json(
+          { error: "Unknown error occurred." },
+          { status: 500 }
+        );
   }
 }
