@@ -16,10 +16,7 @@ export async function GET(
     );
 
     if (user.length === 0) {
-      return NextResponse.json(
-        { error: "User not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     return NextResponse.json(user[0]);
@@ -70,10 +67,7 @@ export async function PUT(
     );
 
     if (result.affectedRows === 0) {
-      return NextResponse.json(
-        { error: "User not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     return NextResponse.json({ message: "User updated successfully" });
@@ -101,10 +95,7 @@ export async function DELETE(
     );
 
     if (result.affectedRows === 0) {
-      return NextResponse.json(
-        { error: "User not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     return NextResponse.json({ message: "User deleted successfully" });
