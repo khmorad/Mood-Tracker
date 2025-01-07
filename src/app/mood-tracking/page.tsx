@@ -10,9 +10,6 @@ import "../styles/mood-tracking.css";
 const MoodTrackingPage: React.FC = () => {
   const [journal, setJournal] = useState("");
   const [journalEntries, setJournalEntries] = useState<string[]>([]);
-  const [aiResponses, setAiResponses] = useState<string[]>([
-    "How can I help you today?",
-  ]);
 
   interface Conversation {
     user: string;
@@ -27,6 +24,7 @@ const MoodTrackingPage: React.FC = () => {
     lastName: string;
     email: string;
   } | null>(null);
+
   const [isClient, setIsClient] = useState(false);
   const journalInputRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -45,7 +43,9 @@ const MoodTrackingPage: React.FC = () => {
   useEffect(() => {
     setIsClient(true);
   }, []);
-
+  const [aiResponses, setAiResponses] = useState<string[]>([
+    `Hello How can I help you today?`,
+  ]);
   const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
     setJournal(e.currentTarget.textContent || "");
   };
