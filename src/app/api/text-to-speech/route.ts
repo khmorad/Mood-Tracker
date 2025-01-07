@@ -14,7 +14,10 @@ export async function POST(req: Request) {
   try {
     const { text, voice = "onyx" } = await req.json();
     if (!text) {
-      return NextResponse.json({ error: "Text input is required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Text input is required" },
+        { status: 400 }
+      );
     }
 
     // Define the file path for the audio file
@@ -35,7 +38,10 @@ export async function POST(req: Request) {
 
     // Check if the response body exists
     if (!response || !response.body) {
-      return NextResponse.json({ error: "No audio data received" }, { status: 500 });
+      return NextResponse.json(
+        { error: "No audio data received" },
+        { status: 500 }
+      );
     }
 
     // Fetch the audio data as an ArrayBuffer and write it to a file
@@ -46,6 +52,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ url: `/speech.mp3` });
   } catch (error) {
     console.error("Error generating speech:", error);
-    return NextResponse.json({ error: "Failed to generate speech" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to generate speech" },
+      { status: 500 }
+    );
   }
 }
