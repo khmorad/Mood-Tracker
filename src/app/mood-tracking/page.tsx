@@ -5,13 +5,15 @@ import Layout from "../layout";
 import axios from "axios";
 import { TypeAnimation } from "react-type-animation";
 import ReactMarkdown from "react-markdown";
-import '../styles/mood-tracking.css';
+import "../styles/mood-tracking.css";
 
 const MoodTrackingPage: React.FC = () => {
   const [journal, setJournal] = useState("");
   const [journalEntries, setJournalEntries] = useState<string[]>([]);
-  const [aiResponses, setAiResponses] = useState<string[]>(["How can I help you today?"]);
-  
+  const [aiResponses, setAiResponses] = useState<string[]>([
+    "How can I help you today?",
+  ]);
+
   interface Conversation {
     user: string;
     ai: string;
@@ -20,9 +22,26 @@ const MoodTrackingPage: React.FC = () => {
   const [conversation, setConversation] = useState<Conversation[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [user, setUser] = useState<{
+    firstName: string;
+    lastName: string;
+    email: string;
+  } | null>(null);
   const [isClient, setIsClient] = useState(false);
   const journalInputRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const userInfo = localStorage.getItem("userInfo");
+    if (userInfo) {
+      const user = JSON.parse(userInfo);
+      console.log("Parsed user object:", user); // Log the parsed object to check its structure
 
+      setUser({
+        firstName: user.first_name,
+        lastName: user.last_name,
+        email: user.email,
+      });
+    }
+  }, []);
   useEffect(() => {
     setIsClient(true);
   }, []);
@@ -36,11 +55,13 @@ const MoodTrackingPage: React.FC = () => {
       setIsLoading(true);
       setErrorMessage(null);
 
-      const conversationHistoryString = conversation.map((conv) => {
-        const userMessage = `User message: ${conv.user || ''}`;
-        const aiMessage = `AI response: ${conv.ai || ''}`;
-        return `${userMessage}, ${aiMessage}`;
-      }).join(' ');
+      const conversationHistoryString = conversation
+        .map((conv) => {
+          const userMessage = `User message: ${conv.user || ""}`;
+          const aiMessage = `AI response: ${conv.ai || ""}`;
+          return `${userMessage}, ${aiMessage}`;
+        })
+        .join(" ");
 
       const combinedEntry = `User message: ${entry}, Previous messages: ${conversationHistoryString}`;
 
@@ -51,7 +72,7 @@ const MoodTrackingPage: React.FC = () => {
 
       const aiResponse = response.data.message;
       setConversation([...conversation, { user: entry, ai: aiResponse }]);
-    
+
       return aiResponse;
     } catch {
       setErrorMessage("An error occurred while processing your entry.");
@@ -79,11 +100,11 @@ const MoodTrackingPage: React.FC = () => {
       setJournalEntries((prevEntries) => [...prevEntries, journal]);
 
       const aiResponse = await getGeminiResponse(journal);
-      
+
       setAiResponses((prevResponses) => [...prevResponses, aiResponse]);
 
-      // Trigger TTS playback for AI response
-      playTTS(aiResponse);
+      // comment to stop text to speech
+      //playTTS(aiResponse);
 
       setJournal("");
       if (journalInputRef.current) {
@@ -102,11 +123,11 @@ const MoodTrackingPage: React.FC = () => {
         <h1>Track Your Moods</h1>
 
         {errorMessage && <p style={styles.error}>{errorMessage}</p>}
-        
+
         <div style={styles.entriesList}>
           <div>
             <p style={styles.aiMessage}>
-              <strong>AI:</strong> 
+              <strong>AI:</strong>
               <TypeAnimation
                 sequence={[aiResponses[0], 1000]}
                 wrapper="span"
@@ -120,7 +141,9 @@ const MoodTrackingPage: React.FC = () => {
 
           {journalEntries.map((entry, index) => (
             <div key={index}>
-              <p><strong>You:</strong> {entry}</p>
+              <p>
+                <strong>You:</strong> {entry}
+              </p>
               <p style={styles.aiMessage}>
                 <strong>AI:</strong>
                 {aiResponses[index + 1] ? (
@@ -141,7 +164,10 @@ const MoodTrackingPage: React.FC = () => {
                     </ReactMarkdown>
                   </div>
                 )}
-                <button onClick={() => playTTS(aiResponses[index + 1])} aria-label="Play AI Response">
+                <button
+                  onClick={() => playTTS(aiResponses[index + 1])}
+                  aria-label="Play AI Response"
+                >
                   🔊
                 </button>
               </p>
@@ -150,7 +176,7 @@ const MoodTrackingPage: React.FC = () => {
         </div>
 
         <div style={styles.journalWrapper}>
-          <label id="journalInputLabel" style={{ display: 'none' }}>
+          <label id="journalInputLabel" style={{ display: "none" }}>
             Journal Entry Input
           </label>
           <div
@@ -159,14 +185,16 @@ const MoodTrackingPage: React.FC = () => {
             ref={journalInputRef}
             style={styles.journalInput}
             suppressContentEditableWarning={true}
-            aria-labelledby="journalInputLabel"  // Associates the div with an accessible label
+            aria-labelledby="journalInputLabel" // Associates the div with an accessible label
           ></div>
 
-          {journal === "" && <div style={styles.placeholder}>How are you feeling today?</div>}
+          {journal === "" && (
+            <div style={styles.placeholder}>How are you feeling today?</div>
+          )}
         </div>
 
-        <button 
-          style={styles.sub_button} 
+        <button
+          style={styles.sub_button}
           onClick={handleSubmit}
           disabled={isLoading || !journal.trim()}
           aria-label="Submit Journal Entry"
@@ -254,7 +282,7 @@ const styles = {
   error: {
     color: "red",
     marginBottom: "1rem",
-  }
+  },
 };
 
 export default MoodTrackingPage;
