@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import Layout from "../layout";
 import axios from "axios";
-import { TypeAnimation } from "react-type-animation";
+import TypingAnimation from "../components/TypingAnimation";
 import ReactMarkdown from "react-markdown";
 import "../styles/mood-tracking.css";
 
@@ -121,24 +121,9 @@ const MoodTrackingPage: React.FC = () => {
     <Layout>
       <div style={styles.container}>
         <h1>Track Your Moods</h1>
-
         {errorMessage && <p style={styles.error}>{errorMessage}</p>}
 
         <div style={styles.entriesList}>
-          <div>
-            <p style={styles.aiMessage}>
-              <strong>AI:</strong>
-              <TypeAnimation
-                sequence={[aiResponses[0], 1000]}
-                wrapper="span"
-                speed={90}
-                cursor={false}
-                repeat={0}
-                style={{ display: "inline-block" }}
-              />
-            </p>
-          </div>
-
           {journalEntries.map((entry, index) => (
             <div key={index}>
               <p>
@@ -147,26 +132,14 @@ const MoodTrackingPage: React.FC = () => {
               <p style={styles.aiMessage}>
                 <strong>AI:</strong>
                 {aiResponses[index + 1] ? (
-                  <TypeAnimation
-                    sequence={[aiResponses[index + 1], 1000]}
-                    wrapper="span"
-                    speed={90}
-                    cursor={false}
-                    repeat={0}
-                    style={{ display: "inline-block" }}
-                  />
+                  <TypingAnimation text={aiResponses[index + 1]} />
                 ) : (
-                  <div>
-                    <ReactMarkdown>
-                      {aiResponses[index + 1]
-                        ?.replace(/\* /g, "\n- ") // Ensure markdown bullet points are rendered correctly
-                        .trim()}
-                    </ReactMarkdown>
-                  </div>
+                  <span>No AI response yet.</span>
                 )}
                 <button
                   onClick={() => playTTS(aiResponses[index + 1])}
                   aria-label="Play AI Response"
+                  style={{ marginLeft: "10px" }}
                 >
                   🔊
                 </button>
@@ -185,11 +158,12 @@ const MoodTrackingPage: React.FC = () => {
             ref={journalInputRef}
             style={styles.journalInput}
             suppressContentEditableWarning={true}
-            aria-labelledby="journalInputLabel" // Associates the div with an accessible label
+            aria-labelledby="journalInputLabel"
           ></div>
-
           {journal === "" && (
-            <div style={styles.placeholder}>How are you feeling today?</div>
+            <div style={styles.placeholder}>
+              <TypingAnimation text={"type here..."} />
+            </div>
           )}
         </div>
 
@@ -250,9 +224,11 @@ const styles = {
   },
   placeholder: {
     position: "absolute" as const,
-    top: "10px",
+    bottom: "-6px",
+
     left: "10px",
     color: "#aaa",
+
     pointerEvents: "none" as const,
     zIndex: 0,
   },
