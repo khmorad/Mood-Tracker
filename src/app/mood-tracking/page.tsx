@@ -4,7 +4,6 @@ import React, { useState, useEffect, useRef } from "react";
 import Layout from "../layout";
 import axios from "axios";
 import TypingAnimation from "../components/TypingAnimation";
-import ReactMarkdown from "react-markdown";
 import "../styles/mood-tracking.css";
 
 const MoodTrackingPage: React.FC = () => {
@@ -19,27 +18,27 @@ const MoodTrackingPage: React.FC = () => {
   const [conversation, setConversation] = useState<Conversation[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [user, setUser] = useState<{
-    firstName: string;
-    lastName: string;
-    email: string;
-  } | null>(null);
+  //const [user, setUser] = useState<{
+  //  firstName: string;
+  //  lastName: string;
+  //  email: string;
+  //} | null>(null);
 
   const [isClient, setIsClient] = useState(false);
   const journalInputRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const userInfo = localStorage.getItem("userInfo");
-    if (userInfo) {
-      const user = JSON.parse(userInfo);
-      console.log("Parsed user object:", user); // Log the parsed object to check its structure
-
-      setUser({
-        firstName: user.first_name,
-        lastName: user.last_name,
-        email: user.email,
-      });
-    }
-  }, []);
+  // useEffect(() => {
+  //   const userInfo = localStorage.getItem("userInfo");
+  //   if (userInfo) {
+  //     const user = JSON.parse(userInfo);
+  //     console.log("Parsed user object:", user); // Log the parsed object to check its structure
+  //
+  //     setUser({
+  //       firstName: user.first_name,
+  //       lastName: user.last_name,
+  //       email: user.email,
+  //     });
+  //   }
+  // }, []);
   useEffect(() => {
     setIsClient(true);
   }, []);
