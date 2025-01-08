@@ -10,6 +10,7 @@ const EnhancedNavbar: React.FC = () => {
   const [user, setUser] = useState<{ firstName: string; email: string } | null>(
     null
   );
+  const [dropdownVisible, setDropdownVisible] = useState(false);
 
   useEffect(() => {
     const userInfo = localStorage.getItem("userInfo");
@@ -21,6 +22,9 @@ const EnhancedNavbar: React.FC = () => {
 
   const handleMouseEnter = (link: string) => setHovered(link);
   const handleMouseLeave = () => setHovered(null);
+
+  const toggleDropdown = () => setDropdownVisible(!dropdownVisible);
+  const closeDropdown = () => setDropdownVisible(false);
 
   const navigateToLogin = () => {
     window.location.href = "/login";
@@ -100,13 +104,36 @@ const EnhancedNavbar: React.FC = () => {
           </li>
         </ul>
 
-        {/* User Greeting and Logout Button */}
+        {/* User Profile Dropdown */}
         {user ? (
-          <div style={styles.loginButtonWrapper}>
-            <span>Hello, {user.firstName}</span>
-            <button onClick={handleLogout} className="button-29">
-              Logout
-            </button>
+          <div style={styles.profileWrapper}>
+            <div style={styles.profilePicture} onClick={toggleDropdown}>
+              <Image
+                src="/default_pfp/default_pfp1.webp"
+                alt="User Profile"
+                width={40}
+                height={40}
+                style={{ borderRadius: "50%" }}
+              />
+            </div>
+            <div
+              style={{
+                ...styles.dropdown,
+                opacity: dropdownVisible ? 1 : 0,
+                transform: dropdownVisible
+                  ? "translateY(0)"
+                  : "translateY(-10px)",
+                pointerEvents: dropdownVisible ? "auto" : "none",
+              }}
+            >
+              <p style={styles.dropdownItem}>{user.email}</p>
+              <button style={styles.dropdownItem} onClick={closeDropdown}>
+                Account
+              </button>
+              <button style={styles.dropdownItem} onClick={handleLogout}>
+                Logout
+              </button>
+            </div>
           </div>
         ) : (
           <div style={styles.loginButtonWrapper}>
@@ -176,6 +203,42 @@ const styles: { [key: string]: CSSProperties } = {
     fontSize: "1rem",
     fontWeight: "500",
     cursor: "pointer",
+  },
+  profileWrapper: {
+    position: "relative",
+    display: "flex",
+    alignItems: "center",
+    marginRight: "32px",
+  },
+  profilePicture: {
+    cursor: "pointer",
+  },
+  dropdown: {
+    position: "absolute",
+    top: "100%",
+    right: 0,
+    backgroundColor: "#ffffff",
+    borderRadius: "0.5rem",
+    boxShadow: "0 4px 16px rgba(0, 0, 0, 0.15)",
+    padding: "0.5rem 0",
+    minWidth: "150px",
+    zIndex: 1000,
+    transition: "opacity 0.3s ease, transform 0.3s ease",
+  },
+  dropdownItem: {
+    padding: "0.5rem 1rem",
+    textAlign: "left",
+    color: "#333",
+    background: "none",
+    border: "none",
+    width: "100%",
+    textDecoration: "none",
+    fontSize: "0.875rem",
+    cursor: "pointer",
+    transition: "background-color 0.2s ease",
+  },
+  dropdownItemHover: {
+    backgroundColor: "#f0f0f0",
   },
   loginButtonWrapper: {
     display: "flex",
