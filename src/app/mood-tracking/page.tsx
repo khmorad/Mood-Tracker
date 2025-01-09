@@ -18,27 +18,26 @@ const MoodTrackingPage: React.FC = () => {
   const [conversation, setConversation] = useState<Conversation[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  //const [user, setUser] = useState<{
-  //  firstName: string;
-  //  lastName: string;
-  //  email: string;
-  //} | null>(null);
+  const [user, setUser] = useState<{
+    firstName: string;
+    lastName: string;
+    email: string;
+  } | null>(null);
 
   const [isClient, setIsClient] = useState(false);
   const journalInputRef = useRef<HTMLDivElement>(null);
-  // useEffect(() => {
-  //   const userInfo = localStorage.getItem("userInfo");
-  //   if (userInfo) {
-  //     const user = JSON.parse(userInfo);
-  //     console.log("Parsed user object:", user); // Log the parsed object to check its structure
-  //
-  //     setUser({
-  //       firstName: user.first_name,
-  //       lastName: user.last_name,
-  //       email: user.email,
-  //     });
-  //   }
-  // }, []);
+  useEffect(() => {
+    const userInfo = localStorage.getItem("userInfo");
+    if (userInfo) {
+      const parsedUser = JSON.parse(userInfo);
+      setUser(parsedUser);
+      // Set the initial AI response with the user's first name
+      setAiResponses([
+        `Hello ${parsedUser.firstName}, how can I help you today?`,
+      ]);
+    }
+    setIsClient(true); // Ensure client-side rendering before executing browser-specific code
+  }, []);
   useEffect(() => {
     setIsClient(true);
   }, []);
@@ -61,8 +60,9 @@ const MoodTrackingPage: React.FC = () => {
           return `${userMessage}, ${aiMessage}`;
         })
         .join(" ");
-
-      const combinedEntry = `User message: ${entry}, Previous messages: ${conversationHistoryString}`;
+      const userInfoString = JSON.stringify(user);
+      const nameOfUser = `user info: ${userInfoString}`;
+      const combinedEntry = `your respond to the user needs to be encouragig, supportive, encouraging, includer nonverval cues${nameOfUser}, User message: ${entry}, Previous messages: ${conversationHistoryString}`;
 
       const response = await axios.post("/api/generate", {
         message: combinedEntry,
@@ -121,7 +121,6 @@ const MoodTrackingPage: React.FC = () => {
       <div style={styles.container}>
         <h1>Track Your Moods</h1>
         {errorMessage && <p style={styles.error}>{errorMessage}</p>}
-
         <div style={styles.entriesList}>
           {journalEntries.map((entry, index) => (
             <div key={index}>
@@ -129,35 +128,23 @@ const MoodTrackingPage: React.FC = () => {
                 <strong>You:</strong> {entry}
               </p>
               <p style={styles.aiMessage}>
-                <strong>AI:</strong>
+                <strong>AI:</strong>{" "}
                 {aiResponses[index + 1] ? (
                   <TypingAnimation text={aiResponses[index + 1]} />
                 ) : (
                   <span>No AI response yet.</span>
                 )}
-                <button
-                  onClick={() => playTTS(aiResponses[index + 1])}
-                  aria-label="Play AI Response"
-                  style={{ marginLeft: "10px" }}
-                >
-                  🔊
-                </button>
               </p>
             </div>
           ))}
         </div>
-
         <div style={styles.journalWrapper}>
-          <label id="journalInputLabel" style={{ display: "none" }}>
-            Journal Entry Input
-          </label>
           <div
             contentEditable
             onInput={handleInput}
             ref={journalInputRef}
             style={styles.journalInput}
             suppressContentEditableWarning={true}
-            aria-labelledby="journalInputLabel"
           ></div>
           {journal === "" && (
             <div style={styles.placeholder}>
@@ -165,22 +152,13 @@ const MoodTrackingPage: React.FC = () => {
             </div>
           )}
         </div>
-
         <button
           style={styles.sub_button}
           onClick={handleSubmit}
           disabled={isLoading || !journal.trim()}
           aria-label="Submit Journal Entry"
         >
-          {isLoading ? "Loading..." : "Submit"}
-        </button>
-        <button
-          style={styles.analyze_button}
-          onClick={handleSubmit}
-          disabled={isLoading || !journal.trim()}
-          aria-label="Analyze Journal Entry"
-        >
-          Analyze
+          Submit
         </button>
       </div>
     </Layout>
