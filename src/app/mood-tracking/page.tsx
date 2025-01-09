@@ -132,8 +132,15 @@ const MoodTrackingPage: React.FC = () => {
                 {aiResponses[index + 1] ? (
                   <TypingAnimation text={aiResponses[index + 1]} />
                 ) : (
-                  <span>No AI response yet.</span>
+                  <span></span>
                 )}
+                <button
+                  onClick={() => playTTS(aiResponses[index + 1])}
+                  aria-label="Play AI Response"
+                  style={{ marginLeft: "10px" }}
+                >
+                  🔊
+                </button>
               </p>
             </div>
           ))}
