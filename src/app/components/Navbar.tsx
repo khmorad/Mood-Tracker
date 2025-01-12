@@ -12,13 +12,14 @@ const EnhancedNavbar: React.FC = () => {
   );
   const [dropdownVisible, setDropdownVisible] = useState(false);
 
-  useEffect(() => {
-    const userInfo = localStorage.getItem("userInfo");
-    if (userInfo) {
-      const user = JSON.parse(userInfo);
-      setUser({ firstName: user.first_name, email: user.email });
-    }
-  }, []);
+useEffect(() => {
+  const userInfo = localStorage.getItem("userInfo");
+  if (userInfo) {
+    console.log("User Info:", userInfo); // Debugging
+    const user = JSON.parse(userInfo);
+    setUser({ firstName: user.user.first_name, email: user.user.email });
+  }
+}, []);
 
   const handleMouseEnter = (link: string) => setHovered(link);
   const handleMouseLeave = () => setHovered(null);
