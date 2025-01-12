@@ -5,7 +5,7 @@ import Layout from "../layout";
 import axios from "axios";
 import TypingAnimation from "../components/TypingAnimation";
 import "../styles/mood-tracking.css";
-
+import Link from "next/link";
 const MoodTrackingPage: React.FC = () => {
   const [journal, setJournal] = useState("");
   const [journalEntries, setJournalEntries] = useState<string[]>([]);
@@ -141,6 +141,7 @@ const MoodTrackingPage: React.FC = () => {
                 >
                   🔊
                 </button>
+                
               </p>
             </div>
           ))}
@@ -167,6 +168,12 @@ const MoodTrackingPage: React.FC = () => {
         >
           Submit
         </button>
+        <button style={styles.analyze_button} disabled={isLoading || !journal.trim()}>
+  <Link href="/dashboard" style={{ textDecoration: "none", color: "inherit" }}>
+    Analyze
+  </Link>
+</button>
+
       </div>
     </Layout>
   );

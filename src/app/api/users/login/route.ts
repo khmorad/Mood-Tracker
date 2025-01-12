@@ -1,6 +1,9 @@
 import { pool } from "../../../lib/mysql";
 import { NextResponse } from "next/server";
+import jwt from "jsonwebtoken";
 import type { RowDataPacket } from "mysql2";
+
+const JWT_SECRET = process.env.JWT_SECRET || "your-very-secure-secret"; 
 
 export async function POST(req: Request) {
   try {
@@ -26,7 +29,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const matchedUser = user[0]; // No error here now
+    const matchedUser = user[0];
 
     // Placeholder for password hashing/validation
     if (matchedUser.password !== password) {
@@ -36,12 +39,28 @@ export async function POST(req: Request) {
       );
     }
 
+    // Generate a JWT
+    const token = jwt.sign(
+      {
+        user_id: matchedUser.user_id,
+        email: matchedUser.email,
+        first_name: matchedUser.first_name,
+        last_name: matchedUser.last_name,
+      },
+      JWT_SECRET,
+      { expiresIn: "1h" } // Token expires in 1 hour
+    );
+
+    // Respond with the token and user details
     return NextResponse.json({
       message: "Login successful",
-      user_id: matchedUser.user_id,
-      email: matchedUser.email,
-      first_name: matchedUser.first_name,
-      last_name: matchedUser.last_name,
+      token, // Return the JWT token
+      user: {
+        user_id: matchedUser.user_id,
+        email: matchedUser.email,
+        first_name: matchedUser.first_name,
+        last_name: matchedUser.last_name,
+      },
     });
   } catch (error: unknown) {
     return error instanceof Error

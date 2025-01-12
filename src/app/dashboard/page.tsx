@@ -3,6 +3,8 @@
 import React, { useRef, useEffect } from 'react';
 import { Chart, LineController, LineElement, PointElement, CategoryScale, LinearScale, Title, Tooltip, Legend, BarController, BarElement, ArcElement, PieController, RadarController, PolarAreaController, DoughnutController, RadialLinearScale } from 'chart.js';
 import { TypeAnimation } from "react-type-animation"; 
+import 'aos/dist/aos.css';
+import AOS from 'aos';
 
 // Register required Chart.js components
 Chart.register(LineController, LineElement, PointElement, CategoryScale, LinearScale, Title, Tooltip, Legend, BarController, BarElement, ArcElement, PieController, RadarController, PolarAreaController, DoughnutController, RadialLinearScale);
@@ -23,104 +25,172 @@ const Dashboard: React.FC = () => {
   let polarChartInstance: Chart<"polarArea"> | null = null;
 
   useEffect(() => {
-    // Line chart
+    AOS.init({ duration: 1000 });
+
+    // Line chart: Mood trend over time
     if (lineChartRef.current) {
       if (lineChartInstance) lineChartInstance.destroy();
       lineChartInstance = new Chart(lineChartRef.current, {
-        type: 'line',
+        type: "line",
         data: {
-          labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-          datasets: [{
-            label: 'Daily Scores',
-            data: [3, 4, 3.5, 4.5, 5, 4, 4.5],
-            borderColor: '#6b97f7',
-            backgroundColor: 'rgba(107, 151, 247, 0.3)',
-          }],
+          labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+          datasets: [
+            {
+              label: "Mood Scores",
+              data: [4, 3, 5, 4.5, 3.5, 4, 5],
+              borderColor: "#6b97f7",
+              backgroundColor: "rgba(107, 151, 247, 0.3)",
+            },
+          ],
         },
-        options: { responsive: true, plugins: { title: { display: true, text: 'Weekly Journal Scores' }, tooltip: { enabled: true } } },
+        options: {
+          responsive: true,
+          plugins: {
+            title: {
+              display: true,
+              text: "Mood Trend Over the Week",
+            },
+            tooltip: {
+              enabled: true,
+            },
+          },
+        },
       });
     }
 
-    // Bar chart
+    // Bar chart: Weekly journal entries
     if (barChartRef.current) {
       if (barChartInstance) barChartInstance.destroy();
       barChartInstance = new Chart(barChartRef.current, {
-        type: 'bar',
+        type: "bar",
         data: {
-          labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
-          datasets: [{
-            label: 'Weekly Average Scores',
-            data: [3.5, 4, 3.7, 4.2],
-            backgroundColor: '#f75713',
-          }],
+          labels: ["Week 1", "Week 2", "Week 3", "Week 4"],
+          datasets: [
+            {
+              label: "Number of Entries",
+              data: [12, 15, 10, 14],
+              backgroundColor: "#f75713",
+            },
+          ],
         },
-        options: { responsive: true, plugins: { title: { display: true, text: 'Monthly Journal Analysis' }, tooltip: { enabled: true } } },
+        options: {
+          responsive: true,
+          plugins: {
+            title: {
+              display: true,
+              text: "Weekly Journal Entry Count",
+            },
+            tooltip: {
+              enabled: true,
+            },
+          },
+        },
       });
     }
 
-    // Pie chart
+    // Pie chart: Emotional distribution
     if (pieChartRef.current) {
       if (pieChartInstance) pieChartInstance.destroy();
       pieChartInstance = new Chart(pieChartRef.current, {
-        type: 'pie',
+        type: "pie",
         data: {
-          labels: ['Happy', 'Neutral', 'Sad'],
-          datasets: [{
-            data: [40, 35, 25],
-            backgroundColor: ['#6b97f7', '#b9a03b', '#f75713'],
-          }],
+          labels: ["Happy", "Neutral", "Sad", "Angry"],
+          datasets: [
+            {
+              data: [40, 25, 25, 10],
+              backgroundColor: ["#6b97f7", "#b9a03b", "#f75713", "#e23e57"],
+            },
+          ],
         },
-        options: { responsive: true, plugins: { title: { display: true, text: 'Overall Mood Distribution' }, tooltip: { enabled: true } } },
+        options: {
+          responsive: true,
+          plugins: {
+            title: {
+              display: true,
+              text: "Emotional Distribution",
+            },
+          },
+        },
       });
     }
 
-    // Radar chart
+    // Radar chart: Emotional intensity
     if (radarChartRef.current) {
       if (radarChartInstance) radarChartInstance.destroy();
       radarChartInstance = new Chart(radarChartRef.current, {
-        type: 'radar',
+        type: "radar",
         data: {
-          labels: ['Happiness', 'Anxiety', 'Energy', 'Calmness', 'Focus', 'Satisfaction'],
-          datasets: [{
-            label: 'Emotional States',
-            data: [3, 4, 2, 5, 4, 3],
-            backgroundColor: 'rgba(107, 151, 247, 0.3)',
-            borderColor: '#6b97f7',
-          }],
+          labels: ["Happy", "Stressed", "Anxious", "Sad", "Angry"],
+          datasets: [
+            {
+              label: "Emotion Intensity",
+              data: [3, 4, 2, 5, 4],
+              backgroundColor: "rgba(107, 151, 247, 0.3)",
+              borderColor: "#6b97f7",
+            },
+          ],
         },
-        options: { responsive: true, plugins: { title: { display: true, text: 'Emotional States Radar' } } },
+        options: {
+          responsive: true,
+          plugins: {
+            title: {
+              display: true,
+              text: "Emotional Intensity Radar",
+            },
+          },
+        },
       });
     }
 
-    // Doughnut chart
+    // Doughnut chart: Episode flags
     if (doughnutChartRef.current) {
       if (doughnutChartInstance) doughnutChartInstance.destroy();
       doughnutChartInstance = new Chart(doughnutChartRef.current, {
-        type: 'doughnut',
+        type: "doughnut",
         data: {
-          labels: ['Happy', 'Neutral', 'Sad', 'Angry'],
-          datasets: [{
-            data: [30, 25, 25, 20],
-            backgroundColor: ['#6b97f7', '#b9a03b', '#f75713', '#e23e57'],
-          }],
+          labels: ["Flagged", "Non-Flagged"],
+          datasets: [
+            {
+              data: [10, 30],
+              backgroundColor: ["#f75713", "#6b97f7"],
+            },
+          ],
         },
-        options: { responsive: true, plugins: { title: { display: true, text: 'Mood Distribution' } } },
+        options: {
+          responsive: true,
+          plugins: {
+            title: {
+              display: true,
+              text: "Flagged Episodes Distribution",
+            },
+          },
+        },
       });
     }
 
-    // Polar Area chart
+    // Polar Area chart: Activity frequency
     if (polarChartRef.current) {
       if (polarChartInstance) polarChartInstance.destroy();
       polarChartInstance = new Chart(polarChartRef.current, {
-        type: 'polarArea',
+        type: "polarArea",
         data: {
-          labels: ['Work', 'Exercise', 'Meditation', 'Socializing', 'Learning'],
-          datasets: [{
-            data: [15, 10, 12, 8, 5],
-            backgroundColor: ['#6b97f7', '#f75713', '#b9a03b', '#e23e57', '#9b59b6'],
-          }],
+          labels: ["Work", "Exercise", "Socializing", "Meditation", "Other"],
+          datasets: [
+            {
+              data: [10, 12, 8, 5, 3],
+              backgroundColor: ["#6b97f7", "#f75713", "#b9a03b", "#e23e57", "#9b59b6"],
+            },
+          ],
         },
-        options: { responsive: true, plugins: { title: { display: true, text: 'Activity Frequency' } } },
+        options: {
+          responsive: true,
+          plugins: {
+            title: {
+              display: true,
+              text: "Activity Frequency",
+            },
+          },
+        },
       });
     }
 
@@ -134,19 +204,56 @@ const Dashboard: React.FC = () => {
     };
   }, []);
 
+  const userInfo = JSON.parse(localStorage.getItem("userInfo") || "{}");
+  const { first_name, email } = userInfo.user || {};
+
   return (
-    <div className="container" style={{marginTop: '80px'}}>
-      <div style={{boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',maxWidth:'920px', margin:'auto', padding:'.002px', fontSize:'12px'}}>
-      <h2>Journal Dashboard</h2>
-      </div>
-      
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', justifyContent: 'space-evenly', marginTop: '20px', maxWidth: '1000px', margin: '0 auto' }}>
+    <div className="container" style={{ marginTop: '80px' }}>
+<header
+  style={{
+    backgroundColor: "#fff",
+    padding: "20px 30px",
+    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+    borderRadius: "10px",
+    marginBottom: "30px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    maxWidth: "860px", // Same as the content width
+    margin: "0 auto",
+
+  }}
+>
+  <h1
+    style={{
+      margin: 0,
+      fontSize: "1.8rem",
+      fontWeight: "bold",
+      color: "#333",
+    }}
+  >
+    Analysis Dashboard
+  </h1>
+  <p
+    style={{
+      margin: 0,
+      fontSize: "1rem",
+      color: "#666",
+    }}
+  >
+    Insights from your journaling
+  </p>
+</header>
+
+
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', justifyContent: 'space-evenly', marginTop: '20px', maxWidth: '1000px', margin: '30px auto' }}>
         {[lineChartRef, barChartRef, pieChartRef, radarChartRef, doughnutChartRef, polarChartRef].map((ref, index) => (
-          <div key={index} style={{ width: '250px', height: '200px', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)', padding: '10px', borderRadius: '8px', background: '#fff' }}>
+          <div key={index} data-aos="fade-up" style={{ width: '250px', height: '200px', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)', padding: '10px', borderRadius: '8px', background: '#fff' }}>
             <canvas ref={ref} style={{ width: '100%', height: '100%' }} />
           </div>
         ))}
       </div>
+
       <div style={{ marginTop: '30px', padding: '20px', backgroundColor: '#f7f7f7', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)', borderRadius: '8px', width: '88%', maxWidth:'890px',margin: '30px auto' }}>
         <h3>Full Analysis</h3>
         <p style={{ color: '#555' }}>
