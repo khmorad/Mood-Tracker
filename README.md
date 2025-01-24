@@ -73,4 +73,3 @@ Mood Stabilizer is a journaling app designed to help users track and manage thei
 
 If you have any questions or feedback, feel free to reach out:
 - Email: khakho.morad@gmail.com
-- GitHub Issues: [github.com/khmorad/mood-stabilizer/issues](https://github.com/khmorad/mood-stabilizer/issues)
