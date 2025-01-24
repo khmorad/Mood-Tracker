@@ -15,7 +15,7 @@ const EnhancedNavbar: React.FC = () => {
 useEffect(() => {
   const userInfo = localStorage.getItem("userInfo");
   if (userInfo) {
-    console.log("User Info:", userInfo); // Debugging
+    console.log("User Info:", userInfo);
     const user = JSON.parse(userInfo);
     setUser({ firstName: user.user.first_name, email: user.user.email });
   }
@@ -55,7 +55,6 @@ useEffect(() => {
           </button>
         </div>
 
-        {/* Centered Navigation Links */}
         <ul style={styles.ul}>
           <li
             style={{
@@ -105,7 +104,6 @@ useEffect(() => {
           </li>
         </ul>
 
-        {/* User Profile Dropdown */}
         {user ? (
           <div style={styles.profileWrapper}>
             <div style={styles.profilePicture} onClick={toggleDropdown}>
