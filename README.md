@@ -29,7 +29,7 @@ Mood Stabilizer is a journaling app designed to help users track and manage thei
    ```
 2. Navigate to the project directory:
    ```bash
-   cd mood-stabilizer
+   cd Mood-Tracker
    ```
 3. Install dependencies:
    ```bash
