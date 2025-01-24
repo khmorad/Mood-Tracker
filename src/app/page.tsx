@@ -45,7 +45,6 @@ const Page: React.FC = () => {
           />
         </nav>
 
-        {/* Main Content */}
         <div id="moods" className="mt-16" style={styles.section}>
           <h1 className="text-4xl font-bold text-center">
             Welcome to the Mood Stabilizer Support App
@@ -56,9 +55,8 @@ const Page: React.FC = () => {
           >
             <TypeAnimation
               sequence={[
-                // Same substring at the start will only be typed out once, initially
                 "A safe space to help you manage your mental health journey with personalized resources and tools.",
-                2000, // wait 1s before replacing "Mice" with "Hamsters"
+                2000,
                 "Navigating with Understanding: A Compassionate Guide for Your Mental Health Journey",
                 2000,
                 "Supporting You Every Day: Tools, Tips, and Community for Living with BPD",

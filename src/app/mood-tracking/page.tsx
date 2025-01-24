@@ -31,12 +31,11 @@ const MoodTrackingPage: React.FC = () => {
     if (userInfo) {
       const parsedUser = JSON.parse(userInfo);
       setUser(parsedUser);
-      // Set the initial AI response with the user's first name
       setAiResponses([
         `Hello ${parsedUser.firstName}, how can I help you today?`,
       ]);
     }
-    setIsClient(true); // Ensure client-side rendering before executing browser-specific code
+    setIsClient(true); 
   }, []);
   useEffect(() => {
     setIsClient(true);
@@ -102,7 +101,7 @@ const MoodTrackingPage: React.FC = () => {
 
       setAiResponses((prevResponses) => [...prevResponses, aiResponse]);
 
-      // comment to stop text to speech
+      // comment to stop text to speech [ dont have money :( ]
       //playTTS(aiResponse);
 
       setJournal("");

@@ -58,7 +58,6 @@ const Dashboard: React.FC = () => {
       });
     }
 
-    // Bar chart: Weekly journal entries
     if (barChartRef.current) {
       if (barChartInstance) barChartInstance.destroy();
       barChartInstance = new Chart(barChartRef.current, {
@@ -88,7 +87,6 @@ const Dashboard: React.FC = () => {
       });
     }
 
-    // Pie chart: Emotional distribution
     if (pieChartRef.current) {
       if (pieChartInstance) pieChartInstance.destroy();
       pieChartInstance = new Chart(pieChartRef.current, {
@@ -114,7 +112,6 @@ const Dashboard: React.FC = () => {
       });
     }
 
-    // Radar chart: Emotional intensity
     if (radarChartRef.current) {
       if (radarChartInstance) radarChartInstance.destroy();
       radarChartInstance = new Chart(radarChartRef.current, {
@@ -142,7 +139,6 @@ const Dashboard: React.FC = () => {
       });
     }
 
-    // Doughnut chart: Episode flags
     if (doughnutChartRef.current) {
       if (doughnutChartInstance) doughnutChartInstance.destroy();
       doughnutChartInstance = new Chart(doughnutChartRef.current, {
@@ -168,7 +164,6 @@ const Dashboard: React.FC = () => {
       });
     }
 
-    // Polar Area chart: Activity frequency
     if (polarChartRef.current) {
       if (polarChartInstance) polarChartInstance.destroy();
       polarChartInstance = new Chart(polarChartRef.current, {
@@ -204,8 +199,8 @@ const Dashboard: React.FC = () => {
     };
   }, []);
 
-  const userInfo = JSON.parse(localStorage.getItem("userInfo") || "{}");
-  const { first_name, email } = userInfo.user || {};
+ // const userInfo = JSON.parse(localStorage.getItem("userInfo") || "{}");
+  //const { first_name, email } = userInfo.user || {};
 
   return (
     <div className="container" style={{ marginTop: '80px' }}>
@@ -219,7 +214,7 @@ const Dashboard: React.FC = () => {
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
-    maxWidth: "860px", // Same as the content width
+    maxWidth: "860px", 
     margin: "0 auto",
 
   }}
@@ -259,7 +254,6 @@ const Dashboard: React.FC = () => {
         <p style={{ color: '#555' }}>
         <TypeAnimation
       sequence={[
-        // Same substring at the start will only be typed out once, initially
         '          This section provides a comprehensive analysis of the user’s emotional and behavioral trends based on their journaling and activity records. Current data suggests fluctuations in emotional states across the week, with noticeable trends in specific activities influencing mood positively or negatively. Further insights can be drawn upon analyzing these patterns over extended periods, allowing for more personalized recommendations.',
       ]}
       wrapper="span"

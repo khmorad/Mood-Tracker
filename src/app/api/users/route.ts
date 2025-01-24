@@ -76,7 +76,7 @@ export async function POST(req: Request) {
         gender || null,
         preferred_language || null,
         phone_number || null,
-        formattedDate, // Pass as-is if valid
+        formattedDate, 
         first_name || null,
         middle_name || null,
         last_name || null,
