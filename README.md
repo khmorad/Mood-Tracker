@@ -62,15 +62,12 @@ Mood Stabilizer is a journaling app designed to help users track and manage thei
 ## Team Members
 
 - **Khashayar Moradpour**  
-  GitHub: [github.com/khmorad](https://github.com/khmorad)  
-  LinkedIn: [linkedin.com/in/kmoradpour](https://linkedin.com/in/kmoradpour)
+  [GitHub](https://github.com/khmorad)  
+  [LinkedIn](https://linkedin.com/in/kmoradpour)
 
-- **Shizuka Takao**
-  (Additional links or details can be added if available)
-
-## License
-
-This project is licensed under the [MIT License](./LICENSE).
+- **Shizuka Takao**   
+  [GitHub](https://github.com/tkpp26)  
+  [LinkedIn](https://linkedin.com/in/shizukatakao)
 
 ## Contact
 
