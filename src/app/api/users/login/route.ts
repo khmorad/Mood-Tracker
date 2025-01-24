@@ -16,7 +16,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // Specify the type for the query result
     const [user] = await pool.query<RowDataPacket[]>(
       "SELECT * FROM User WHERE email = ?",
       [email]
@@ -31,7 +30,6 @@ export async function POST(req: Request) {
 
     const matchedUser = user[0];
 
-    // Placeholder for password hashing/validation
     if (matchedUser.password !== password) {
       return NextResponse.json(
         { error: "Invalid email or password" },
@@ -39,7 +37,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // Generate a JWT
+    // generating a jwt and giving it token which expires in 1 hour
     const token = jwt.sign(
       {
         user_id: matchedUser.user_id,
@@ -48,10 +46,8 @@ export async function POST(req: Request) {
         last_name: matchedUser.last_name,
       },
       JWT_SECRET,
-      { expiresIn: "1h" } // Token expires in 1 hour
+      { expiresIn: "1h" } 
     );
-
-    // Respond with the token and user details
     return NextResponse.json({
       message: "Login successful",
       token, // Return the JWT token

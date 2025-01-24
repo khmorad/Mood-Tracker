@@ -60,21 +60,21 @@ const styles = {
     padding: "20px",
     backgroundColor: "#fff",
     borderRadius: "12px",
-    boxShadow: "0px 4px 15px rgba(0, 0, 0, 0.1)", // Default box shadow
+    boxShadow: "0px 4px 15px rgba(0, 0, 0, 0.1)", 
     transition: "all 0.3s ease",
     cursor: "pointer",
     maxWidth: "350px",
     margin: "0 auto",
   },
   iconContainer: {
-    textAlign: "center" as const, // Ensure 'center' is treated as a literal
+    textAlign: "center" as const, 
     marginBottom: "15px",
   },
   icon: {
     fontSize: "3rem",
   },
   content: {
-    textAlign: "center" as const, // Ensure 'center' is treated as a literal
+    textAlign: "center" as const,
   },
   title: {
     fontSize: "1.5rem",

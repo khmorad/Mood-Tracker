@@ -2,7 +2,7 @@ import { pool } from "../../../lib/mysql";
 import { NextResponse } from "next/server";
 import type { RowDataPacket, ResultSetHeader } from "mysql2";
 
-// GET Request Handler for a specific user
+// specific user
 export async function GET(
   req: Request,
   { params }: { params: { id: string } }
@@ -30,7 +30,7 @@ export async function GET(
   }
 }
 
-// PUT Request Handler to update a specific user
+// update a specific user
 export async function PUT(
   req: Request,
   { params }: { params: { id: string } }
@@ -81,7 +81,7 @@ export async function PUT(
   }
 }
 
-// DELETE Request Handler to delete a specific user
+//delete a specific user
 export async function DELETE(
   req: Request,
   { params }: { params: { id: string } }

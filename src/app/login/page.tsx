@@ -115,8 +115,6 @@ const Login: React.FC = () => {
       }
       localStorage.setItem("userInfo", JSON.stringify(data));
       window.location.href = "/";
-
-      // Handle successful login here, e.g., storing the returned data in local storage or context
       console.log("Login successful:", data);
     } catch (err: unknown) {
       setLoginError(
