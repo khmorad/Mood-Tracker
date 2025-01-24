@@ -14,8 +14,8 @@ const TypingAnimation: React.FC<TypingAnimationProps> = ({ text }) => {
       const timeoutId = setTimeout(() => {
         setRenderText((prev) => prev + text.charAt(index));
         setIndex(index + 1);
-      }, 10); // Lower this value for faster typing, increase for slower typing
-
+      }, 10); 
+      //in case speed needs to be changed the lower the number the faster
       return () => clearTimeout(timeoutId);
     }
   }, [index, text]);

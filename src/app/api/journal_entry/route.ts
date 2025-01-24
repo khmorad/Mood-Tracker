@@ -2,7 +2,6 @@ import { pool } from "../../lib/mysql";
 import { NextResponse } from "next/server";
 import type { ResultSetHeader } from "mysql2";
 
-// GET Request Handler for all journal entries
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
@@ -27,7 +26,6 @@ export async function GET(req: Request) {
   }
 }
 
-// POST Request Handler to add a new journal entry
 export async function POST(req: Request) {
   try {
     const body = await req.json();
