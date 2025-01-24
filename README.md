@@ -1,5 +1,5 @@
 # Mood Stabilizer
-<img src="https://raw.githubusercontent.com/khmorad/csvStore/refs/heads/main/f09c8fa2-674d-41d8-a8ca-e7c39f0ccf7e.webp" alt="Mood Stabilizer" width="600" />
+<img src="https://raw.githubusercontent.com/khmorad/csvStore/refs/heads/main/f09c8fa2-674d-41d8-a8ca-e7c39f0ccf7e.webp" alt="Mood Stabilizer" width="400" />
 
 
 
