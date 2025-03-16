@@ -15,7 +15,9 @@ const MoodTrackingPage: React.FC = () => {
     ai: string;
   }
 
-  const [conversation, setConversation] = useState<Conversation[]>([]);
+  const [conversation, setConversation] = useState<Conversation[]>([
+    { user: "", ai: "Hello! How can I help you today? :D" },
+  ]);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [user, setUser] = useState<{
@@ -31,22 +33,23 @@ const MoodTrackingPage: React.FC = () => {
     if (userInfo) {
       const parsedUser = JSON.parse(userInfo);
       setUser(parsedUser);
-      setAiResponses([
+      setAiResponses((prev) => [
+        prev[0], // Keep the initial AI message
         `Hello ${parsedUser.firstName}, how can I help you today?`,
       ]);
     }
-    setIsClient(true); 
+    setIsClient(true);
   }, []);
   useEffect(() => {
     setIsClient(true);
   }, []);
   const [aiResponses, setAiResponses] = useState<string[]>([
-    `Hello How can I help you today?`,
+    `"Hello! How can I help you today? 😊"`,
   ]);
   const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
     setJournal(e.currentTarget.textContent || "");
   };
-
+  console.log();
   const getGeminiResponse = async (entry: string) => {
     try {
       setIsLoading(true);
@@ -61,7 +64,7 @@ const MoodTrackingPage: React.FC = () => {
         .join(" ");
       const userInfoString = JSON.stringify(user);
       const nameOfUser = `user info: ${userInfoString}`;
-      const combinedEntry = `your respond to the user needs to be encouragig, supportive, encouraging, includer nonverval cues${nameOfUser}, User message: ${entry}, Previous messages: ${conversationHistoryString}`;
+      const combinedEntry = `your respond to the user needs to be encouragig, supportive, includer nonverval cues and and always end with a question that could dig deeper neme of the user:${nameOfUser}, User message: ${entry}, Previous messages: ${conversationHistoryString}`;
 
       const response = await axios.post("/api/generate", {
         message: combinedEntry,
@@ -121,18 +124,28 @@ const MoodTrackingPage: React.FC = () => {
         <h1>Track Your Moods</h1>
         {errorMessage && <p style={styles.error}>{errorMessage}</p>}
         <div style={styles.entriesList}>
+          <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+            <strong>AI:</strong>
+            <span>
+              <TypingAnimation text={aiResponses[0]} />
+            </span>
+          </div>
           {journalEntries.map((entry, index) => (
             <div key={index}>
               <p>
                 <strong>You:</strong> {entry}
               </p>
-              <p style={styles.aiMessage}>
-                <strong>AI:</strong>{" "}
-                {aiResponses[index + 1] ? (
-                  <TypingAnimation text={aiResponses[index + 1]} />
-                ) : (
-                  <span></span>
-                )}
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "5px" }}
+              >
+                <strong>AI:</strong>
+                <span>
+                  {aiResponses[index + 1] ? (
+                    <TypingAnimation text={aiResponses[index + 1]} />
+                  ) : (
+                    <span></span>
+                  )}
+                </span>
                 <button
                   onClick={() => playTTS(aiResponses[index + 1])}
                   aria-label="Play AI Response"
@@ -140,8 +153,7 @@ const MoodTrackingPage: React.FC = () => {
                 >
                   🔊
                 </button>
-                
-              </p>
+              </div>
             </div>
           ))}
         </div>
@@ -167,12 +179,17 @@ const MoodTrackingPage: React.FC = () => {
         >
           Submit
         </button>
-        <button style={styles.analyze_button} disabled={isLoading || !journal.trim()}>
-  <Link href="/dashboard" style={{ textDecoration: "none", color: "inherit" }}>
-    Analyze
-  </Link>
-</button>
-
+        <button
+          style={styles.analyze_button}
+          disabled={isLoading || !journal.trim()}
+        >
+          <Link
+            href="/dashboard"
+            style={{ textDecoration: "none", color: "inherit" }}
+          >
+            Analyze
+          </Link>
+        </button>
       </div>
     </Layout>
   );
