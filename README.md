@@ -67,10 +67,6 @@ Mood Stabilizer is a journaling app designed to help users track and manage thei
   [GitHub](https://github.com/khmorad)  
   [LinkedIn](https://linkedin.com/in/kmoradpour)
 
-- **Shizuka Takao**   
-  [GitHub](https://github.com/tkpp26)  
-  [LinkedIn](https://linkedin.com/in/shizukatakao)
-
 ## Contact
 
 If you have any questions or feedback, feel free to reach out:
