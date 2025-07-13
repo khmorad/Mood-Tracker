@@ -1,0 +1,22 @@
+/* Gradient Animation Keyframes */
+@keyframes gradient-animation {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Applying the gradient background with animation to the container */
+.container {
+  background: linear-gradient(334deg, #6b97f7, #b9a03b, #f75713);
+  background-size: 180% 180%;
+  animation: gradient-animation 6s ease infinite;
+}
+.analyze_button:hover {
+  background: linear-gradient(100deg, #ff7e79, #ffd700, #ff69b4);
+}

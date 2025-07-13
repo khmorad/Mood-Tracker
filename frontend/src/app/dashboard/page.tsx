@@ -81,7 +81,7 @@ const Dashboard: React.FC = () => {
       <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50">
         <div className="container mx-auto px-4 py-6">
           {/* Header */}
-          <div className="text-center mb-6 ">
+          <div className="text-center mb-6 mt-10">
             <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent mb-2">
               Your Wellness Dashboard
             </h1>

@@ -1,0 +1,8 @@
+# Database Configuration
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=021888274047Mm!
+DB_NAME=mood_stabilizer
+# API Configuration
+API_HOST=0.0.0.0
+API_PORT=8000 
