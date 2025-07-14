@@ -1,14 +1,19 @@
 # Dependencies
 node_modules/
+*/node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Next.js
+# Build outputs
 .next/
+*/.next/
 out/
+*/out/
 build/
+*/build/
 dist/
+*/dist/
 
 # Environment files
 .env
@@ -16,6 +21,24 @@ dist/
 .env.development.local
 .env.test.local
 .env.production.local
+*/.env
+*/.env.local
+*/.env.development.local
+*/.env.test.local
+*/.env.production.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.venv/
 
 # IDE
 .vscode/
@@ -35,6 +58,10 @@ Thumbs.db
 
 # Logs
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
 
 # Runtime data
 pids
@@ -76,15 +103,6 @@ jspm_packages/
 # parcel-bundler cache (https://parceljs.org/)
 .cache
 .parcel-cache
-
-# next.js build/
-.next
-
-# nuxt.js build/
-.nuxt
-
-# vuepress build output
-.vuepress/dist
 
 # Serverless directories
 .serverless/
