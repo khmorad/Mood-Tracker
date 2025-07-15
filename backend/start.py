@@ -14,4 +14,4 @@ if __name__ == "__main__":
     port = int(os.getenv("API_PORT", 8000))
     
     print(f"Starting Mood Tracker API on {host}:{port}")
-    uvicorn.run("main:app", host=host, port=port, reload=True) 
+    uvicorn.run("backend.main:app", host=host, port=port, reload=True)

@@ -9,8 +9,7 @@ from dotenv import load_dotenv
 import uvicorn
 
 # Import routers
-from routers import users, journal_entries, auth
-
+from backend.routers import users, journal_entries, auth
 # Load environment variables
 load_dotenv()
 
@@ -39,54 +38,6 @@ DATABASE_URL = f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}"
 # Create database engine
 engine = create_engine(DATABASE_URL, pool_pre_ping=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-# Dependency to get database session
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-# Pydantic models
-class UserBase(BaseModel):
-    user_id: str
-    email: str
-    password: str
-    profile_picture: Optional[str] = None
-    gender: Optional[str] = None
-    preferred_language: Optional[str] = None
-    phone_number: Optional[str] = None
-    date_of_birth: Optional[str] = None
-    first_name: Optional[str] = None
-    middle_name: Optional[str] = None
-    last_name: Optional[str] = None
-    diagnosis_status: Optional[str] = None
-
-class UserCreate(UserBase):
-    pass
-
-class User(UserBase):
-    id: int
-    
-    class Config:
-        from_attributes = True
-
-class JournalEntryBase(BaseModel):
-    user_id: str
-    entry_text: str
-    journal_date: str
-    AI_response: Optional[str] = None
-    episode_flag: Optional[int] = 0
-
-class JournalEntryCreate(JournalEntryBase):
-    pass
-
-class JournalEntry(JournalEntryBase):
-    entry_id: int
-    
-    class Config:
-        from_attributes = True
 
 # Include routers
 app.include_router(users.router)

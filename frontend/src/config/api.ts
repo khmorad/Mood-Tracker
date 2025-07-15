@@ -5,7 +5,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 export const API_ENDPOINTS = {
   // Users
   USERS: `${API_BASE_URL}/users`,
-  USER_LOGIN: `${API_BASE_URL}/users/login`,
+  USER_LOGIN: `${API_BASE_URL}/auth/login`,
   USER_BY_ID: (id: string) => `${API_BASE_URL}/users/${id}`,
 
   // Journal Entries

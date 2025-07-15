@@ -5,7 +5,7 @@ from pydantic import BaseModel
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from main import get_db
+from ..schemas.db import get_db
 
 router = APIRouter(prefix="/users", tags=["auth"])
 

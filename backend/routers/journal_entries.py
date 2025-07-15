@@ -5,7 +5,8 @@ from typing import List, Optional
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from main import get_db, JournalEntryCreate, JournalEntry
+from ..schemas.db import get_db
+from ..schemas.journal_schemas import JournalEntryCreate, JournalEntry
 
 router = APIRouter(prefix="/journal-entries", tags=["journal_entries"])
 
