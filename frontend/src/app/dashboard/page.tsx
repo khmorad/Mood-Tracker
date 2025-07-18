@@ -5,19 +5,19 @@ import { TypeAnimation } from "react-type-animation";
 import Layout from "../layout";
 
 const Dashboard: React.FC = () => {
-  const [user, setUser] = useState<{
-    firstName: string;
-    lastName: string;
-    email: string;
-  } | null>(null);
-  const [currentDate] = useState(new Date());
+  //const [user, setUser] = useState<{
+  //  firstName: string;
+  //  lastName: string;
+  //  email: string;
+  //} | null>(null);
+  //const [currentDate] = useState(new Date());
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
     const userInfo = localStorage.getItem("userInfo");
     if (userInfo) {
-      setUser(JSON.parse(userInfo));
+      //setUser(JSON.parse(userInfo));
     }
   }, []);
 

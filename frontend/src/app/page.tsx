@@ -71,7 +71,7 @@ const Page: React.FC = () => {
     <>
       <Background />
       <Navbar />
-      <div className="min-h-screen relative overflow-hidden">
+      <div className="min-h-screen relative overflow-hidden mt-10">
         {/* Background */}
         {useSimpleBackground ? <SimpleBackground /> : <AnimatedBackground />}
 
