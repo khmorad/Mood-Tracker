@@ -5,7 +5,7 @@ import Layout from "../layout";
 import axios from "axios";
 import TypingAnimation from "../components/TypingAnimation";
 import Link from "next/link";
-
+//sdasd
 const MoodTrackingPage: React.FC = () => {
   const [journal, setJournal] = useState("");
   const [journalEntries, setJournalEntries] = useState<string[]>([]);
