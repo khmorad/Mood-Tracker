@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import styles from "../styles/Auth.module.css";
 import Link from "next/link";
-import { apiClient, API_ENDPOINTS } from "../../config/api";
+import { NextResponse } from "next/server";
 
 const Login: React.FC = () => {
   const [rightPanelActive, setRightPanelActive] = useState(false);
@@ -48,17 +48,25 @@ const Login: React.FC = () => {
     setSignupSuccess(null);
 
     const payload = {
-      user_id: `U${Date.now()}`, // Generate unique user_id
       email: signupData.email,
       password: signupData.password,
-      date_of_birth: signupData.birthdate,
-      first_name: signupData.firstName,
-      last_name: signupData.lastName,
-      diagnosis_status: "Undiagnosed", // Example default
+      name: `${signupData.firstName} ${signupData.lastName}`.trim(),
     };
 
     try {
-      await apiClient.post(API_ENDPOINTS.USERS, payload);
+      const response = await fetch("/api/users/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setSignupError(data.error || "Registration failed");
+        return;
+      }
+
       setSignupSuccess("Account created successfully!");
       setSignupData({
         firstName: "",
@@ -69,7 +77,7 @@ const Login: React.FC = () => {
       });
       // Redirect after successful signup
       setTimeout(() => {
-        window.location.href = "/";
+        window.location.href = "/login";
       }, 2000);
     } catch (err: unknown) {
       setSignupError(
@@ -77,6 +85,7 @@ const Login: React.FC = () => {
       );
     }
   };
+
   const handleLoginChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setLoginData((prevData) => ({
@@ -84,19 +93,42 @@ const Login: React.FC = () => {
       [name]: value,
     }));
   };
+
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoginError(null); // Reset the login error before the new login attempt
+    setLoginError(null);
+
+    console.log("Login attempt with:", {
+      email: loginData.email,
+      password: "***",
+    });
 
     try {
-      const data = await apiClient.post(API_ENDPOINTS.USER_LOGIN, {
-        email: loginData.email,
-        password: loginData.password,
+      console.log("Making request to /api/users/login");
+      const response = await fetch("/api/users/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: loginData.email,
+          password: loginData.password,
+        }),
+        credentials: "include",
       });
-      localStorage.setItem("userInfo", JSON.stringify(data));
-      window.location.href = "/";
+
+      console.log("Response status:", response.status);
+      const data = await response.json();
+      console.log("Response data:", data);
+
+      if (!response.ok) {
+        setLoginError(data.error || "Login failed");
+        return;
+      }
+
+      localStorage.setItem("userInfo", JSON.stringify(data.user));
+      window.location.href = "/mood-tracking";
       console.log("Login successful:", data);
     } catch (err: unknown) {
+      console.error("Login error:", err);
       setLoginError(
         err instanceof Error ? err.message : "An unknown error occurred"
       );
@@ -118,9 +150,9 @@ const Login: React.FC = () => {
             {signupError && <p className={styles.error}>{signupError}</p>}
             {signupSuccess && (
               <p className={styles.success}>
-                {signupSuccess} <Link href="/">Go to homepage</Link>
+                {signupSuccess} <Link href="/login">Go to login</Link>
               </p>
-            )}{" "}
+            )}
             <input
               type="text"
               name="name"

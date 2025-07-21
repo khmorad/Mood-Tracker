@@ -19,6 +19,6 @@ class UserCreate(UserBase):
     pass
 
 class User(UserBase):
-    id: int
+    # Remove the incorrect 'id' field
     class Config:
         from_attributes = True 

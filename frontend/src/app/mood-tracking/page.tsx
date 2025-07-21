@@ -5,7 +5,15 @@ import Layout from "../layout";
 import axios from "axios";
 import TypingAnimation from "../components/TypingAnimation";
 import Link from "next/link";
-//sdasd
+import { jwtDecode } from "jwt-decode";
+
+function getCookie(name: string): string | null {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop()!.split(";").shift()!;
+  return null;
+}
+
 const MoodTrackingPage: React.FC = () => {
   const [journal, setJournal] = useState("");
   const [journalEntries, setJournalEntries] = useState<string[]>([]);
@@ -50,13 +58,32 @@ const MoodTrackingPage: React.FC = () => {
   ];
 
   useEffect(() => {
-    const userInfo = localStorage.getItem("userInfo");
-    if (userInfo) {
-      const parsedUser = JSON.parse(userInfo);
-      setUser(parsedUser);
+    // Read JWT from cookie and decode
+    const jwt = getCookie("access_token");
+    if (jwt) {
+      try {
+        const decoded: any = jwtDecode(jwt);
+        setUser({
+          firstName: decoded.first_name || "",
+          lastName: decoded.last_name || "",
+          email: decoded.email || "",
+        });
+        setAiResponses([
+          `Hello ${
+            decoded.first_name || "User"
+          }! How are you feeling today? I'm here to listen and support you. 💙`,
+        ]);
+        console.log("[MoodTracking] Decoded JWT:", decoded);
+      } catch (e) {
+        console.error("[MoodTracking] Failed to decode JWT:", e);
+        setUser(null);
+      }
+    } else {
+      setUser(null);
       setAiResponses([
-        `Hello ${parsedUser.firstName}! How are you feeling today? I'm here to listen and support you. 💙`,
+        "Hello! How are you feeling today? I'm here to listen and support you. 💙",
       ]);
+      console.warn("[MoodTracking] No access_token cookie found.");
     }
     setIsClient(true);
   }, []);

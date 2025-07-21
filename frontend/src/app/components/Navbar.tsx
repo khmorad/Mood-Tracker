@@ -4,6 +4,14 @@ import Image from "next/image";
 import React, { CSSProperties, useState, useEffect } from "react";
 import bpdLogo from "../assets/bpdLogo.png";
 import "../styles/NavBar.css";
+import { jwtDecode } from "jwt-decode";
+
+function getCookie(name: string): string | null {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop()!.split(";").shift()!;
+  return null;
+}
 
 const EnhancedNavbar: React.FC = () => {
   const [hovered, setHovered] = useState<string | null>(null);
@@ -12,14 +20,26 @@ const EnhancedNavbar: React.FC = () => {
   );
   const [dropdownVisible, setDropdownVisible] = useState(false);
 
-useEffect(() => {
-  const userInfo = localStorage.getItem("userInfo");
-  if (userInfo) {
-    console.log("User Info:", userInfo);
-    const user = JSON.parse(userInfo);
-    setUser({ firstName: user.user.first_name, email: user.user.email });
-  }
-}, []);
+  useEffect(() => {
+    // Read JWT from cookie and decode
+    const jwt = getCookie("access_token");
+    if (jwt) {
+      try {
+        const decoded: any = jwtDecode(jwt);
+        setUser({
+          firstName: decoded.first_name || "",
+          email: decoded.email || "",
+        });
+        console.log("[Navbar] Decoded JWT:", decoded);
+      } catch (e) {
+        console.error("[Navbar] Failed to decode JWT:", e);
+        setUser(null);
+      }
+    } else {
+      setUser(null);
+      console.warn("[Navbar] No access_token cookie found.");
+    }
+  }, []);
 
   const handleMouseEnter = (link: string) => setHovered(link);
   const handleMouseLeave = () => setHovered(null);
