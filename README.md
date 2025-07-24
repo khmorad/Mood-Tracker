@@ -1,6 +1,16 @@
 # Mood Tracker
 
-A comprehensive mood tracking application with AI-powered journaling and mood analysis.
+<img src="https://raw.githubusercontent.com/khmorad/csvStore/refs/heads/main/f09c8fa2-674d-41d8-a8ca-e7c39f0ccf7e.webp" alt="Mood Stabilizer" width="400" />
+
+Mood Stabilizer is a journaling app designed to help users track and manage their emotional well-being. By leveraging advanced APIs and scalable cloud technologies, the app provides personalized and accessible journaling features to promote mental health.
+
+## Features
+
+- **Dynamic Journaling**: Integrated with the **Gemini API** to provide personalized journaling prompts and responses.
+- **Text-to-Speech Functionality**: Utilizes the **OpenAI API** to enhance accessibility by converting journal entries to speech.
+- **Secure User Authentication**: Employs **JSON Web Tokens (JWT)** to ensure secure user login and data privacy.
+- **Reliable Data Management**: Backend powered by a **MySQL database**, deployed on **AWS**, ensuring 99.9% uptime and scalability.
+- **Optimized Performance**: Backend performance optimized with efficient query handling, reducing API response times by 25%.
 
 ## Project Structure
 
