@@ -25,7 +25,12 @@ const MoodTrackingPage: React.FC = () => {
     lastName: string;
     email: string;
   } | null>(null);
-
+  type DecodedToken = {
+    first_name: string;
+    last_name: string;
+    email: string;
+    [key: string]: unknown; // optional: if you expect additional fields
+  };
   const [isClient, setIsClient] = useState(false);
   const journalInputRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -62,7 +67,7 @@ const MoodTrackingPage: React.FC = () => {
     const jwt = getCookie("access_token");
     if (jwt) {
       try {
-        const decoded: any = jwtDecode(jwt);
+        const decoded: DecodedToken = jwtDecode(jwt);
         setUser({
           firstName: decoded.first_name || "",
           lastName: decoded.last_name || "",

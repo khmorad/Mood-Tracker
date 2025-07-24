@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 import styles from "../styles/Auth.module.css";
 import Link from "next/link";
-import { NextResponse } from "next/server";
 
 const Login: React.FC = () => {
   const [rightPanelActive, setRightPanelActive] = useState(false);
