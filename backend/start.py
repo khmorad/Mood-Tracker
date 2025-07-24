@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 #  
 #    pip install -r requirements.txt
 #    # Create .env file with your database credentials
-#    python start.py
+#    python -m backend.start
 
 # Load environment variables
 load_dotenv()

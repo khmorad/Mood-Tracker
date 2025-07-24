@@ -139,14 +139,12 @@ The application uses MySQL for data storage. Make sure your database is running 
 1. Start the backend:
 
    ```bash
-   cd backend
-   python start.py
+   python -m backend.start
    ```
 
 2. In a new terminal, start the frontend:
    ```bash
-   cd frontend
-   npm run dev
+   cd frontend | npm run dev
    ```
 
 ### API Documentation
