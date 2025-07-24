@@ -14,6 +14,13 @@ function getCookie(name: string): string | null {
 }
 
 const EnhancedNavbar: React.FC = () => {
+  type DecodedToken = {
+    user_id: string;
+    email: string;
+    first_name: string;
+    last_name: string;
+    // add other fields as needed...
+  };
   const [hovered, setHovered] = useState<string | null>(null);
   const [user, setUser] = useState<{ firstName: string; email: string } | null>(
     null
@@ -25,7 +32,7 @@ const EnhancedNavbar: React.FC = () => {
     const jwt = getCookie("access_token");
     if (jwt) {
       try {
-        const decoded: any = jwtDecode(jwt);
+        const decoded: DecodedToken = jwtDecode(jwt);
         setUser({
           firstName: decoded.first_name || "",
           email: decoded.email || "",
