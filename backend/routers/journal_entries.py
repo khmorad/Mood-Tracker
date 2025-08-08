@@ -38,9 +38,9 @@ async def create_journal_entry(entry: JournalEntryCreate, db: Session = Depends(
         result = db.execute(query, {
             "user_id": entry.user_id,
             "entry_text": entry.entry_text,
-            "AI_response": entry.AI_response,
+            "AI_response": entry.AI_response if entry.AI_response is not None else "",
             "journal_date": entry.journal_date,
-            "episode_flag": entry.episode_flag or 0
+            "episode_flag": entry.episode_flag if entry.episode_flag is not None else 0
         })
         
         db.commit()
@@ -132,4 +132,4 @@ async def delete_journal_entry(entry_id: int, db: Session = Depends(get_db)):
         raise
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=str(e)) 
+        raise HTTPException(status_code=500, detail=str(e))

@@ -1,90 +1,83 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { TypeAnimation } from "react-type-animation";
+import dynamic from "next/dynamic";
 import Layout from "../layout";
 
+const moodData = [4, 3, 5, 4.5, 3.5, 4, 5];
+const maxMood = Math.max(...moodData);
+const minMood = Math.min(...moodData);
+
+const insights = [
+  {
+    icon: "📈",
+    title: "Mood Improvement",
+    description: "20% better than last week",
+    color: "bg-green-100 border-green-300",
+    value: "+20%",
+  },
+  {
+    icon: "📝",
+    title: "Journal Entries",
+    description: "5 days this week",
+    color: "bg-blue-100 border-blue-300",
+    value: "14",
+  },
+  {
+    icon: "🌟",
+    title: "Good Days",
+    description: "Out of 30 total days",
+    color: "bg-purple-100 border-purple-300",
+    value: "22",
+  },
+  {
+    icon: "🔥",
+    title: "Current Streak",
+    description: "Keep it going!",
+    color: "bg-pink-100 border-pink-300",
+    value: "5",
+  },
+];
+
+const emotionData = [
+  { name: "Happy", percentage: 35, color: "#10b981" },
+  { name: "Calm", percentage: 25, color: "#3b82f6" },
+  { name: "Sad", percentage: 20, color: "#8b5cf6" },
+  { name: "Anxious", percentage: 15, color: "#f59e0b" },
+  { name: "Angry", percentage: 5, color: "#ef4444" },
+];
+
+const activityData = [
+  { name: "Exercise", value: 12, color: "#10b981" },
+  { name: "Meditation", value: 8, color: "#8b5cf6" },
+  { name: "Social", value: 15, color: "#3b82f6" },
+  { name: "Work", value: 20, color: "#ec4899" },
+  { name: "Self-Care", value: 10, color: "#f59e0b" },
+];
+
+const TypeAnimation = dynamic(
+  () => import("react-type-animation").then((mod) => mod.TypeAnimation),
+  { ssr: false }
+);
+
 const Dashboard: React.FC = () => {
-  //const [user, setUser] = useState<{
-  //  firstName: string;
-  //  lastName: string;
-  //  email: string;
-  //} | null>(null);
-  //const [currentDate] = useState(new Date());
-  const [isClient, setIsClient] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setIsClient(true);
-    const userInfo = localStorage.getItem("userInfo");
-    if (userInfo) {
-      //setUser(JSON.parse(userInfo));
-    }
+    setMounted(true);
   }, []);
 
-  if (!isClient) {
-    return null;
-  }
-
-  const moodData = [4, 3, 5, 4.5, 3.5, 4, 5];
-  const maxMood = Math.max(...moodData);
-  const minMood = Math.min(...moodData);
-
-  const insights = [
-    {
-      icon: "📈",
-      title: "Mood Improvement",
-      description: "20% better than last week",
-      color: "bg-green-100 border-green-300",
-      value: "+20%",
-    },
-    {
-      icon: "📝",
-      title: "Journal Entries",
-      description: "5 days this week",
-      color: "bg-blue-100 border-blue-300",
-      value: "14",
-    },
-    {
-      icon: "🌟",
-      title: "Good Days",
-      description: "Out of 30 total days",
-      color: "bg-purple-100 border-purple-300",
-      value: "22",
-    },
-    {
-      icon: "🔥",
-      title: "Current Streak",
-      description: "Keep it going!",
-      color: "bg-pink-100 border-pink-300",
-      value: "5",
-    },
-  ];
-
-  const emotionData = [
-    { name: "Happy", percentage: 35, color: "#10b981" },
-    { name: "Calm", percentage: 25, color: "#3b82f6" },
-    { name: "Sad", percentage: 20, color: "#8b5cf6" },
-    { name: "Anxious", percentage: 15, color: "#f59e0b" },
-    { name: "Angry", percentage: 5, color: "#ef4444" },
-  ];
-
-  const activityData = [
-    { name: "Exercise", value: 12, color: "#10b981" },
-    { name: "Meditation", value: 8, color: "#8b5cf6" },
-    { name: "Social", value: 15, color: "#3b82f6" },
-    { name: "Work", value: 20, color: "#ec4899" },
-    { name: "Self-Care", value: 10, color: "#f59e0b" },
-  ];
+  if (!mounted) return null;
 
   return (
     <Layout>
-      <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50">
+      <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 mt-14">
         <div className="container mx-auto px-4 py-6">
           {/* Quick Stats */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            {insights.map((insight, index) => (
+            {insights.map((insight, idx) => (
               <div
-                key={index}
+                key={idx}
                 className={`${insight.color} border-2 rounded-xl p-4 shadow-sm`}
               >
                 <div className="flex items-center justify-between">
@@ -111,14 +104,14 @@ const Dashboard: React.FC = () => {
                 Your Mood Journey
               </h3>
               <div className="flex items-end justify-between h-32 mb-4">
-                {moodData.map((value, index) => (
-                  <div key={index} className="flex flex-col items-center">
+                {moodData.map((value, idx) => (
+                  <div key={idx} className="flex flex-col items-center">
                     <div
                       className="w-8 bg-gradient-to-t from-purple-400 to-pink-400 rounded-t-sm"
                       style={{ height: `${(value / 5) * 100}%` }}
                     ></div>
                     <span className="text-xs text-gray-600 mt-1">
-                      {["M", "T", "W", "T", "F", "S", "S"][index]}
+                      {["M", "T", "W", "T", "F", "S", "S"][idx]}
                     </span>
                   </div>
                 ))}
@@ -135,11 +128,8 @@ const Dashboard: React.FC = () => {
                 Emotional Landscape
               </h3>
               <div className="space-y-3">
-                {emotionData.map((emotion, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between"
-                  >
+                {emotionData.map((emotion, idx) => (
+                  <div key={idx} className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                       <div
                         className="w-3 h-3 rounded-full"
@@ -174,8 +164,8 @@ const Dashboard: React.FC = () => {
                 Activity Balance
               </h3>
               <div className="grid grid-cols-2 gap-4">
-                {activityData.map((activity, index) => (
-                  <div key={index} className="flex items-center space-x-3">
+                {activityData.map((activity, idx) => (
+                  <div key={idx} className="flex items-center space-x-3">
                     <div
                       className="w-4 h-4 rounded-full"
                       style={{ backgroundColor: activity.color }}
@@ -254,14 +244,16 @@ const Dashboard: React.FC = () => {
               Your Progress Analysis
             </h3>
             <div className="text-sm text-gray-600 leading-relaxed">
-              <TypeAnimation
-                sequence={[
-                  "You're showing excellent progress in emotional awareness and self-regulation. Your mood tracking reveals a positive trend with 73% good days. Your consistent journaling habit is helping you identify triggers and develop better coping strategies. Activities like exercise and social interaction have a significant positive impact on your mood. Keep up the great work! 💙",
-                ]}
-                wrapper="p"
-                speed={60}
-                repeat={0}
-              />
+              {mounted && (
+                <TypeAnimation
+                  sequence={[
+                    "You're showing excellent progress in emotional awareness and self-regulation. Your mood tracking reveals a positive trend with 73% good days. Your consistent journaling habit is helping you identify triggers and develop better coping strategies. Activities like exercise and social interaction have a significant positive impact on your mood. Keep up the great work! 💙",
+                  ]}
+                  wrapper="p"
+                  speed={60}
+                  repeat={0}
+                />
+              )}
             </div>
           </div>
 

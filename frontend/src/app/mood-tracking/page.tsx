@@ -14,42 +14,49 @@ function getCookie(name: string): string | null {
   return null;
 }
 
+interface DecodedToken {
+  user_id?: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  [key: string]: unknown;
+}
+
+interface User {
+  user_id?: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+}
+
+interface Conversation {
+  user: string;
+  ai: string;
+}
+
+interface JournalEntry {
+  entry_id: number;
+  user_id: string;
+  entry_text: string;
+  AI_response: string;
+  journal_date: string;
+  episode_flag: number;
+}
+
 const MoodTrackingPage: React.FC = () => {
   const [journal, setJournal] = useState("");
   const [journalEntries, setJournalEntries] = useState<string[]>([]);
   const [currentMood, setCurrentMood] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [user, setUser] = useState<{
-    firstName: string;
-    lastName: string;
-    email: string;
-  } | null>(null);
-  type DecodedToken = {
-    first_name: string;
-    last_name: string;
-    email: string;
-    [key: string]: unknown; // optional: if you expect additional fields
-  };
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [isClient, setIsClient] = useState(false);
+  const [conversation, setConversation] = useState<Conversation[]>([]);
+  const [aiResponses, setAiResponses] = useState<string[]>([]);
+
   const journalInputRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  interface Conversation {
-    user: string;
-    ai: string;
-  }
-
-  const [conversation, setConversation] = useState<Conversation[]>([
-    {
-      user: "",
-      ai: "Hello! How are you feeling today? I'm here to listen and support you. 💙",
-    },
-  ]);
-
-  const [aiResponses, setAiResponses] = useState<string[]>([
-    "Hello! How are you feeling today? I'm here to listen and support you. 💙",
-  ]);
 
   const moodEmojis = [
     { emoji: "😊", label: "Happy", color: "bg-green-100 border-green-300" },
@@ -62,40 +69,52 @@ const MoodTrackingPage: React.FC = () => {
     { emoji: "🤗", label: "Grateful", color: "bg-pink-100 border-pink-300" },
   ];
 
+  // Initialize user and welcome message
   useEffect(() => {
-    // Read JWT from cookie and decode
     const jwt = getCookie("access_token");
     if (jwt) {
       try {
         const decoded: DecodedToken = jwtDecode(jwt);
-        setUser({
+        const userData: User = {
+          user_id: decoded.user_id || decoded.email || "anonymous",
           firstName: decoded.first_name || "",
           lastName: decoded.last_name || "",
           email: decoded.email || "",
-        });
-        setAiResponses([
-          `Hello ${
-            decoded.first_name || "User"
-          }! How are you feeling today? I'm here to listen and support you. 💙`,
-        ]);
-        console.log("[MoodTracking] Decoded JWT:", decoded);
+        };
+        setUser(userData);
+
+        const welcomeMessage = `Hello ${
+          userData.firstName || "User"
+        }! How are you feeling today? I'm here to listen and support you. 💙`;
+        setAiResponses([welcomeMessage]);
+        setConversation([{ user: "", ai: welcomeMessage }]);
+
+        console.log("[MoodTracking] User loaded:", userData);
       } catch (e) {
         console.error("[MoodTracking] Failed to decode JWT:", e);
-        setUser(null);
+        handleAnonymousUser();
       }
     } else {
-      setUser(null);
-      setAiResponses([
-        "Hello! How are you feeling today? I'm here to listen and support you. 💙",
-      ]);
+      handleAnonymousUser();
       console.warn("[MoodTracking] No access_token cookie found.");
     }
     setIsClient(true);
   }, []);
 
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
+  const handleAnonymousUser = () => {
+    const anonymousUser: User = {
+      user_id: "anonymous",
+      firstName: "Guest",
+      lastName: "",
+      email: "anonymous@example.com",
+    };
+    setUser(anonymousUser);
+
+    const welcomeMessage =
+      "Hello! How are you feeling today? I'm here to listen and support you. 💙";
+    setAiResponses([welcomeMessage]);
+    setConversation([{ user: "", ai: welcomeMessage }]);
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -105,46 +124,118 @@ const MoodTrackingPage: React.FC = () => {
     scrollToBottom();
   }, [journalEntries, aiResponses]);
 
-  const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
-    setJournal(e.currentTarget.textContent || "");
+  const clearMessages = () => {
+    setErrorMessage(null);
+    setSuccessMessage(null);
   };
 
-  const getGeminiResponse = async (entry: string) => {
+  const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
+    setJournal(e.currentTarget.textContent || "");
+    clearMessages();
+  };
+
+  const getGeminiResponse = async (entry: string): Promise<string> => {
     try {
       setIsLoading(true);
-      setErrorMessage(null);
+      clearMessages();
 
       const conversationHistoryString = conversation
+        .filter((conv) => conv.user || conv.ai)
         .map((conv) => {
-          const userMessage = `User message: ${conv.user || ""}`;
-          const aiMessage = `AI response: ${conv.ai || ""}`;
-          return `${userMessage}, ${aiMessage}`;
+          const userMessage = conv.user ? `User: ${conv.user}` : "";
+          const aiMessage = conv.ai ? `AI: ${conv.ai}` : "";
+          return [userMessage, aiMessage].filter(Boolean).join(" ");
         })
-        .join(" ");
+        .join(" | ");
 
-      const userInfoString = JSON.stringify(user);
-      const nameOfUser = `user info: ${userInfoString}`;
-      const combinedEntry = `Your response to the user needs to be encouraging, supportive, include nonverbal cues and always end with a question that could dig deeper. Name of the user: ${nameOfUser}, User message: ${entry}, Previous messages: ${conversationHistoryString}`;
+      const userInfoString = user
+        ? `User: ${user.firstName} ${user.lastName} (${user.email})`
+        : "Anonymous User";
+
+      const prompt = `You are a supportive mental health assistant. Be encouraging, empathetic, and include nonverbal cues. Always end with a thoughtful question to help the user explore their feelings deeper.
+      
+      ${userInfoString}
+      Current mood: ${currentMood || "Not specified"}
+      User message: ${entry}
+      Previous conversation: ${conversationHistoryString}
+      
+      Provide a supportive response:`;
+
+      console.log("[AI Request] Sending prompt to AI:", prompt);
 
       const response = await axios.post("/api/generate", {
-        message: combinedEntry,
-        conversation: conversation || null,
+        message: prompt,
+        conversation: conversation,
       });
 
-      const aiResponse = response.data.message;
-      setConversation([...conversation, { user: entry, ai: aiResponse }]);
+      const aiResponse =
+        response.data.message ||
+        response.data.response ||
+        "I'm here to support you. How else can I help? 💙";
 
+      console.log("[AI Response] Received:", aiResponse);
       return aiResponse;
-    } catch {
-      setErrorMessage("An error occurred while processing your entry.");
+    } catch (error) {
+      console.error("[AI Error]", error);
+      setErrorMessage(
+        "I'm having trouble processing that right now. Could you try again?"
+      );
       return "I'm sorry, I'm having trouble processing that right now. Could you try again? 💙";
     } finally {
       setIsLoading(false);
     }
   };
 
+  const saveJournalEntry = async (
+    entryText: string,
+    aiResponse: string
+  ): Promise<boolean> => {
+    try {
+      if (!user) {
+        console.error("[Journal Save] No user available");
+        return false;
+      }
+
+      const today = new Date();
+      const journalDate = today.toISOString().split("T")[0]; // YYYY-MM-DD format
+
+      const postData = {
+        user_id: user.user_id || user.email,
+        entry_text: entryText,
+        AI_response: aiResponse,
+        journal_date: journalDate,
+        episode_flag: 0,
+      };
+
+      console.log("[Journal Save] Saving entry:", postData);
+
+      const response = await axios.post("/api/journal-entries", postData);
+
+      if (response.status === 200 || response.status === 201) {
+        console.log("[Journal Save] Success:", response.data);
+        setSuccessMessage("Your journal entry has been saved! 💙");
+        return true;
+      } else {
+        throw new Error(`Unexpected status: ${response.status}`);
+      }
+    } catch (error) {
+      console.error("[Journal Save] Error:", error);
+      if (axios.isAxiosError(error)) {
+        const errorMsg =
+          error.response?.data?.error ||
+          error.response?.data?.detail ||
+          error.message;
+        setErrorMessage(`Failed to save journal entry: ${errorMsg}`);
+      } else {
+        setErrorMessage("Failed to save journal entry. Please try again.");
+      }
+      return false;
+    }
+  };
+
   const playTTS = async (text: string) => {
     try {
+      setIsLoading(true);
       const response = await axios.post("/api/text-to-speech", { text });
       const audioUrl = response.data.url;
       const audio = new Audio(audioUrl);
@@ -152,18 +243,56 @@ const MoodTrackingPage: React.FC = () => {
     } catch (error) {
       console.error("Error playing TTS:", error);
       setErrorMessage("Failed to play audio. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleSubmit = async () => {
-    if (journal.trim()) {
-      setJournalEntries((prevEntries) => [...prevEntries, journal]);
+    if (!journal.trim()) {
+      setErrorMessage("Please enter some text before submitting.");
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      clearMessages();
+
+      // Add user message to UI immediately
+      setJournalEntries((prev) => [...prev, journal]);
+
+      // Get AI response
       const aiResponse = await getGeminiResponse(journal);
-      setAiResponses((prevResponses) => [...prevResponses, aiResponse]);
+
+      // Update conversation state
+      const newConversation = [
+        ...conversation,
+        { user: journal, ai: aiResponse },
+      ];
+      setConversation(newConversation);
+      setAiResponses((prev) => [...prev, aiResponse]);
+
+      // Save to backend
+      const saved = await saveJournalEntry(journal, aiResponse);
+
+      if (saved) {
+        console.log("[Submit] Journal entry saved successfully");
+      } else {
+        console.warn("[Submit] Journal entry not saved, but continuing...");
+      }
+
+      // Clear input
       setJournal("");
       if (journalInputRef.current) {
         journalInputRef.current.textContent = "";
       }
+    } catch (error) {
+      console.error("[Submit] Error:", error);
+      setErrorMessage(
+        "An error occurred while processing your entry. Please try again."
+      );
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -171,6 +300,61 @@ const MoodTrackingPage: React.FC = () => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSubmit();
+    }
+  };
+
+  // Load existing journal entries on component mount
+  useEffect(() => {
+    if (user && user.user_id !== "anonymous") {
+      loadExistingEntries();
+    }
+  }, [user]);
+
+  const loadExistingEntries = async () => {
+    try {
+      if (!user || user.user_id === "anonymous") return;
+
+      const response = await axios.get(
+        `/api/journal-entries?userId=${encodeURIComponent(
+          user.user_id || user.email
+        )}`
+      );
+
+      if (response.data && Array.isArray(response.data)) {
+        const entries: JournalEntry[] = response.data.sort(
+          (a, b) =>
+            new Date(a.journal_date).getTime() -
+            new Date(b.journal_date).getTime()
+        );
+
+        // Load recent entries into conversation
+        const recentEntries = entries.slice(-5); // Last 5 entries
+        const loadedConversation: Conversation[] = [conversation[0]]; // Keep welcome message
+        const loadedUserEntries: string[] = [];
+        const loadedAiResponses: string[] = [aiResponses[0]]; // Keep welcome message
+
+        recentEntries.forEach((entry) => {
+          loadedConversation.push({
+            user: entry.entry_text,
+            ai: entry.AI_response,
+          });
+          loadedUserEntries.push(entry.entry_text);
+          loadedAiResponses.push(entry.AI_response);
+        });
+
+        setConversation(loadedConversation);
+        setJournalEntries(loadedUserEntries);
+        setAiResponses(loadedAiResponses);
+
+        console.log(
+          "[Load Entries] Loaded",
+          recentEntries.length,
+          "recent entries"
+        );
+      }
+    } catch (error) {
+      console.error("[Load Entries] Error:", error);
+      // Don't show error to user for loading existing entries
     }
   };
 
