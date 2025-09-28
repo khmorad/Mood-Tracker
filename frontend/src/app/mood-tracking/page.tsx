@@ -6,6 +6,23 @@ import axios from "axios";
 import TypingAnimation from "../components/TypingAnimation";
 import Link from "next/link";
 import { jwtDecode } from "jwt-decode";
+import {
+  Smile,
+  Meh,
+  Frown,
+  Heart,
+  CloudRain,
+  Zap,
+  Moon,
+  Sun,
+  Send,
+  BarChart3,
+  Volume2,
+  Bot,
+  User,
+  CheckCircle,
+  AlertCircle,
+} from "lucide-react";
 
 function getCookie(name: string): string | null {
   const value = `; ${document.cookie}`;
@@ -59,14 +76,46 @@ const MoodTrackingPage: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const moodEmojis = [
-    { emoji: "😊", label: "Happy", color: "bg-green-100 border-green-300" },
-    { emoji: "😌", label: "Calm", color: "bg-blue-100 border-blue-300" },
-    { emoji: "😐", label: "Neutral", color: "bg-gray-100 border-gray-300" },
-    { emoji: "😔", label: "Sad", color: "bg-blue-100 border-blue-300" },
-    { emoji: "😰", label: "Anxious", color: "bg-yellow-100 border-yellow-300" },
-    { emoji: "😡", label: "Angry", color: "bg-red-100 border-red-300" },
-    { emoji: "😴", label: "Tired", color: "bg-purple-100 border-purple-300" },
-    { emoji: "🤗", label: "Grateful", color: "bg-pink-100 border-pink-300" },
+    {
+      icon: <Sun className="w-8 h-8" />,
+      label: "Happy",
+      color: "bg-yellow-50 border-yellow-200 hover:bg-yellow-100",
+    },
+    {
+      icon: <Heart className="w-8 h-8" />,
+      label: "Calm",
+      color: "bg-blue-50 border-blue-200 hover:bg-blue-100",
+    },
+    {
+      icon: <Meh className="w-8 h-8" />,
+      label: "Neutral",
+      color: "bg-gray-50 border-gray-200 hover:bg-gray-100",
+    },
+    {
+      icon: <Frown className="w-8 h-8" />,
+      label: "Sad",
+      color: "bg-indigo-50 border-indigo-200 hover:bg-indigo-100",
+    },
+    {
+      icon: <CloudRain className="w-8 h-8" />,
+      label: "Anxious",
+      color: "bg-orange-50 border-orange-200 hover:bg-orange-100",
+    },
+    {
+      icon: <Zap className="w-8 h-8" />,
+      label: "Angry",
+      color: "bg-red-50 border-red-200 hover:bg-red-100",
+    },
+    {
+      icon: <Moon className="w-8 h-8" />,
+      label: "Tired",
+      color: "bg-purple-50 border-purple-200 hover:bg-purple-100",
+    },
+    {
+      icon: <Smile className="w-8 h-8" />,
+      label: "Grateful",
+      color: "bg-pink-50 border-pink-200 hover:bg-pink-100",
+    },
   ];
 
   // Initialize user and welcome message
@@ -364,26 +413,41 @@ const MoodTrackingPage: React.FC = () => {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50">
+      <div className="min-h-screen bg-gradient-to-br from-rose-50 via-purple-50 to-indigo-50">
         <div className="container mx-auto px-4 py-8">
+          {/* Welcome Section */}
+          <div className="max-w-4xl mx-auto mb-8 mt-10 text-center">
+            <div className="mb-6">
+              <Heart className="w-12 h-12 text-rose-400 mx-auto mb-4" />
+              <h1 className="text-3xl font-bold text-gray-800 mb-2">
+                Welcome to Your Safe Space
+              </h1>
+              <p className="text-gray-600 text-lg">
+                I'm here to listen with care and understanding
+              </p>
+            </div>
+          </div>
+
           {/* Mood Selection */}
-          <div className="max-w-4xl mx-auto mb-8 mt-10">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-4 text-center">
-              How would you describe your mood right now?
+          <div className="max-w-4xl mx-auto mb-8">
+            <h2 className="text-2xl font-semibold text-gray-800 mb-6 text-center">
+              How are you feeling right now?
             </h2>
-            <div className="grid grid-cols-4 md:grid-cols-8 gap-3">
+            <div className="grid grid-cols-4 md:grid-cols-8 gap-4">
               {moodEmojis.map((mood, index) => (
                 <button
                   key={index}
                   onClick={() => setCurrentMood(mood.label)}
-                  className={`p-4 rounded-2xl border-2 transition-all duration-300 hover:scale-105 ${
+                  className={`p-6 rounded-3xl border-2 transition-all duration-300 hover:scale-105 hover:shadow-lg ${
                     currentMood === mood.label
-                      ? `${mood.color} border-2 border-purple-400 shadow-lg`
-                      : `${mood.color} hover:shadow-md`
+                      ? `${mood.color} border-rose-300 shadow-lg ring-2 ring-rose-200`
+                      : `${mood.color} shadow-sm`
                   }`}
                 >
-                  <div className="text-3xl mb-2">{mood.emoji}</div>
-                  <div className="text-xs font-medium text-gray-700">
+                  <div className="text-rose-500 mb-3 flex justify-center">
+                    {mood.icon}
+                  </div>
+                  <div className="text-sm font-medium text-gray-700">
                     {mood.label}
                   </div>
                 </button>
@@ -391,70 +455,80 @@ const MoodTrackingPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Error Message */}
+          {/* Messages */}
           {errorMessage && (
             <div className="max-w-4xl mx-auto mb-6">
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
-                {errorMessage}
+              <div className="bg-red-50 border border-red-200 rounded-2xl p-4 flex items-center">
+                <AlertCircle className="w-5 h-5 text-red-500 mr-3 flex-shrink-0" />
+                <span className="text-red-700">{errorMessage}</span>
+              </div>
+            </div>
+          )}
+
+          {successMessage && (
+            <div className="max-w-4xl mx-auto mb-6">
+              <div className="bg-green-50 border border-green-200 rounded-2xl p-4 flex items-center">
+                <CheckCircle className="w-5 h-5 text-green-500 mr-3 flex-shrink-0" />
+                <span className="text-green-700">{successMessage}</span>
               </div>
             </div>
           )}
 
           {/* Chat Interface */}
           <div className="max-w-4xl mx-auto">
-            <div className="bg-white/70 backdrop-blur-sm rounded-3xl shadow-lg p-6 mb-6">
-              <div className="space-y-6 max-h-96 overflow-y-auto">
+            <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-white/50 p-8 mb-6">
+              <div className="space-y-8 max-h-96 overflow-y-auto">
                 {/* Initial AI Message */}
-                <div className="flex items-start space-x-3">
-                  <div className="w-8 h-8 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white text-sm font-bold">
-                    AI
+                <div className="flex items-start space-x-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-rose-400 to-pink-500 rounded-full flex items-center justify-center shadow-lg">
+                    <Bot className="w-6 h-6 text-white" />
                   </div>
-                  <div className="flex-1 bg-purple-50 rounded-2xl p-4">
+                  <div className="flex-1 bg-gradient-to-br from-rose-50 to-pink-50 rounded-3xl p-6 shadow-sm border border-rose-100">
                     <TypingAnimation text={aiResponses[0]} />
                   </div>
                 </div>
 
                 {/* Conversation History */}
                 {journalEntries.map((entry, index) => (
-                  <div key={index} className="space-y-4">
+                  <div key={index} className="space-y-6">
                     {/* User Message */}
-                    <div className="flex items-start space-x-3 justify-end">
-                      <div className="flex-1 bg-blue-50 rounded-2xl p-4 text-right">
-                        <p className="text-gray-800">{entry}</p>
+                    <div className="flex items-start space-x-4 justify-end">
+                      <div className="flex-1 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-3xl p-6 text-right shadow-sm border border-blue-100">
+                        <p className="text-gray-800 leading-relaxed">{entry}</p>
                       </div>
-                      <div className="w-8 h-8 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full flex items-center justify-center text-white text-sm font-bold">
-                        You
+                      <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-full flex items-center justify-center shadow-lg">
+                        <User className="w-6 h-6 text-white" />
                       </div>
                     </div>
 
                     {/* AI Response */}
-                    <div className="flex items-start space-x-3">
-                      <div className="w-8 h-8 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white text-sm font-bold">
-                        AI
+                    <div className="flex items-start space-x-4">
+                      <div className="w-12 h-12 bg-gradient-to-br from-rose-400 to-pink-500 rounded-full flex items-center justify-center shadow-lg">
+                        <Bot className="w-6 h-6 text-white" />
                       </div>
-                      <div className="flex-1 bg-purple-50 rounded-2xl p-4">
+                      <div className="flex-1 bg-gradient-to-br from-rose-50 to-pink-50 rounded-3xl p-6 shadow-sm border border-rose-100">
                         {aiResponses[index + 1] ? (
-                          <div className="flex items-center justify-between">
+                          <div className="flex items-start justify-between">
                             <div className="flex-1">
                               <TypingAnimation text={aiResponses[index + 1]} />
                             </div>
                             <button
                               onClick={() => playTTS(aiResponses[index + 1])}
-                              className="ml-3 p-2 text-purple-600 hover:text-purple-800 transition-colors"
+                              className="ml-4 p-3 text-rose-500 hover:text-rose-700 hover:bg-rose-100 rounded-full transition-colors"
                               aria-label="Play AI Response"
                             >
-                              🔊
+                              <Volume2 className="w-5 h-5" />
                             </button>
                           </div>
                         ) : (
                           <div className="flex items-center space-x-2">
-                            <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce"></div>
+                            <div className="w-3 h-3 bg-rose-400 rounded-full animate-bounce"></div>
                             <div
-                              className="w-2 h-2 bg-purple-400 rounded-full animate-bounce"
+                              className="w-3 h-3 bg-rose-400 rounded-full animate-bounce"
                               style={{ animationDelay: "0.1s" }}
                             ></div>
                             <div
-                              className="w-2 h-2 bg-purple-400 rounded-full animate-bounce"
+                              className="w-3 h-3 bg-rose-400 rounded-full animate-bounce"
                               style={{ animationDelay: "0.2s" }}
                             ></div>
                           </div>
@@ -468,46 +542,50 @@ const MoodTrackingPage: React.FC = () => {
             </div>
 
             {/* Input Area */}
-            <div className="bg-white/70 backdrop-blur-sm rounded-3xl shadow-lg p-6">
+            <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-white/50 p-8">
               <div className="relative">
                 <div
                   contentEditable
                   onInput={handleInput}
                   onKeyPress={handleKeyPress}
                   ref={journalInputRef}
-                  className="w-full min-h-[120px] max-h-48 overflow-y-auto p-4 text-gray-800 bg-transparent border-2 border-gray-200 rounded-2xl focus:border-purple-400 focus:outline-none transition-colors resize-none"
+                  className="w-full min-h-[140px] max-h-48 overflow-y-auto p-6 text-gray-800 bg-gradient-to-br from-gray-50 to-white border-2 border-gray-200 rounded-3xl focus:border-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-100 transition-all resize-none leading-relaxed"
                   suppressContentEditableWarning={true}
                 />
                 {journal === "" && (
-                  <div className="absolute top-4 left-4 text-gray-400 pointer-events-none">
-                    <TypingAnimation text="Share your thoughts and feelings..." />
+                  <div className="absolute top-6 left-6 text-gray-400 pointer-events-none">
+                    <TypingAnimation text="Share what's on your heart today..." />
                   </div>
                 )}
               </div>
 
               {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row gap-4 mt-6">
+              <div className="flex flex-col sm:flex-row gap-4 mt-8">
                 <button
                   onClick={handleSubmit}
                   disabled={isLoading || !journal.trim()}
-                  className="flex-1 bg-gradient-to-r from-purple-400 to-pink-400 text-white py-3 px-6 rounded-2xl font-semibold hover:shadow-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 bg-gradient-to-r from-rose-400 to-pink-500 text-white py-4 px-8 rounded-3xl font-semibold hover:shadow-xl transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center"
                   aria-label="Submit Journal Entry"
                 >
                   {isLoading ? (
                     <div className="flex items-center justify-center">
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                      Processing...
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-3"></div>
+                      Processing with care...
                     </div>
                   ) : (
-                    "Send Message 💙"
+                    <>
+                      <Send className="w-5 h-5 mr-2" />
+                      Share Your Thoughts
+                    </>
                   )}
                 </button>
 
                 <Link
                   href="/dashboard"
-                  className="flex-1 bg-gradient-to-r from-blue-400 to-purple-400 text-white py-3 px-6 rounded-2xl font-semibold hover:shadow-lg transition-all duration-300 transform hover:scale-105 text-center"
+                  className="flex-1 bg-gradient-to-r from-blue-400 to-indigo-500 text-white py-4 px-8 rounded-3xl font-semibold hover:shadow-xl transition-all duration-300 transform hover:scale-105 text-center flex items-center justify-center"
                 >
-                  View Analytics 📊
+                  <BarChart3 className="w-5 h-5 mr-2" />
+                  View Your Journey
                 </Link>
               </div>
             </div>
