@@ -1,16 +1,32 @@
-# Mood Tracker
+<p align="center">
+  <img src="https://raw.githubusercontent.com/khmorad/csvStore/refs/heads/main/f09c8fa2-674d-41d8-a8ca-e7c39f0ccf7e.webp" alt="Mood Stabilizer" width="400" />
+</p>
 
-<img src="https://raw.githubusercontent.com/khmorad/csvStore/refs/heads/main/f09c8fa2-674d-41d8-a8ca-e7c39f0ccf7e.webp" alt="Mood Stabilizer" width="400" />
+<p align="center">
+  <img src="https://img.shields.io/badge/Built%20With-TypeScript-blue?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/Frontend-Next.js-black?logo=next.js&style=for-the-badge" />
+  <img src="https://img.shields.io/badge/Backend-FastAPI-green?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/Database-MySQL-blue?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/AI-Gemini_API-orange?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/Text--to--Speech-OpenAI_API-lightgrey?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/Authentication-JWT-yellowgreen?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/Deployment-AWS-yellow?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/Maintained-Yes-success?style=for-the-badge" />
+</p>
 
-Mood Stabilizer is a journaling app designed to help users track and manage their emotional well-being. By leveraging advanced APIs and scalable cloud technologies, the app provides personalized and accessible journaling features to promote mental health.
+Mood Stabilizer is a journaling app designed to help users track and manage their emotional well-being.  
+By leveraging advanced APIs and scalable cloud technologies, the app provides **personalized** and **accessible** journaling features to promote mental health.  
+
+It supports dynamic journaling with AI-powered prompts, text-to-speech playback, and secure user authentication,  
+all backed by a robust MySQL database deployed on AWS for **99.9% uptime** and **scalability**.  
 
 ## Features
 
-- **Dynamic Journaling**: Integrated with the **Gemini API** to provide personalized journaling prompts and responses.
-- **Text-to-Speech Functionality**: Utilizes the **OpenAI API** to enhance accessibility by converting journal entries to speech.
-- **Secure User Authentication**: Employs **JSON Web Tokens (JWT)** to ensure secure user login and data privacy.
-- **Reliable Data Management**: Backend powered by a **MySQL database**, deployed on **AWS**, ensuring 99.9% uptime and scalability.
-- **Optimized Performance**: Backend performance optimized with efficient query handling, reducing API response times by 25%.
+- **Dynamic Journaling** – Integrated with the **Gemini API** to provide personalized journaling prompts and responses.
+- **Text-to-Speech Functionality** – Utilizes the **OpenAI API** to convert journal entries to speech.
+- **Secure User Authentication** – Employs **JWT** for secure login and data privacy.
+- **Reliable Data Management** – MySQL backend deployed on **AWS**, ensuring uptime and scalability.
+- **Optimized Performance** – Efficient query handling reduces API response times by 25%.
 
 ## Project Structure
 
