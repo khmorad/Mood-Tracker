@@ -10,7 +10,6 @@ import {
   Heart,
   Flower2,
   Sparkles,
-  Star,
   Phone,
   ArrowRight,
 } from "lucide-react";
