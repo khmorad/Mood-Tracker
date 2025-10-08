@@ -2,11 +2,22 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import {
+  BarChart3,
+  Lightbulb,
+  Users,
+  AlertTriangle,
+  Heart,
+  Flower2,
+  Sparkles,
+  Star,
+  Phone,
+  ArrowRight,
+} from "lucide-react";
 import Navbar from "./components/Navbar";
 import Background from "./components/Background";
 import NavItem from "./components/NavItem";
 import Safe3DScene from "./components/Safe3DScene";
-import AnimatedHero from "./components/AnimatedHero";
 import InteractiveCard from "./components/InteractiveCard";
 import AnimatedBackground from "./components/AnimatedBackground";
 import SimpleBackground from "./components/SimpleBackground";
@@ -36,10 +47,10 @@ const Page: React.FC = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-pink-200 via-purple-200 to-blue-200 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-40 h-40 bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 rounded-full flex items-center justify-center mx-auto mb-6 shadow-2xl animate-pulse">
-            <span className="text-8xl">🌸</span>
+          <div className="w-20 h-20 bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl">
+            <Flower2 className="w-10 h-10 text-white" />
           </div>
-          <h1 className="text-4xl font-bold text-gray-800 mb-4">Loading...</h1>
+          <h1 className="text-2xl font-bold text-gray-800">Loading...</h1>
         </div>
       </div>
     );
@@ -57,7 +68,7 @@ const Page: React.FC = () => {
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.2,
+        staggerChildren: 0.15,
       },
     },
   };
@@ -79,48 +90,101 @@ const Page: React.FC = () => {
         {!useSimpleBackground && <Safe3DScene />}
 
         {/* Main Content */}
-        <div className="relative z-10 container mx-auto px-4 py-16">
-          {/* Animated Hero Section */}
-          <AnimatedHero />
-
-          {/* Interactive Navigation */}
+        <div className="relative z-10 container mx-auto px-6 py-20">
+          {/* Modern Hero Section */}
           <motion.div
-            className="max-w-5xl mx-auto mb-16"
+            className="text-center mb-20"
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+          >
+            <motion.div
+              className="inline-flex items-center gap-3 bg-white/20 backdrop-blur-md rounded-full px-6 py-3 mb-8 border border-white/30"
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
+              <Sparkles className="w-5 h-5 text-purple-600" />
+              <span className="text-gray-700 font-medium">
+                Your Mental Health Companion
+              </span>
+            </motion.div>
+
+            <motion.h1
+              className="text-6xl md:text-7xl font-bold text-gray-800 mb-6 leading-tight"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.4 }}
+            >
+              Welcome to Your
+              <br />
+              <span className="bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 bg-clip-text text-transparent">
+                Safe Space
+              </span>
+            </motion.h1>
+
+            <motion.p
+              className="text-xl text-gray-600 mb-10 max-w-2xl mx-auto leading-relaxed"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.6 }}
+            >
+              Track your moods, find support, and discover tools for better
+              mental health. You&apos;re not alone in this journey.
+            </motion.p>
+
+            <motion.button
+              className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-8 py-4 rounded-2xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-3 mx-auto"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.8 }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => (window.location.href = "/mood-tracking")}
+            >
+              Start Your Journey
+              <ArrowRight className="w-5 h-5" />
+            </motion.button>
+          </motion.div>
+
+          {/* Navigation Grid */}
+          <motion.div
+            className="max-w-4xl mx-auto mb-20"
             variants={containerVariants}
             initial="hidden"
             animate="visible"
           >
             <motion.h2
-              className="text-4xl font-bold text-center text-gray-800 mb-8"
+              className="text-3xl font-bold text-center text-gray-800 mb-12"
               variants={itemVariants}
             >
-              Choose Your Adventure 💫
+              Explore Our Tools
             </motion.h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               <motion.div variants={itemVariants}>
                 <NavItem
-                  emoji="📊"
+                  icon={<BarChart3 className="w-8 h-8" />}
                   title="Track Moods"
                   onClick={() => (window.location.href = "/mood-tracking")}
                 />
               </motion.div>
               <motion.div variants={itemVariants}>
                 <NavItem
-                  emoji="💡"
+                  icon={<Lightbulb className="w-8 h-8" />}
                   title="Daily Tips"
                   onClick={() => scrollToSection("tips")}
                 />
               </motion.div>
               <motion.div variants={itemVariants}>
                 <NavItem
-                  emoji="🤝"
+                  icon={<Users className="w-8 h-8" />}
                   title="Community"
                   onClick={() => scrollToSection("community")}
                 />
               </motion.div>
               <motion.div variants={itemVariants}>
                 <NavItem
-                  emoji="🚨"
+                  icon={<AlertTriangle className="w-8 h-8" />}
                   title="Crisis Help"
                   onClick={() => scrollToSection("crisis")}
                 />
@@ -128,7 +192,7 @@ const Page: React.FC = () => {
             </div>
           </motion.div>
 
-          {/* Interactive Features Grid */}
+          {/* Features Grid */}
           <motion.div
             className="max-w-6xl mx-auto mb-20"
             variants={containerVariants}
@@ -136,136 +200,63 @@ const Page: React.FC = () => {
             animate="visible"
           >
             <motion.h2
-              className="text-5xl font-bold text-center text-gray-800 mb-12"
+              className="text-4xl font-bold text-center text-gray-800 mb-12"
               variants={itemVariants}
             >
-              Magical Tools for Your Journey ✨
+              Tools for Your Wellbeing
             </motion.h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <motion.div variants={itemVariants}>
                 <InteractiveCard
                   title="Mood Tracking"
-                  description="Gently track your feelings with our compassionate mood tracker. Understand your patterns and celebrate your progress with love 💖"
-                  icon="📊"
-                  gradient="from-pink-400 to-purple-500"
+                  description="Monitor your emotional patterns with our intuitive mood tracker. Gain insights into your mental health journey."
+                  icon={<BarChart3 className="w-8 h-8" />}
+                  gradient="from-purple-500 to-pink-500"
                   onClick={() => (window.location.href = "/mood-tracking")}
                 />
               </motion.div>
               <motion.div variants={itemVariants}>
                 <InteractiveCard
                   title="Crisis Support"
-                  description="Immediate access to help when you need it most. Crisis resources and emergency contacts are always available with care 🤗"
-                  icon="🚨"
-                  gradient="from-red-400 to-pink-500"
+                  description="Immediate access to professional help and emergency resources when you need them most."
+                  icon={<AlertTriangle className="w-8 h-8" />}
+                  gradient="from-red-500 to-orange-500"
                   onClick={() => scrollToSection("crisis")}
                 />
               </motion.div>
               <motion.div variants={itemVariants}>
                 <InteractiveCard
-                  title="Grounding Exercises"
-                  description="Quick, gentle exercises to help you stay present and calm during difficult moments. Find your center with love 🌸"
-                  icon="🧘"
-                  gradient="from-green-400 to-blue-500"
+                  title="Wellness Resources"
+                  description="Discover coping strategies, mindfulness exercises, and tools for better mental health."
+                  icon={<Heart className="w-8 h-8" />}
+                  gradient="from-green-500 to-teal-500"
                   onClick={() => scrollToSection("grounding")}
                 />
               </motion.div>
               <motion.div variants={itemVariants}>
                 <InteractiveCard
                   title="Community Support"
-                  description="Connect with others who understand. Share experiences and find support in a safe, loving space full of understanding hearts 💫"
-                  icon="🤝"
-                  gradient="from-purple-400 to-indigo-500"
+                  description="Connect with others who understand your journey. Find support in a safe environment."
+                  icon={<Users className="w-8 h-8" />}
+                  gradient="from-blue-500 to-indigo-500"
                   onClick={() => scrollToSection("community")}
                 />
               </motion.div>
             </div>
           </motion.div>
 
-          {/* Floating Interactive Elements */}
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <motion.div
-              className="absolute top-20 left-10 text-4xl"
-              animate={{
-                y: [0, -20, 0],
-                rotate: [0, 10, -10, 0],
-              }}
-              transition={{
-                duration: 4,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-            >
-              💖
-            </motion.div>
-            <motion.div
-              className="absolute top-40 right-20 text-3xl"
-              animate={{
-                y: [0, 20, 0],
-                rotate: [0, -15, 15, 0],
-              }}
-              transition={{
-                duration: 5,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-            >
-              🌸
-            </motion.div>
-            <motion.div
-              className="absolute bottom-40 left-20 text-5xl"
-              animate={{
-                y: [0, -15, 0],
-                rotate: [0, 20, -20, 0],
-              }}
-              transition={{
-                duration: 6,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-            >
-              ✨
-            </motion.div>
-            <motion.div
-              className="absolute bottom-20 right-10 text-3xl"
-              animate={{
-                y: [0, 25, 0],
-                rotate: [0, -25, 25, 0],
-              }}
-              transition={{
-                duration: 4.5,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-            >
-              💫
-            </motion.div>
-          </div>
-
-          {/* Enhanced Crisis Support Section */}
+          {/* Crisis Support Section */}
           <motion.div
-            className="mt-20 bg-white/95 backdrop-blur-md rounded-3xl p-10 shadow-2xl border border-white/30"
+            className="mt-20 bg-white/25 backdrop-blur-lg rounded-3xl p-10 shadow-xl border border-white/40"
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.5 }}
           >
             <div className="text-center">
               <motion.h3
-                className="text-4xl font-bold text-gray-800 mb-4"
+                className="text-3xl font-bold text-gray-800 mb-4"
                 animate={{
-                  scale: [1, 1.05, 1],
-                }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-              >
-                Need Some Extra Love? 💖
-              </motion.h3>
-              <motion.p
-                className="text-xl text-gray-600 mb-8"
-                animate={{
-                  opacity: [0.7, 1, 0.7],
+                  scale: [1, 1.02, 1],
                 }}
                 transition={{
                   duration: 3,
@@ -273,28 +264,28 @@ const Page: React.FC = () => {
                   ease: "easeInOut",
                 }}
               >
-                Remember, you&apos;re never alone. Help is always available, and
-                you deserve support.
+                Need Immediate Support?
+              </motion.h3>
+              <motion.p className="text-lg text-gray-700 mb-8 max-w-2xl mx-auto">
+                Crisis resources and professional help are available 24/7. You
+                deserve support and care.
               </motion.p>
-              <motion.div
-                className="flex flex-col sm:flex-row gap-4 justify-center"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 1 }}
-              >
+              <motion.div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <motion.button
-                  className="bg-gradient-to-r from-red-400 to-pink-500 text-white px-8 py-4 rounded-full font-semibold text-lg hover:shadow-xl transition-all duration-300"
+                  className="bg-gradient-to-r from-red-500 to-pink-500 text-white px-8 py-4 rounded-2xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-3"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  Crisis Hotline 🚨
+                  <AlertTriangle className="w-5 h-5" />
+                  Crisis Hotline
                 </motion.button>
                 <motion.button
-                  className="bg-gradient-to-r from-blue-400 to-purple-500 text-white px-8 py-4 rounded-full font-semibold text-lg hover:shadow-xl transition-all duration-300"
+                  className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-8 py-4 rounded-2xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-3"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  Emergency Resources 📞
+                  <Phone className="w-5 h-5" />
+                  Get Help Now
                 </motion.button>
               </motion.div>
             </div>
