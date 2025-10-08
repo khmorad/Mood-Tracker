@@ -63,7 +63,7 @@ interface JournalEntry {
 const MoodTrackingPage: React.FC = () => {
   const [journal, setJournal] = useState("");
   const [journalEntries, setJournalEntries] = useState<string[]>([]);
-  const [currentMood, setCurrentMood] = useState<string>("");
+  const [currentMood, setCurrentMood] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -201,10 +201,13 @@ const MoodTrackingPage: React.FC = () => {
         ? `User: ${user.firstName} ${user.lastName} (${user.email})`
         : "Anonymous User";
 
+      const moodString =
+        currentMood.length > 0 ? currentMood.join(", ") : "Not specified";
+
       const prompt = `You are a supportive mental health assistant. Be encouraging, empathetic, and include nonverbal cues. Always end with a thoughtful question to help the user explore their feelings deeper.
       
       ${userInfoString}
-      Current mood: ${currentMood || "Not specified"}
+      Current mood(s): ${moodString}
       User message: ${entry}
       Previous conversation: ${conversationHistoryString}
       
@@ -370,19 +373,21 @@ const MoodTrackingPage: React.FC = () => {
       );
 
       if (response.data && Array.isArray(response.data)) {
-        const entries: JournalEntry[] = response.data.sort(
-          (a, b) =>
-            new Date(a.journal_date).getTime() -
-            new Date(b.journal_date).getTime()
-        );
+        const today = new Date().toISOString().split("T")[0];
+        const entries: JournalEntry[] = response.data
+          .filter((entry) => entry.journal_date === today)
+          .sort(
+            (a, b) =>
+              new Date(a.journal_date).getTime() -
+              new Date(b.journal_date).getTime()
+          );
 
         // Load recent entries into conversation
-        const recentEntries = entries.slice(-5); // Last 5 entries
         const loadedConversation: Conversation[] = [conversation[0]]; // Keep welcome message
         const loadedUserEntries: string[] = [];
         const loadedAiResponses: string[] = [aiResponses[0]]; // Keep welcome message
 
-        recentEntries.forEach((entry) => {
+        entries.forEach((entry) => {
           loadedConversation.push({
             user: entry.entry_text,
             ai: entry.AI_response,
@@ -395,16 +400,24 @@ const MoodTrackingPage: React.FC = () => {
         setJournalEntries(loadedUserEntries);
         setAiResponses(loadedAiResponses);
 
-        console.log(
-          "[Load Entries] Loaded",
-          recentEntries.length,
-          "recent entries"
-        );
+        console.log("[Load Entries] Loaded", entries.length, "recent entries");
       }
     } catch (error) {
       console.error("[Load Entries] Error:", error);
       // Don't show error to user for loading existing entries
     }
+  };
+
+  const handleMoodSelection = (moodLabel: string) => {
+    setCurrentMood((prev) => {
+      if (prev.includes(moodLabel)) {
+        // Remove mood if already selected
+        return prev.filter((mood) => mood !== moodLabel);
+      } else {
+        // Add mood if not selected
+        return [...prev, moodLabel];
+      }
+    });
   };
 
   if (!isClient) {
@@ -416,17 +429,7 @@ const MoodTrackingPage: React.FC = () => {
       <div className="min-h-screen bg-gradient-to-br from-rose-50 via-purple-50 to-indigo-50">
         <div className="container mx-auto px-4 py-8">
           {/* Welcome Section */}
-          <div className="max-w-4xl mx-auto mb-8 mt-10 text-center">
-            <div className="mb-6">
-              <Heart className="w-12 h-12 text-rose-400 mx-auto mb-4" />
-              <h1 className="text-3xl font-bold text-gray-800 mb-2">
-                Welcome to Your Safe Space
-              </h1>
-              <p className="text-gray-600 text-lg">
-                I'm here to listen with care and understanding
-              </p>
-            </div>
-          </div>
+          <div className="max-w-4xl mx-auto mb-8 mt-10 text-center"></div>
 
           {/* Mood Selection */}
           <div className="max-w-4xl mx-auto mb-8">
@@ -437,10 +440,10 @@ const MoodTrackingPage: React.FC = () => {
               {moodEmojis.map((mood, index) => (
                 <button
                   key={index}
-                  onClick={() => setCurrentMood(mood.label)}
+                  onClick={() => handleMoodSelection(mood.label)}
                   className={`p-6 rounded-3xl border-2 transition-all duration-300 hover:scale-105 hover:shadow-lg ${
-                    currentMood === mood.label
-                      ? `${mood.color} border-rose-300 shadow-lg ring-2 ring-rose-200`
+                    currentMood.includes(mood.label)
+                      ? `${mood.color} border-rose-400 shadow-lg`
                       : `${mood.color} shadow-sm`
                   }`}
                 >
