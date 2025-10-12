@@ -8,12 +8,43 @@ import os
 from dotenv import load_dotenv
 import uvicorn
 
+# Add these new imports for background task
+import asyncio
+from contextlib import asynccontextmanager
+
 # Import routers
 from backend.routers import users, journal_entries, auth
+# Add this new import for emotions router
+from backend.routers import emotions
+# Add this import for the background scheduler
+from backend.tasks.emotion_scheduler import emotion_scheduler
+
 # Load environment variables
 load_dotenv()
 
-app = FastAPI(title="Mood Tracker API", version="1.0.0")
+# Add lifespan event handler for background task
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    print("Starting emotion analysis scheduler...")
+    # Create background task for emotion analysis
+    task = asyncio.create_task(emotion_scheduler.start_scheduler())
+    yield
+    # Shutdown
+    print("Stopping emotion analysis scheduler...")
+    emotion_scheduler.stop_scheduler()
+    try:
+        task.cancel()
+        await task
+    except asyncio.CancelledError:
+        pass
+
+# Update FastAPI app initialization to include lifespan
+app = FastAPI(
+    title="Mood Tracker API", 
+    version="1.0.0",
+    lifespan=lifespan  # Add this line
+)
 
 # CORS middleware
 app.add_middleware(
@@ -43,6 +74,7 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 app.include_router(users.router)
 app.include_router(journal_entries.router)
 app.include_router(auth.router)
+app.include_router(emotions.router)  # Add this line for emotions router
 
 # Health check endpoint
 @app.get("/")
@@ -61,4 +93,4 @@ async def health_check():
         raise HTTPException(status_code=500, detail=f"Database connection failed: {str(e)}")
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000) 
+    uvicorn.run(app, host="0.0.0.0", port=8000)
