@@ -7,6 +7,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from backend.schemas.db import SessionLocal
 from backend.services.emotion_analyzer import EmotionAnalyzer
 import logging
+import re
+import json
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -132,10 +134,35 @@ class EmotionScheduler:
         logger.info(f"[EmotionScheduler] 📊 Completed catch-up analysis: {missing_analyses} missing analyses filled")
         return missing_analyses
     
+    async def check_api_health(self):
+        """Test Gemini API connectivity"""
+        logger.info("[EmotionScheduler] 🔍 Checking Gemini API health...")
+        
+        try:
+            test_conversation = "User: Hello\nAI: Hi there!"
+            emotions = await self.analyzer.analyze_emotions_with_gemini(test_conversation)
+            
+            if emotions != self.analyzer._get_default_emotions():
+                logger.info("[EmotionScheduler] ✅ Gemini API is healthy and responding")
+                return True
+            else:
+                logger.warning("[EmotionScheduler] ⚠️ Gemini API returned default emotions - may be having issues")
+                return False
+                
+        except Exception as e:
+            logger.error(f"[EmotionScheduler] ❌ Gemini API health check failed: {e}")
+            return False
+    
     async def start_scheduler(self):
         """Start the background scheduler"""
         self.is_running = True
         logger.info("[EmotionScheduler] 🔄 Starting background emotion analysis scheduler...")
+        
+        # Check API health on startup
+        api_healthy = await self.check_api_health()
+        if not api_healthy:
+            logger.warning("[EmotionScheduler] ⚠️ API health check failed - continuing anyway...")
+        
         logger.info("[EmotionScheduler] ⏰ Scheduled to run daily at 11:30 PM")
         
         # Run catch-up analysis on startup
@@ -196,6 +223,7 @@ class EmotionScheduler:
             result = {"date": str(target_date), "message": "Analysis completed for all users"}
             logger.info(f"[EmotionScheduler] Manual analysis result: {result}")
             return result
+
 
 # Global scheduler instance
 logger.info("[EmotionScheduler] Creating global emotion_scheduler instance...")

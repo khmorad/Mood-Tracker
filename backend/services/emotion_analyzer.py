@@ -26,7 +26,8 @@ class EmotionAnalyzer:
         try:
             # Configure Gemini
             genai.configure(api_key=self.gemini_api_key)
-            self.model = genai.GenerativeModel('gemini-pro')
+            # Use the correct model name
+            self.model = genai.GenerativeModel('gemini-2.5-flash')  # Changed from 'gemini-pro'
             logger.info("[EmotionAnalyzer] Gemini API configured successfully")
         except Exception as e:
             logger.error(f"[EmotionAnalyzer] Failed to configure Gemini API: {e}")
@@ -61,22 +62,53 @@ class EmotionAnalyzer:
             """
             
             logger.info("[EmotionAnalyzer] Sending request to Gemini API...")
-            response = self.model.generate_content(prompt)
-            ai_response = response.text
-            logger.info(f"[EmotionAnalyzer] Received response from Gemini: {ai_response}")
+            
+            # Add timeout and more detailed error handling
+            try:
+                response = self.model.generate_content(prompt)
+                ai_response = response.text
+                logger.info(f"[EmotionAnalyzer] ✓ Received response from Gemini: {ai_response}")
+                
+            except Exception as api_error:
+                # Specific API error logging
+                error_type = type(api_error).__name__
+                logger.error(f"[EmotionAnalyzer] ✗ Gemini API Error ({error_type}): {api_error}")
+                
+                # Check for specific error types
+                if "quota" in str(api_error).lower():
+                    logger.error("[EmotionAnalyzer] 🚫 API QUOTA EXCEEDED - Check your Gemini API limits")
+                elif "authentication" in str(api_error).lower():
+                    logger.error("[EmotionAnalyzer] 🔑 API AUTHENTICATION FAILED - Check your API key")
+                elif "timeout" in str(api_error).lower():
+                    logger.error("[EmotionAnalyzer] ⏰ API TIMEOUT - Gemini API took too long to respond")
+                elif "rate" in str(api_error).lower():
+                    logger.error("[EmotionAnalyzer] 🚦 API RATE LIMIT - Too many requests, need to slow down")
+                else:
+                    logger.error(f"[EmotionAnalyzer] 🔥 UNKNOWN API ERROR: {api_error}")
+                
+                # Return default emotions on API failure
+                logger.warning("[EmotionAnalyzer] Using default emotions due to API failure")
+                return self._get_default_emotions()
             
             # Extract JSON from response
-            json_match = re.search(r'\{[^}]+\}', ai_response)
-            if json_match:
-                emotion_scores = json.loads(json_match.group())
-                logger.info(f"[EmotionAnalyzer] Successfully parsed emotion scores: {emotion_scores}")
-                return emotion_scores
-            else:
-                logger.warning("[EmotionAnalyzer] No valid JSON found in Gemini response, using default emotions")
+            try:
+                json_match = re.search(r'\{[^}]+\}', ai_response)
+                if json_match:
+                    emotion_scores = json.loads(json_match.group())
+                    logger.info(f"[EmotionAnalyzer] ✓ Successfully parsed emotion scores: {emotion_scores}")
+                    return emotion_scores
+                else:
+                    logger.warning("[EmotionAnalyzer] ⚠️ No valid JSON found in Gemini response")
+                    logger.warning(f"[EmotionAnalyzer] Raw response: {ai_response}")
+                    return self._get_default_emotions()
+                    
+            except json.JSONDecodeError as json_error:
+                logger.error(f"[EmotionAnalyzer] ✗ JSON Parse Error: {json_error}")
+                logger.error(f"[EmotionAnalyzer] Failed to parse: {ai_response}")
                 return self._get_default_emotions()
                 
         except Exception as e:
-            logger.error(f"[EmotionAnalyzer] Error analyzing emotions with Gemini: {e}")
+            logger.error(f"[EmotionAnalyzer] ✗ Unexpected error in emotion analysis: {e}")
             return self._get_default_emotions()
     
     def _get_default_emotions(self) -> dict:
