@@ -292,7 +292,7 @@ const Page: React.FC = () => {
           </motion.div>
         </div>
       </div>
-      
+
       {/* Footer */}
       <Footer />
     </>
