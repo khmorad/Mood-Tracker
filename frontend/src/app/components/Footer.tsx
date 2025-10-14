@@ -1,14 +1,6 @@
 // components/Footer.tsx
 import React from "react";
-import {
-  Heart,
-  Mail,
-  Phone,
-  MapPin,
-  Github,
-  Twitter,
-  Instagram,
-} from "lucide-react";
+import { Heart, MapPin, Github, Twitter, Instagram } from "lucide-react";
 import { motion } from "framer-motion";
 
 const Footer: React.FC = () => {
