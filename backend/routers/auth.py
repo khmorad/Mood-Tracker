@@ -33,7 +33,7 @@ async def register(register_data: RegisterRequest, db: Session = Depends(get_db)
     """Register a new user with hashed password"""
     try:
         # Check if user already exists - FIXED: use user_id instead of id
-        check_query = text("SELECT user_id FROM User WHERE email = :email")
+        check_query = text("SELECT user_id FROM \"user\" WHERE email = :email")
         existing_user = db.execute(check_query, {"email": register_data.email}).fetchone()
         
         if existing_user:
@@ -52,7 +52,7 @@ async def register(register_data: RegisterRequest, db: Session = Depends(get_db)
         
         # Insert new user - FIXED: use actual table columns
         insert_query = text("""
-            INSERT INTO User (user_id, email, password, first_name, last_name) 
+            INSERT INTO \"user\" (user_id, email, password, first_name, last_name) 
             VALUES (:user_id, :email, :password, :first_name, :last_name)
         """)
         
@@ -77,7 +77,7 @@ async def register(register_data: RegisterRequest, db: Session = Depends(get_db)
 async def login(login_data: LoginRequest, response: Response, db: Session = Depends(get_db)):
     """Login user with email and password, return JWT in cookie"""
     try:
-        query = text("SELECT * FROM User WHERE email = :email")
+        query = text("SELECT * FROM \"user\" WHERE email = :email")
         result = db.execute(query, {"email": login_data.email})
         user = result.fetchone()
         if not user:

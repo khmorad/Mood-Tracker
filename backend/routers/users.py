@@ -16,10 +16,10 @@ async def get_users(email: Optional[str] = Query(None), db: Session = Depends(ge
     """Get all users or filter by email"""
     try:
         if email:
-            query = text("SELECT * FROM User WHERE email = :email")
+            query = text("SELECT * FROM \"user\" WHERE email = :email")
             result = db.execute(query, {"email": email})
         else:
-            query = text("SELECT * FROM User")
+            query = text("SELECT * FROM \"user\"")
             result = db.execute(query)
         
         users = result.fetchall()
@@ -41,7 +41,7 @@ async def create_user(user: UserCreate, db: Session = Depends(get_db)):
                 raise HTTPException(status_code=400, detail="Invalid date_of_birth format")
         
         query = text("""
-            INSERT INTO User (user_id, email, password, profile_picture, gender, 
+            INSERT INTO \"user\" (user_id, email, password, profile_picture, gender, 
                             preferred_language, phone_number, date_of_birth, first_name, 
                             middle_name, last_name, diagnosis_status) 
             VALUES (:user_id, :email, :password, :profile_picture, :gender, 
@@ -79,7 +79,7 @@ async def create_user(user: UserCreate, db: Session = Depends(get_db)):
 async def get_user(user_id: str, db: Session = Depends(get_db)):
     """Get a specific user by ID"""
     try:
-        query = text("SELECT * FROM User WHERE user_id = :user_id")
+        query = text("SELECT * FROM \"user\" WHERE user_id = :user_id")
         result = db.execute(query, {"user_id": user_id})
         user = result.fetchone()
         
@@ -97,7 +97,7 @@ async def update_user(user_id: str, user_update: UserCreate, db: Session = Depen
     """Update a user"""
     try:
         # Check if user exists
-        check_query = text("SELECT user_id FROM User WHERE user_id = :user_id")
+        check_query = text("SELECT user_id FROM \"user\" WHERE user_id = :user_id")
         result = db.execute(check_query, {"user_id": user_id})
         if not result.fetchone():
             raise HTTPException(status_code=404, detail="User not found")
@@ -112,7 +112,7 @@ async def update_user(user_id: str, user_update: UserCreate, db: Session = Depen
                 raise HTTPException(status_code=400, detail="Invalid date_of_birth format")
         
         query = text("""
-            UPDATE User SET 
+            UPDATE \"user\" SET 
                 email = :email, password = :password, profile_picture = :profile_picture,
                 gender = :gender, preferred_language = :preferred_language, 
                 phone_number = :phone_number, date_of_birth = :date_of_birth,
@@ -149,13 +149,13 @@ async def delete_user(user_id: str, db: Session = Depends(get_db)):
     """Delete a user"""
     try:
         # First check if user exists
-        check_query = text("SELECT user_id FROM User WHERE user_id = :user_id")
+        check_query = text("SELECT user_id FROM \"user\" WHERE user_id = :user_id")
         check_result = db.execute(check_query, {"user_id": user_id})
         if not check_result.fetchone():
             raise HTTPException(status_code=404, detail="User not found")
         
         # Delete the user
-        query = text("DELETE FROM User WHERE user_id = :user_id")
+        query = text("DELETE FROM \"user\" WHERE user_id = :user_id")
         db.execute(query, {"user_id": user_id})
         db.commit()
         

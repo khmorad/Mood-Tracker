@@ -37,7 +37,7 @@ async def get_current_user_dependency(
             headers={"WWW-Authenticate": "Bearer"},
         )
     # Get user from database
-    query = text("SELECT * FROM User WHERE user_id = :user_id")
+    query = text("SELECT * FROM \"user\" WHERE user_id = :user_id")
     result = db.execute(query, {"user_id": payload.get("user_id")})
     user = result.fetchone()
     if not user:

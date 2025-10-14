@@ -31,8 +31,9 @@ async def create_journal_entry(entry: JournalEntryCreate, db: Session = Depends(
     """Create a new journal entry"""
     try:
         query = text("""
-            INSERT INTO journal_entry (user_id, entry_text, AI_response, journal_date, episode_flag) 
+            INSERT INTO journal_entry (user_id, entry_text, "AI_response", journal_date, episode_flag)
             VALUES (:user_id, :entry_text, :AI_response, :journal_date, :episode_flag)
+            RETURNING entry_id
         """)
         
         result = db.execute(query, {
@@ -43,10 +44,9 @@ async def create_journal_entry(entry: JournalEntryCreate, db: Session = Depends(
             "episode_flag": entry.episode_flag if entry.episode_flag is not None else 0
         })
         
+        # Fetch inserted id from RETURNING
+        inserted_id = result.scalar()
         db.commit()
-        
-        # Get the inserted ID
-        inserted_id = db.execute(text("SELECT LAST_INSERT_ID()")).scalar()
         
         return {
             "entry_id": inserted_id,
@@ -90,7 +90,7 @@ async def update_journal_entry(entry_id: int, entry_update: JournalEntryCreate, 
         query = text("""
             UPDATE journal_entry SET 
                 user_id = :user_id, entry_text = :entry_text, 
-                AI_response = :AI_response, journal_date = :journal_date, 
+                "AI_response" = :AI_response, journal_date = :journal_date, 
                 episode_flag = :episode_flag
             WHERE entry_id = :entry_id
         """)
