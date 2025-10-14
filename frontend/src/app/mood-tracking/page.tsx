@@ -214,21 +214,35 @@ const MoodTrackingPage: React.FC = () => {
       Provide a supportive response:`;
 
       console.log("[AI Request] Sending prompt to AI:", prompt);
+      console.log("[AI Request] Request URL:", "/api/generate");
+      console.log("[AI Request] Request payload:", {
+        message: prompt,
+        conversation: conversation,
+      });
 
       const response = await axios.post("/api/generate", {
         message: prompt,
         conversation: conversation,
       });
 
+      console.log("[AI Response] Full response object:", response);
+      console.log("[AI Response] Response status:", response.status);
+      console.log("[AI Response] Response data:", response.data);
+
       const aiResponse =
         response.data.message ||
         response.data.response ||
-        "I'm here to support you. How else can I help? 💙";
+        "I'm here to support you. How else can I help? c";
 
-      console.log("[AI Response] Received:", aiResponse);
+      console.log("[AI Response] Final processed response:", aiResponse);
       return aiResponse;
     } catch (error) {
-      console.error("[AI Error]", error);
+      console.error("[AI Error] Full error object:", error);
+      if (axios.isAxiosError(error)) {
+        console.error("[AI Error] Response data:", error.response?.data);
+        console.error("[AI Error] Response status:", error.response?.status);
+        console.error("[AI Error] Error message:", error.message);
+      }
       setErrorMessage(
         "I'm having trouble processing that right now. Could you try again?"
       );

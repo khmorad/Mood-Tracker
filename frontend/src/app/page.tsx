@@ -20,6 +20,7 @@ import Safe3DScene from "./components/Safe3DScene";
 import InteractiveCard from "./components/InteractiveCard";
 import AnimatedBackground from "./components/AnimatedBackground";
 import SimpleBackground from "./components/SimpleBackground";
+import Footer from "./components/Footer";
 import { motion } from "framer-motion";
 
 const Page: React.FC = () => {
@@ -291,6 +292,9 @@ const Page: React.FC = () => {
           </motion.div>
         </div>
       </div>
+
+      {/* Footer */}
+      <Footer />
     </>
   );
 };
