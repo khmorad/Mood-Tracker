@@ -1,6 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends, Query
-from sqlalchemy.orm import Session
-from sqlalchemy import text, func
+from fastapi import APIRouter, HTTPException, Query
 from typing import List, Optional, Dict, Any
 from datetime import date, datetime, timedelta
 import sys
@@ -8,8 +6,8 @@ import os
 import logging
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from backend.schemas.db import get_db
-from backend.tasks.emotion_scheduler import emotion_scheduler
+from ..services.supabase_service import supabase_service
+from ..tasks.emotion_scheduler import emotion_scheduler
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -19,35 +17,25 @@ router = APIRouter(prefix="/emotions", tags=["emotions"])
 @router.get("/", response_model=List[dict])
 async def get_emotions(
     user_id: Optional[str] = Query(None),
-    journal_date: Optional[str] = Query(None),
-    db: Session = Depends(get_db)
+    journal_date: Optional[str] = Query(None)
 ):
     """Get emotion analysis results"""
     logger.info(f"[EmotionsAPI] GET emotions - user_id: {user_id}, journal_date: {journal_date}")
     
     try:
-        base_query = "SELECT * FROM emotions WHERE 1=1"
-        params = {}
-        
         if user_id:
-            base_query += " AND user_id = :user_id"
-            params["user_id"] = user_id
-        
-        if journal_date:
-            base_query += " AND journal_date = :journal_date"
-            params["journal_date"] = journal_date
-        
-        base_query += " ORDER BY journal_date DESC"
-        
-        query = text(base_query)
-        result = db.execute(query, params)
-        
-        emotions = result.fetchall()
-        logger.info(f"[EmotionsAPI] Found {len(emotions)} emotion records")
-        
-        emotion_list = [dict(emotion._mapping) for emotion in emotions]
-        logger.info(f"[EmotionsAPI] ✓ Successfully retrieved emotions")
-        return emotion_list
+            emotions = supabase_service.get_emotions_by_user(user_id)
+            # Filter by date if provided
+            if journal_date:
+                emotions = [e for e in emotions if e.get('journal_date') == journal_date]
+            logger.info(f"[EmotionsAPI] Found {len(emotions)} emotion records")
+            return emotions
+        else:
+            # Get all emotions using Supabase
+            client = supabase_service.client
+            result = client.table("emotions").select("*").order("journal_date", desc=True).execute()
+            logger.info(f"[EmotionsAPI] Found {len(result.data)} emotion records")
+            return result.data or []
         
     except Exception as e:
         logger.error(f"[EmotionsAPI] ✗ Error getting emotions: {e}")
@@ -56,8 +44,7 @@ async def get_emotions(
 @router.get("/dashboard/{user_id}")
 async def get_dashboard_data(
     user_id: str,
-    days: int = Query(30, description="Number of days to analyze"),
-    db: Session = Depends(get_db)
+    days: int = Query(30, description="Number of days to analyze")
 ):
     """Get comprehensive dashboard data for a user"""
     logger.info(f"[EmotionsAPI] GET dashboard data for user: {user_id}, days: {days}")
@@ -67,19 +54,19 @@ async def get_dashboard_data(
         start_date = end_date - timedelta(days=days-1)
         
         # Get mood improvement data
-        mood_improvement = await get_mood_improvement_data(user_id, days, db)
+        mood_improvement = await get_mood_improvement_data(user_id, days)
         
         # Get mood journey data  
-        mood_journey = await get_mood_journey_data(user_id, days, db)
+        mood_journey = await get_mood_journey_data(user_id, days)
         
         # Get emotional landscape
-        emotional_landscape = await get_emotional_landscape_data(user_id, days, db)
+        emotional_landscape = await get_emotional_landscape_data(user_id, days)
         
         # Get progress metrics
-        progress_data = await get_progress_data(user_id, days, db)
+        progress_data = await get_progress_data(user_id, days)
         
         # Get journal entry count
-        journal_entries = await get_journal_entries_count(user_id, days, db)
+        journal_entries = await get_journal_entries_count(user_id, days)
         
         dashboard_data = {
             "mood_improvement": mood_improvement,
@@ -101,21 +88,16 @@ async def get_dashboard_data(
         logger.error(f"[EmotionsAPI] ✗ Error getting dashboard data: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-async def get_mood_improvement_data(user_id: str, days: int, db: Session) -> Dict[str, Any]:
+async def get_mood_improvement_data(user_id: str, days: int) -> Dict[str, Any]:
     """Calculate mood improvement percentage and trend"""
     try:
-        # Get emotions for the period
-        query = text("""
-            SELECT journal_date, happy, sad, anxious, stressed, angry, agitated, neutral
-            FROM emotions 
-            WHERE user_id = :user_id 
-            AND journal_date >= :start_date
-            ORDER BY journal_date ASC
-        """)
+        # Get emotions for the period using Supabase
+        emotions = supabase_service.get_emotions_by_user(user_id)
         
+        # Filter by date range
         start_date = date.today() - timedelta(days=days-1)
-        result = db.execute(query, {"user_id": user_id, "start_date": start_date})
-        emotions = result.fetchall()
+        emotions = [e for e in emotions if datetime.fromisoformat(e['journal_date']).date() >= start_date]
+        emotions.sort(key=lambda x: x['journal_date'])
         
         if len(emotions) < 2:
             return {
@@ -127,11 +109,11 @@ async def get_mood_improvement_data(user_id: str, days: int, db: Session) -> Dic
         
         # Calculate mood scores (positive emotions - negative emotions)
         def calculate_mood_score(emotion_row):
-            positive = emotion_row.happy + emotion_row.neutral
-            negative = emotion_row.sad + emotion_row.anxious + emotion_row.stressed + emotion_row.angry + emotion_row.agitated
+            positive = emotion_row.get('happy', 0) + emotion_row.get('neutral', 0)
+            negative = emotion_row.get('sad', 0) + emotion_row.get('anxious', 0) + emotion_row.get('stressed', 0) + emotion_row.get('angry', 0) + emotion_row.get('agitated', 0)
             return positive - negative
         
-        # Compare first week vs last week
+        # Compare first half vs second half
         mid_point = len(emotions) // 2
         first_half = emotions[:mid_point]
         second_half = emotions[mid_point:]
@@ -158,28 +140,24 @@ async def get_mood_improvement_data(user_id: str, days: int, db: Session) -> Dic
         logger.error(f"[EmotionsAPI] Error calculating mood improvement: {e}")
         return {"percentage": 0, "trend": "neutral", "message": "Error calculating", "days_compared": 0}
 
-async def get_mood_journey_data(user_id: str, days: int, db: Session) -> Dict[str, Any]:
+async def get_mood_journey_data(user_id: str, days: int) -> Dict[str, Any]:
     """Get mood journey data for calendar/chart visualization"""
     try:
-        query = text("""
-            SELECT journal_date, happy, sad, anxious, stressed, angry, agitated, neutral
-            FROM emotions 
-            WHERE user_id = :user_id 
-            AND journal_date >= :start_date
-            ORDER BY journal_date ASC
-        """)
+        # Get emotions using Supabase
+        emotions = supabase_service.get_emotions_by_user(user_id)
         
+        # Filter by date range
         start_date = date.today() - timedelta(days=days-1)
-        result = db.execute(query, {"user_id": user_id, "start_date": start_date})
-        emotions = result.fetchall()
+        emotions = [e for e in emotions if datetime.fromisoformat(e['journal_date']).date() >= start_date]
+        emotions.sort(key=lambda x: x['journal_date'])
         
         mood_data = []
         mood_scores = []
         
         for emotion in emotions:
             # Calculate overall mood score (1-5 scale)
-            positive = emotion.happy + emotion.neutral
-            negative = emotion.sad + emotion.anxious + emotion.stressed + emotion.angry + emotion.agitated
+            positive = emotion.get('happy', 0) + emotion.get('neutral', 0)
+            negative = emotion.get('sad', 0) + emotion.get('anxious', 0) + emotion.get('stressed', 0) + emotion.get('angry', 0) + emotion.get('agitated', 0)
             total = positive + negative
             
             if total > 0:
@@ -188,17 +166,17 @@ async def get_mood_journey_data(user_id: str, days: int, db: Session) -> Dict[st
                 mood_score = 3  # Neutral
             
             mood_data.append({
-                "date": emotion.journal_date.isoformat(),
+                "date": emotion['journal_date'],
                 "mood_score": round(mood_score, 1),
                 "dominant_emotion": get_dominant_emotion(emotion),
                 "emotions": {
-                    "happy": emotion.happy,
-                    "sad": emotion.sad,
-                    "anxious": emotion.anxious,
-                    "stressed": emotion.stressed,
-                    "angry": emotion.angry,
-                    "agitated": emotion.agitated,
-                    "neutral": emotion.neutral
+                    "happy": emotion.get('happy', 0),
+                    "sad": emotion.get('sad', 0),
+                    "anxious": emotion.get('anxious', 0),
+                    "stressed": emotion.get('stressed', 0),
+                    "angry": emotion.get('angry', 0),
+                    "agitated": emotion.get('agitated', 0),
+                    "neutral": emotion.get('neutral', 0)
                 }
             })
             mood_scores.append(mood_score)
@@ -225,28 +203,17 @@ async def get_mood_journey_data(user_id: str, days: int, db: Session) -> Dict[st
         logger.error(f"[EmotionsAPI] Error getting mood journey: {e}")
         return {"daily_moods": [], "statistics": {"average_mood": 3, "lowest_mood": 3, "highest_mood": 3, "total_days": 0}}
 
-async def get_emotional_landscape_data(user_id: str, days: int, db: Session) -> Dict[str, Any]:
+async def get_emotional_landscape_data(user_id: str, days: int) -> Dict[str, Any]:
     """Get emotional landscape percentages"""
     try:
-        query = text("""
-            SELECT 
-                AVG(happy) as avg_happy,
-                AVG(sad) as avg_sad,
-                AVG(anxious) as avg_anxious,
-                AVG(stressed) as avg_stressed,
-                AVG(angry) as avg_angry,
-                AVG(agitated) as avg_agitated,
-                AVG(neutral) as avg_neutral
-            FROM emotions 
-            WHERE user_id = :user_id 
-            AND journal_date >= :start_date
-        """)
+        # Get emotions using Supabase
+        emotions = supabase_service.get_emotions_by_user(user_id)
         
+        # Filter by date range
         start_date = date.today() - timedelta(days=days-1)
-        result = db.execute(query, {"user_id": user_id, "start_date": start_date})
-        emotion_avgs = result.fetchone()
+        emotions = [e for e in emotions if datetime.fromisoformat(e['journal_date']).date() >= start_date]
         
-        if not emotion_avgs or emotion_avgs.avg_happy is None:
+        if not emotions:
             return {
                 "emotions": [
                     {"name": "Happy", "percentage": 20, "color": "#10B981"},
@@ -258,10 +225,17 @@ async def get_emotional_landscape_data(user_id: str, days: int, db: Session) -> 
                 "dominant_emotion": "Neutral"
             }
         
+        # Calculate averages
+        avg_happy = sum(e.get('happy', 0) for e in emotions) / len(emotions)
+        avg_sad = sum(e.get('sad', 0) for e in emotions) / len(emotions)
+        avg_anxious = sum(e.get('anxious', 0) for e in emotions) / len(emotions)
+        avg_stressed = sum(e.get('stressed', 0) for e in emotions) / len(emotions)
+        avg_angry = sum(e.get('angry', 0) for e in emotions) / len(emotions)
+        avg_agitated = sum(e.get('agitated', 0) for e in emotions) / len(emotions)
+        avg_neutral = sum(e.get('neutral', 0) for e in emotions) / len(emotions)
+        
         # Calculate total and percentages
-        total = (emotion_avgs.avg_happy + emotion_avgs.avg_sad + emotion_avgs.avg_anxious + 
-                emotion_avgs.avg_stressed + emotion_avgs.avg_angry + emotion_avgs.avg_agitated + 
-                emotion_avgs.avg_neutral)
+        total = avg_happy + avg_sad + avg_anxious + avg_stressed + avg_angry + avg_agitated + avg_neutral
         
         if total == 0:
             total = 1  # Avoid division by zero
@@ -269,27 +243,27 @@ async def get_emotional_landscape_data(user_id: str, days: int, db: Session) -> 
         emotions_data = [
             {
                 "name": "Happy",
-                "percentage": round((emotion_avgs.avg_happy / total) * 100, 1),
+                "percentage": round((avg_happy / total) * 100, 1),
                 "color": "#10B981"
             },
             {
                 "name": "Calm", 
-                "percentage": round((emotion_avgs.avg_neutral / total) * 100, 1),
+                "percentage": round((avg_neutral / total) * 100, 1),
                 "color": "#3B82F6"
             },
             {
                 "name": "Sad",
-                "percentage": round((emotion_avgs.avg_sad / total) * 100, 1),
+                "percentage": round((avg_sad / total) * 100, 1),
                 "color": "#8B5CF6"
             },
             {
                 "name": "Anxious",
-                "percentage": round((emotion_avgs.avg_anxious / total) * 100, 1),
+                "percentage": round((avg_anxious / total) * 100, 1),
                 "color": "#F59E0B"
             },
             {
                 "name": "Angry",
-                "percentage": round(((emotion_avgs.avg_angry + emotion_avgs.avg_agitated) / total) * 100, 1),
+                "percentage": round(((avg_angry + avg_agitated) / total) * 100, 1),
                 "color": "#EF4444"
             }
         ]
@@ -306,43 +280,32 @@ async def get_emotional_landscape_data(user_id: str, days: int, db: Session) -> 
         logger.error(f"[EmotionsAPI] Error getting emotional landscape: {e}")
         return {"emotions": [], "dominant_emotion": "Unknown"}
 
-async def get_progress_data(user_id: str, days: int, db: Session) -> Dict[str, Any]:
+async def get_progress_data(user_id: str, days: int) -> Dict[str, Any]:
     """Get progress metrics"""
     try:
-        # Get journal entries count
-        journal_query = text("""
-            SELECT COUNT(*) as count
-            FROM journal_entry 
-            WHERE user_id = :user_id 
-            AND journal_date >= :start_date
-        """)
+        # Get journal entries count using Supabase
+        journal_entries = supabase_service.get_journal_entries_by_user(user_id)
         
+        # Filter by date range
         start_date = date.today() - timedelta(days=days-1)
-        journal_result = db.execute(journal_query, {"user_id": user_id, "start_date": start_date})
-        journal_count = journal_result.fetchone().count
+        journal_entries = [e for e in journal_entries if datetime.fromisoformat(e['journal_date']).date() >= start_date]
+        journal_count = len(journal_entries)
         
-        # Calculate good days (days with positive mood)
-        emotions_query = text("""
-            SELECT journal_date, happy, neutral, sad, anxious, stressed, angry, agitated
-            FROM emotions 
-            WHERE user_id = :user_id 
-            AND journal_date >= :start_date
-        """)
-        
-        emotions_result = db.execute(emotions_query, {"user_id": user_id, "start_date": start_date})
-        emotions = emotions_result.fetchall()
+        # Get emotions using Supabase
+        emotions = supabase_service.get_emotions_by_user(user_id)
+        emotions = [e for e in emotions if datetime.fromisoformat(e['journal_date']).date() >= start_date]
         
         good_days = 0
         total_analyzed_days = len(emotions)
         
         for emotion in emotions:
-            positive = emotion.happy + emotion.neutral
-            negative = emotion.sad + emotion.anxious + emotion.stressed + emotion.angry + emotion.agitated
+            positive = emotion.get('happy', 0) + emotion.get('neutral', 0)
+            negative = emotion.get('sad', 0) + emotion.get('anxious', 0) + emotion.get('stressed', 0) + emotion.get('angry', 0) + emotion.get('agitated', 0)
             if positive > negative:
                 good_days += 1
         
         # Calculate streaks
-        current_streak = await calculate_current_streak(user_id, db)
+        current_streak = await calculate_current_streak(user_id)
         
         # Calculate mood stability (consistency in emotions)
         mood_stability = await calculate_mood_stability(emotions)
@@ -373,19 +336,14 @@ async def get_progress_data(user_id: str, days: int, db: Session) -> Dict[str, A
             "total_entries": 0
         }
 
-async def calculate_current_streak(user_id: str, db: Session) -> int:
+async def calculate_current_streak(user_id: str) -> int:
     """Calculate current journaling streak"""
     try:
-        query = text("""
-            SELECT DISTINCT journal_date 
-            FROM journal_entry 
-            WHERE user_id = :user_id 
-            ORDER BY journal_date DESC
-            LIMIT 30
-        """)
+        # Get journal entries using Supabase
+        journal_entries = supabase_service.get_journal_entries_by_user(user_id)
         
-        result = db.execute(query, {"user_id": user_id})
-        dates = [row.journal_date for row in result.fetchall()]
+        # Get unique dates and sort
+        dates = sorted(set(e['journal_date'] for e in journal_entries), reverse=True)[:30]
         
         if not dates:
             return 0
@@ -394,7 +352,8 @@ async def calculate_current_streak(user_id: str, db: Session) -> int:
         streak = 0
         current_date = date.today()
         
-        for check_date in dates:
+        for check_date_str in dates:
+            check_date = datetime.fromisoformat(check_date_str).date()
             if check_date == current_date:
                 streak += 1
                 current_date -= timedelta(days=1)
@@ -416,8 +375,8 @@ async def calculate_mood_stability(emotions) -> int:
         # Calculate variance in mood scores
         mood_scores = []
         for emotion in emotions:
-            positive = emotion.happy + emotion.neutral
-            negative = emotion.sad + emotion.anxious + emotion.stressed + emotion.angry + emotion.agitated
+            positive = emotion.get('happy', 0) + emotion.get('neutral', 0)
+            negative = emotion.get('sad', 0) + emotion.get('anxious', 0) + emotion.get('stressed', 0) + emotion.get('angry', 0) + emotion.get('agitated', 0)
             total = positive + negative
             if total > 0:
                 mood_score = positive / total
@@ -443,25 +402,18 @@ async def calculate_mood_stability(emotions) -> int:
         logger.error(f"[EmotionsAPI] Error calculating mood stability: {e}")
         return 50
 
-async def get_journal_entries_count(user_id: str, days: int, db: Session) -> Dict[str, Any]:
+async def get_journal_entries_count(user_id: str, days: int) -> Dict[str, Any]:
     """Get journal entries statistics"""
     try:
-        # This week
+        # Get journal entries using Supabase
+        journal_entries = supabase_service.get_journal_entries_by_user(user_id)
+        
+        # Filter by date ranges
         this_week_start = date.today() - timedelta(days=6)
-        this_week_query = text("""
-            SELECT COUNT(*) as count
-            FROM journal_entry 
-            WHERE user_id = :user_id 
-            AND journal_date >= :start_date
-        """)
-        
-        this_week_result = db.execute(this_week_query, {"user_id": user_id, "start_date": this_week_start})
-        this_week_count = this_week_result.fetchone().count
-        
-        # Total for period
         period_start = date.today() - timedelta(days=days-1)
-        total_result = db.execute(this_week_query, {"user_id": user_id, "start_date": period_start})
-        total_count = total_result.fetchone().count
+        
+        this_week_count = len([e for e in journal_entries if datetime.fromisoformat(e['journal_date']).date() >= this_week_start])
+        total_count = len([e for e in journal_entries if datetime.fromisoformat(e['journal_date']).date() >= period_start])
         
         return {
             "this_week": this_week_count,
@@ -476,13 +428,13 @@ async def get_journal_entries_count(user_id: str, days: int, db: Session) -> Dic
 def get_dominant_emotion(emotion_row) -> str:
     """Get the dominant emotion from an emotion row"""
     emotions = {
-        "happy": emotion_row.happy,
-        "sad": emotion_row.sad,
-        "anxious": emotion_row.anxious,
-        "stressed": emotion_row.stressed,
-        "angry": emotion_row.angry,
-        "agitated": emotion_row.agitated,
-        "neutral": emotion_row.neutral
+        "happy": emotion_row.get('happy', 0),
+        "sad": emotion_row.get('sad', 0),
+        "anxious": emotion_row.get('anxious', 0),
+        "stressed": emotion_row.get('stressed', 0),
+        "angry": emotion_row.get('angry', 0),
+        "agitated": emotion_row.get('agitated', 0),
+        "neutral": emotion_row.get('neutral', 0)
     }
     
     return max(emotions.items(), key=lambda x: x[1])[0]
@@ -520,41 +472,26 @@ async def trigger_emotion_analysis(
 async def get_emotion_summary(
     user_id: str,
     start_date: Optional[str] = Query(None),
-    end_date: Optional[str] = Query(None),
-    db: Session = Depends(get_db)
+    end_date: Optional[str] = Query(None)
 ):
     """Get emotion summary for a user over a date range"""
     logger.info(f"[EmotionsAPI] GET summary for user: {user_id}, start_date: {start_date}, end_date: {end_date}")
     
     try:
-        base_query = """
-            SELECT 
-                journal_date,
-                happy, stressed, anxious, angry, sad, agitated, neutral
-            FROM emotions 
-            WHERE user_id = :user_id
-        """
-        params = {"user_id": user_id}
+        # Get emotions using Supabase
+        emotions = supabase_service.get_emotions_by_user(user_id)
         
+        # Filter by date range if provided
         if start_date:
-            base_query += " AND journal_date >= :start_date"
-            params["start_date"] = start_date
-        
+            emotions = [e for e in emotions if e['journal_date'] >= start_date]
         if end_date:
-            base_query += " AND journal_date <= :end_date"
-            params["end_date"] = end_date
+            emotions = [e for e in emotions if e['journal_date'] <= end_date]
         
-        base_query += " ORDER BY journal_date ASC"
+        emotions.sort(key=lambda x: x['journal_date'])
         
-        query = text(base_query)
-        result = db.execute(query, params)
-        
-        emotions = result.fetchall()
         logger.info(f"[EmotionsAPI] Found {len(emotions)} emotion records for summary")
-        
-        emotion_list = [dict(emotion._mapping) for emotion in emotions]
         logger.info(f"[EmotionsAPI] ✓ Successfully retrieved emotion summary")
-        return emotion_list
+        return emotions
         
     except Exception as e:
         logger.error(f"[EmotionsAPI] ✗ Error getting emotion summary: {e}")
