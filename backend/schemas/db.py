@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 from pathlib import Path
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.engine.url import URL
 
 # Load environment variables from backend/.env (parent of this file's dir)
 load_dotenv(Path(__file__).resolve().parents[1] / ".env")
@@ -20,10 +21,9 @@ if not DATABASE_URL:
 
 # Create engine with connection pooling for Supabase
 engine = create_engine(
-    DATABASE_URL, 
-    pool_pre_ping=True,
-    pool_size=5,
-    max_overflow=10
+    DATABASE_URL,
+    connect_args={"sslmode": "require"},
+    pool_pre_ping=True
 )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 

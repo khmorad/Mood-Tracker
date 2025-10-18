@@ -1,11 +1,9 @@
 import asyncio
-from sqlalchemy.orm import Session
-from sqlalchemy import text
 from datetime import datetime, date
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from backend.schemas.db import SessionLocal
+from backend.services.supabase_service import supabase_service
 import json
 import re
 import google.generativeai as genai
@@ -129,22 +127,15 @@ class EmotionAnalyzer:
         """Get all conversations for a user on a specific date"""
         logger.info(f"[EmotionAnalyzer] Getting conversations for user {user_id} on {target_date}")
         
-        db = SessionLocal()
         try:
-            query = text("""
-                SELECT entry_text, AI_response 
-                FROM journal_entry 
-                WHERE user_id = :user_id 
-                AND journal_date = :journal_date 
-                ORDER BY entry_id ASC
-            """)
+            response = supabase_service.client.table("journal_entry") \
+                .select("entry_text, AI_response") \
+                .eq("user_id", user_id) \
+                .eq("journal_date", str(target_date)) \
+                .order("entry_id") \
+                .execute()
             
-            result = db.execute(query, {
-                "user_id": user_id,
-                "journal_date": target_date.strftime('%Y-%m-%d')
-            })
-            
-            entries = result.fetchall()
+            entries = response.data if response.data else []
             logger.info(f"[EmotionAnalyzer] Found {len(entries)} journal entries for user {user_id}")
             
             if not entries:
@@ -154,9 +145,9 @@ class EmotionAnalyzer:
             # Combine all conversations
             conversation_text = ""
             for i, entry in enumerate(entries):
-                conversation_text += f"User: {entry.entry_text}\n"
-                conversation_text += f"AI: {entry.AI_response}\n"
-                logger.debug(f"[EmotionAnalyzer] Added entry {i+1}: User: '{entry.entry_text[:50]}...'")
+                conversation_text += f"User: {entry['entry_text']}\n"
+                conversation_text += f"AI: {entry['AI_response']}\n"
+                logger.debug(f"[EmotionAnalyzer] Added entry {i+1}: User: '{entry['entry_text'][:50]}...'")
             
             logger.info(f"[EmotionAnalyzer] Combined conversation text length: {len(conversation_text)} characters")
             return conversation_text
@@ -164,79 +155,50 @@ class EmotionAnalyzer:
         except Exception as e:
             logger.error(f"[EmotionAnalyzer] Error getting daily conversations: {e}")
             return ""
-        finally:
-            db.close()
     
     async def check_emotions_exist(self, user_id: str, target_date: date) -> bool:
         """Check if emotions already analyzed for this user and date"""
         logger.info(f"[EmotionAnalyzer] Checking if emotions already exist for user {user_id} on {target_date}")
         
-        db = SessionLocal()
         try:
-            query = text("""
-                SELECT entry_id 
-                FROM emotions 
-                WHERE user_id = :user_id 
-                AND journal_date = :journal_date
-            """)
+            response = supabase_service.client.table("emotions") \
+                .select("entry_id") \
+                .eq("user_id", user_id) \
+                .eq("journal_date", str(target_date)) \
+                .execute()
             
-            result = db.execute(query, {
-                "user_id": user_id,
-                "journal_date": target_date.strftime('%Y-%m-%d')
-            })
-            
-            exists = result.fetchone() is not None
+            exists = len(response.data) > 0 if response.data else False
             logger.info(f"[EmotionAnalyzer] Emotions exist for user {user_id} on {target_date}: {exists}")
             return exists
             
         except Exception as e:
             logger.error(f"[EmotionAnalyzer] Error checking if emotions exist: {e}")
             return False
-        finally:
-            db.close()
     
     async def save_emotions(self, user_id: str, target_date: date, emotions: dict) -> bool:
         """Save emotion analysis to database"""
         logger.info(f"[EmotionAnalyzer] Saving emotions for user {user_id} on {target_date}: {emotions}")
         
-        db = SessionLocal()
         try:
             # Get the latest entry_id for this user and date
-            entry_query = text("""
-                SELECT entry_id 
-                FROM journal_entry 
-                WHERE user_id = :user_id 
-                AND journal_date = :journal_date 
-                ORDER BY entry_id DESC 
-                LIMIT 1
-            """)
+            entry_response = supabase_service.client.table("journal_entry") \
+                .select("entry_id") \
+                .eq("user_id", user_id) \
+                .eq("journal_date", str(target_date)) \
+                .order("entry_id", desc=True) \
+                .limit(1) \
+                .execute()
             
-            entry_result = db.execute(entry_query, {
-                "user_id": user_id,
-                "journal_date": target_date.strftime('%Y-%m-%d')
-            })
-            
-            entry_row = entry_result.fetchone()
-            if not entry_row:
+            if not entry_response.data:
                 logger.error(f"[EmotionAnalyzer] No journal entries found for user {user_id} on {target_date}")
                 return False
             
-            entry_id = entry_row.entry_id
+            entry_id = entry_response.data[0]["entry_id"]
             logger.info(f"[EmotionAnalyzer] Using entry_id {entry_id} for emotions")
             
             # Insert emotions
-            insert_query = text("""
-                INSERT INTO emotions (
-                    journal_date, entry_id, happy, stressed, anxious, 
-                    angry, sad, agitated, neutral, user_id
-                ) VALUES (
-                    :journal_date, :entry_id, :happy, :stressed, :anxious,
-                    :angry, :sad, :agitated, :neutral, :user_id
-                )
-            """)
-            
-            db.execute(insert_query, {
-                "journal_date": target_date.strftime('%Y-%m-%d'),
+            emotion_data = {
+                "journal_date": str(target_date),
                 "entry_id": entry_id,
                 "happy": emotions.get("happy", 0),
                 "stressed": emotions.get("stressed", 0),
@@ -246,18 +208,15 @@ class EmotionAnalyzer:
                 "agitated": emotions.get("agitated", 0),
                 "neutral": emotions.get("neutral", 0),
                 "user_id": user_id
-            })
+            }
             
-            db.commit()
+            supabase_service.create_emotion_record(emotion_data)
             logger.info(f"[EmotionAnalyzer] ✓ Successfully saved emotions for user {user_id} on {target_date}")
             return True
             
         except Exception as e:
-            db.rollback()
             logger.error(f"[EmotionAnalyzer] ✗ Error saving emotions: {e}")
             return False
-        finally:
-            db.close()
     
     async def analyze_user_day(self, user_id: str, target_date: date = None) -> bool:
         """Analyze emotions for a specific user and date"""

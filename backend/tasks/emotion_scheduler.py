@@ -1,10 +1,9 @@
 import asyncio
 from datetime import datetime, date, timedelta
-from sqlalchemy import text
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from backend.schemas.db import SessionLocal
+from backend.services.supabase_service import supabase_service
 from backend.services.emotion_analyzer import EmotionAnalyzer
 import logging
 import re
@@ -29,27 +28,19 @@ class EmotionScheduler:
         """Get all users who have journal entries for a specific date"""
         logger.info(f"[EmotionScheduler] Getting active users for {target_date}")
         
-        db = SessionLocal()
         try:
-            query = text("""
-                SELECT DISTINCT user_id 
-                FROM journal_entry 
-                WHERE journal_date = :journal_date
-            """)
+            response = supabase_service.client.table("journal_entry") \
+                .select("user_id") \
+                .eq("journal_date", str(target_date)) \
+                .execute()
             
-            result = db.execute(query, {
-                "journal_date": target_date.strftime('%Y-%m-%d')
-            })
-            
-            users = [row.user_id for row in result.fetchall()]
+            users = list({row["user_id"] for row in response.data}) if response.data else []
             logger.info(f"[EmotionScheduler] Found {len(users)} active users: {users}")
             return users
             
         except Exception as e:
             logger.error(f"[EmotionScheduler] Error getting active users: {e}")
             return []
-        finally:
-            db.close()
     
     async def analyze_daily_emotions(self, target_date: date = None):
         """Analyze emotions for all users for a specific date"""
