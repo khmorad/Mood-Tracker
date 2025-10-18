@@ -71,6 +71,7 @@ const MoodTrackingPage: React.FC = () => {
   const [isClient, setIsClient] = useState(false);
   const [conversation, setConversation] = useState<Conversation[]>([]);
   const [aiResponses, setAiResponses] = useState<string[]>([]);
+  const [typingMessageIndex, setTypingMessageIndex] = useState<number | null>(null);
 
   const journalInputRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -137,6 +138,7 @@ const MoodTrackingPage: React.FC = () => {
         }! How are you feeling today? I'm here to listen and support you. 💙`;
         setAiResponses([welcomeMessage]);
         setConversation([{ user: "", ai: welcomeMessage }]);
+        setTypingMessageIndex(0); // Show typing for welcome message
 
         console.log("[MoodTracking] User loaded:", userData);
       } catch (e) {
@@ -163,6 +165,7 @@ const MoodTrackingPage: React.FC = () => {
       "Hello! How are you feeling today? I'm here to listen and support you. 💙";
     setAiResponses([welcomeMessage]);
     setConversation([{ user: "", ai: welcomeMessage }]);
+    setTypingMessageIndex(0); // Show typing for welcome message
   };
 
   const scrollToBottom = () => {
@@ -327,6 +330,10 @@ const MoodTrackingPage: React.FC = () => {
       // Add user message to UI immediately
       setJournalEntries((prev) => [...prev, journal]);
 
+      // Set typing indicator for the new AI response
+      const newResponseIndex = aiResponses.length;
+      setTypingMessageIndex(newResponseIndex);
+
       // Get AI response
       const aiResponse = await getGeminiResponse(journal);
 
@@ -337,6 +344,11 @@ const MoodTrackingPage: React.FC = () => {
       ];
       setConversation(newConversation);
       setAiResponses((prev) => [...prev, aiResponse]);
+
+      // Clear typing indicator after response is complete
+      setTimeout(() => {
+        setTypingMessageIndex(null);
+      }, 100);
 
       // Save to backend
       const saved = await saveJournalEntry(journal, aiResponse);
@@ -357,6 +369,7 @@ const MoodTrackingPage: React.FC = () => {
       setErrorMessage(
         "An error occurred while processing your entry. Please try again."
       );
+      setTypingMessageIndex(null); // Clear typing on error
     } finally {
       setIsLoading(false);
     }
@@ -413,6 +426,9 @@ const MoodTrackingPage: React.FC = () => {
         setConversation(loadedConversation);
         setJournalEntries(loadedUserEntries);
         setAiResponses(loadedAiResponses);
+        
+        // Clear typing indicator since these are loaded messages
+        setTypingMessageIndex(null);
 
         console.log("[Load Entries] Loaded", entries.length, "recent entries");
       }
@@ -501,7 +517,11 @@ const MoodTrackingPage: React.FC = () => {
                     <Bot className="w-6 h-6 text-white" />
                   </div>
                   <div className="flex-1 bg-gradient-to-br from-rose-50 to-pink-50 rounded-3xl p-6 shadow-sm border border-rose-100">
-                    <TypingAnimation text={aiResponses[0]} />
+                    {typingMessageIndex === 0 ? (
+                      <TypingAnimation text={aiResponses[0]} />
+                    ) : (
+                      <p className="text-gray-800 leading-relaxed">{aiResponses[0]}</p>
+                    )}
                   </div>
                 </div>
 
@@ -527,7 +547,11 @@ const MoodTrackingPage: React.FC = () => {
                         {aiResponses[index + 1] ? (
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
-                              <TypingAnimation text={aiResponses[index + 1]} />
+                              {typingMessageIndex === index + 1 ? (
+                                <TypingAnimation text={aiResponses[index + 1]} />
+                              ) : (
+                                <p className="text-gray-800 leading-relaxed">{aiResponses[index + 1]}</p>
+                              )}
                             </div>
                             <button
                               onClick={() => playTTS(aiResponses[index + 1])}
