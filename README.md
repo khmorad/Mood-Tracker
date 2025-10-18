@@ -15,10 +15,10 @@
 </p>
 
 Mood Stabilizer is a journaling app designed to help users track and manage their emotional well-being.  
-By leveraging advanced APIs and modern cloud technologies, the app provides **personalized** and **accessible** journaling features to promote mental health.  
+By leveraging advanced APIs and modern cloud technologies, the app provides **personalized** and **accessible** journaling features to promote mental health.
 
 It supports dynamic journaling with AI-powered prompts, text-to-speech playback, automated emotion analysis, and secure user authentication,  
-all backed by a robust **Supabase PostgreSQL** database for **real-time data** and **scalability**.  
+all backed by a robust **Supabase PostgreSQL** database for **real-time data** and **scalability**.
 
 ## Features
 
@@ -91,11 +91,11 @@ The backend is built with FastAPI and uses Supabase as the database service, pro
    # Supabase Configuration
    SUPABASE_URL=your_supabase_project_url
    SUPABASE_KEY=your_supabase_anon_key
-   
+
    # AI Services
    GEMINI_API_KEY=your_gemini_api_key
    OPENAI_API_KEY=your_openai_api_key
-   
+
    # Legacy Database (if migrating)
    DB_HOST=localhost
    DB_USER=your_username
@@ -131,10 +131,12 @@ The application uses the following Supabase PostgreSQL tables:
 ### API Endpoints
 
 #### Core Endpoints
+
 - `GET /` - Health check
 - `GET /health` - Database health check
 
 #### User Management
+
 - `GET /users` - Get all users
 - `POST /users` - Create a new user
 - `POST /users/login` - User login
@@ -143,6 +145,7 @@ The application uses the following Supabase PostgreSQL tables:
 - `DELETE /users/{user_id}` - Delete user
 
 #### Journal Entries
+
 - `GET /journal-entries` - Get all journal entries
 - `POST /journal-entries` - Create journal entry
 - `GET /journal-entries/{entry_id}` - Get specific entry
@@ -150,6 +153,7 @@ The application uses the following Supabase PostgreSQL tables:
 - `DELETE /journal-entries/{entry_id}` - Delete entry
 
 #### Emotion Analysis
+
 - `GET /emotions/` - Get emotion analysis results
 - `GET /emotions/dashboard/{user_id}` - Get comprehensive dashboard data
 - `POST /emotions/analyze` - Manually trigger emotion analysis
@@ -190,18 +194,21 @@ The frontend will be available at `http://localhost:3000`
 ## Features in Detail
 
 ### 🤖 AI-Powered Emotion Analysis
+
 - **Automated Processing**: Daily analysis at 11:30 PM
 - **Gemini AI Integration**: Advanced emotion detection from conversations
 - **7 Emotion Categories**: Happy, Sad, Anxious, Stressed, Angry, Agitated, Neutral
 - **Historical Analysis**: Catch-up processing for missed days
 
 ### 📊 Comprehensive Dashboard
+
 - **Mood Improvement Tracking**: Percentage-based progress metrics
 - **Emotional Landscape**: Visual breakdown of emotion patterns
 - **Journey Visualization**: Calendar view of daily mood scores
 - **Progress Metrics**: Streaks, stability, and good days tracking
 
 ### 🔄 Real-time Data Management
+
 - **Supabase Integration**: Real-time database synchronization
 - **RESTful API**: Clean separation of concerns
 - **Error Handling**: Comprehensive logging and error recovery
@@ -234,6 +241,7 @@ Once the backend is running, you can view the interactive API documentation at:
 ## Technologies Used
 
 ### Backend
+
 - **FastAPI** - Modern, fast web framework for building APIs
 - **Supabase** - Open source Firebase alternative with PostgreSQL
 - **PostgreSQL** - Advanced open source relational database
@@ -244,6 +252,7 @@ Once the backend is running, you can view the interactive API documentation at:
 - **Python-dotenv** - Environment variable management
 
 ### Frontend
+
 - **Next.js 14** - React framework with App Router
 - **React 18** - User interface library
 - **TypeScript** - Type-safe JavaScript
@@ -255,6 +264,7 @@ Once the backend is running, you can view the interactive API documentation at:
 ## Environment Variables
 
 ### Backend (.env)
+
 ```env
 # Supabase Configuration
 SUPABASE_URL=https://your-project.supabase.co
@@ -276,6 +286,7 @@ DB_NAME=your_database_name
 ```
 
 ### Frontend (.env.local)
+
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:8000
 ```
@@ -283,14 +294,18 @@ NEXT_PUBLIC_API_URL=http://localhost:8000
 ## Deployment
 
 ### Backend Deployment
+
 The FastAPI backend can be deployed to various cloud platforms:
+
 - **Vercel** - Serverless deployment
 - **Railway** - Container-based deployment
 - **Google Cloud Run** - Scalable containerized deployment
 - **AWS ECS** - Enterprise container service
 
 ### Database
+
 Supabase provides managed PostgreSQL hosting with:
+
 - **Auto-scaling** - Handles traffic spikes automatically
 - **Real-time subscriptions** - Live data updates
 - **Built-in authentication** - User management system
