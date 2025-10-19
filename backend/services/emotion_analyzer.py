@@ -4,6 +4,7 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from backend.services.supabase_service import supabase_service
+from backend.models import Emotion
 import json
 import re
 import google.generativeai as genai
@@ -175,9 +176,9 @@ class EmotionAnalyzer:
             logger.error(f"[EmotionAnalyzer] Error checking if emotions exist: {e}")
             return False
     
-    async def save_emotions(self, user_id: str, target_date: date, emotions: dict) -> bool:
+    async def save_emotions(self, user_id: str, target_date: date, emotion_scores: dict) -> bool:
         """Save emotion analysis to database"""
-        logger.info(f"[EmotionAnalyzer] Saving emotions for user {user_id} on {target_date}: {emotions}")
+        logger.info(f"[EmotionAnalyzer] Saving emotions for user {user_id} on {target_date}: {emotion_scores}")
         
         try:
             # Get the latest entry_id for this user and date
@@ -196,21 +197,11 @@ class EmotionAnalyzer:
             entry_id = entry_response.data[0]["entry_id"]
             logger.info(f"[EmotionAnalyzer] Using entry_id {entry_id} for emotions")
             
-            # Insert emotions
-            emotion_data = {
-                "journal_date": str(target_date),
-                "entry_id": entry_id,
-                "happy": emotions.get("happy", 0),
-                "stressed": emotions.get("stressed", 0),
-                "anxious": emotions.get("anxious", 0),
-                "angry": emotions.get("angry", 0),
-                "sad": emotions.get("sad", 0),
-                "agitated": emotions.get("agitated", 0),
-                "neutral": emotions.get("neutral", 0),
-                "user_id": user_id
-            }
+            # Create Emotion model instance
+            emotion = Emotion.from_gemini_response(emotion_scores, user_id, entry_id, target_date)
             
-            supabase_service.create_emotion_record(emotion_data)
+            # Save using Supabase service
+            supabase_service.create_emotion_record(emotion)
             logger.info(f"[EmotionAnalyzer] ✓ Successfully saved emotions for user {user_id} on {target_date}")
             return True
             

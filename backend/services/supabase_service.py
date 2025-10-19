@@ -1,18 +1,30 @@
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any, List, Union
 from ..utils.supabase_client import get_supabase_client
 from supabase import Client
+import logging
+
+logger = logging.getLogger(__name__)
 
 class SupabaseService:
     def __init__(self):
         self.client: Client = get_supabase_client()
     
     # User operations
-    def create_user(self, user_data: Dict[str, Any]) -> Dict[str, Any]:
+    def create_user(self, user_data: Union[Dict[str, Any], 'User']) -> Dict[str, Any]:
         """Create a new user"""
         try:
-            result = self.client.table("user").insert(user_data).execute()
-            return result.data[0] if result.data else {}
+            # Convert to dict if it's a model
+            if hasattr(user_data, 'to_dict'):
+                data = user_data.to_dict()
+            else:
+                data = user_data
+                
+            result = self.client.table("user").insert(data).execute()
+            if result.data:
+                return result.data[0]
+            raise Exception("Failed to create user")
         except Exception as e:
+            logger.error(f"Error creating user: {str(e)}")
             raise Exception(f"Error creating user: {str(e)}")
     
     def get_user_by_id(self, user_id: str) -> Optional[Dict[str, Any]]:
@@ -21,6 +33,7 @@ class SupabaseService:
             result = self.client.table("user").select("*").eq("user_id", user_id).execute()
             return result.data[0] if result.data else None
         except Exception as e:
+            logger.error(f"Error getting user: {str(e)}")
             raise Exception(f"Error getting user: {str(e)}")
     
     def get_user_by_email(self, email: str) -> Optional[Dict[str, Any]]:
@@ -29,14 +42,22 @@ class SupabaseService:
             result = self.client.table("user").select("*").eq("email", email).execute()
             return result.data[0] if result.data else None
         except Exception as e:
+            logger.error(f"Error getting user by email: {str(e)}")
             raise Exception(f"Error getting user by email: {str(e)}")
     
-    def update_user(self, user_id: str, user_data: Dict[str, Any]) -> Dict[str, Any]:
+    def update_user(self, user_id: str, user_data: Union[Dict[str, Any], 'User']) -> Dict[str, Any]:
         """Update user"""
         try:
-            result = self.client.table("user").update(user_data).eq("user_id", user_id).execute()
+            # Convert to dict if it's a model
+            if hasattr(user_data, 'to_dict'):
+                data = user_data.to_dict()
+            else:
+                data = user_data
+                
+            result = self.client.table("user").update(data).eq("user_id", user_id).execute()
             return result.data[0] if result.data else {}
         except Exception as e:
+            logger.error(f"Error updating user: {str(e)}")
             raise Exception(f"Error updating user: {str(e)}")
     
     def delete_user(self, user_id: str) -> bool:
@@ -45,15 +66,23 @@ class SupabaseService:
             result = self.client.table("user").delete().eq("user_id", user_id).execute()
             return True
         except Exception as e:
+            logger.error(f"Error deleting user: {str(e)}")
             raise Exception(f"Error deleting user: {str(e)}")
     
     # Journal entry operations
-    def create_journal_entry(self, entry_data: Dict[str, Any]) -> Dict[str, Any]:
+    def create_journal_entry(self, entry_data: Union[Dict[str, Any], 'JournalEntry']) -> Dict[str, Any]:
         """Create a new journal entry"""
         try:
-            result = self.client.table("journal_entry").insert(entry_data).execute()
+            # Convert to dict if it's a model
+            if hasattr(entry_data, 'to_dict'):
+                data = entry_data.to_dict()
+            else:
+                data = entry_data
+                
+            result = self.client.table("journal_entry").insert(data).execute()
             return result.data[0] if result.data else {}
         except Exception as e:
+            logger.error(f"Error creating journal entry: {str(e)}")
             raise Exception(f"Error creating journal entry: {str(e)}")
     
     def get_journal_entries_by_user(self, user_id: str) -> List[Dict[str, Any]]:
@@ -62,6 +91,7 @@ class SupabaseService:
             result = self.client.table("journal_entry").select("*").eq("user_id", user_id).order("journal_date", desc=True).execute()
             return result.data or []
         except Exception as e:
+            logger.error(f"Error getting journal entries: {str(e)}")
             raise Exception(f"Error getting journal entries: {str(e)}")
     
     def get_journal_entry_by_id(self, entry_id: int) -> Optional[Dict[str, Any]]:
@@ -70,6 +100,7 @@ class SupabaseService:
             result = self.client.table("journal_entry").select("*").eq("entry_id", entry_id).execute()
             return result.data[0] if result.data else None
         except Exception as e:
+            logger.error(f"Error getting journal entry: {str(e)}")
             raise Exception(f"Error getting journal entry: {str(e)}")
     
     def update_journal_entry(self, entry_id: int, entry_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -78,6 +109,7 @@ class SupabaseService:
             result = self.client.table("journal_entry").update(entry_data).eq("entry_id", entry_id).execute()
             return result.data[0] if result.data else {}
         except Exception as e:
+            logger.error(f"Error updating journal entry: {str(e)}")
             raise Exception(f"Error updating journal entry: {str(e)}")
     
     def delete_journal_entry(self, entry_id: int) -> bool:
@@ -86,15 +118,23 @@ class SupabaseService:
             result = self.client.table("journal_entry").delete().eq("entry_id", entry_id).execute()
             return True
         except Exception as e:
+            logger.error(f"Error deleting journal entry: {str(e)}")
             raise Exception(f"Error deleting journal entry: {str(e)}")
     
     # Emotion operations
-    def create_emotion_record(self, emotion_data: Dict[str, Any]) -> Dict[str, Any]:
+    def create_emotion_record(self, emotion_data: Union[Dict[str, Any], 'Emotion']) -> Dict[str, Any]:
         """Create emotion record"""
         try:
-            result = self.client.table("emotions").insert(emotion_data).execute()
+            # Convert to dict if it's a model
+            if hasattr(emotion_data, 'to_dict'):
+                data = emotion_data.to_dict()
+            else:
+                data = emotion_data
+                
+            result = self.client.table("emotions").insert(data).execute()
             return result.data[0] if result.data else {}
         except Exception as e:
+            logger.error(f"Error creating emotion record: {str(e)}")
             raise Exception(f"Error creating emotion record: {str(e)}")
     
     def get_emotions_by_user(self, user_id: str) -> List[Dict[str, Any]]:
@@ -103,6 +143,7 @@ class SupabaseService:
             result = self.client.table("emotions").select("*").eq("user_id", user_id).order("journal_date", desc=True).execute()
             return result.data or []
         except Exception as e:
+            logger.error(f"Error getting emotions: {str(e)}")
             raise Exception(f"Error getting emotions: {str(e)}")
     
     def get_emotions_by_entry(self, entry_id: int) -> Optional[Dict[str, Any]]:
@@ -111,6 +152,7 @@ class SupabaseService:
             result = self.client.table("emotions").select("*").eq("entry_id", entry_id).execute()
             return result.data[0] if result.data else None
         except Exception as e:
+            logger.error(f"Error getting emotions by entry: {str(e)}")
             raise Exception(f"Error getting emotions by entry: {str(e)}")
     
     # Episode operations
@@ -120,6 +162,7 @@ class SupabaseService:
             result = self.client.table("episode").insert(episode_data).execute()
             return result.data[0] if result.data else {}
         except Exception as e:
+            logger.error(f"Error creating episode: {str(e)}")
             raise Exception(f"Error creating episode: {str(e)}")
     
     def get_episodes_by_user(self, user_id: str) -> List[Dict[str, Any]]:
@@ -128,6 +171,7 @@ class SupabaseService:
             result = self.client.table("episode").select("*").eq("user_id", user_id).order("episode_start", desc=True).execute()
             return result.data or []
         except Exception as e:
+            logger.error(f"Error getting episodes: {str(e)}")
             raise Exception(f"Error getting episodes: {str(e)}")
     
     def update_episode(self, episode_id: str, episode_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -136,6 +180,7 @@ class SupabaseService:
             result = self.client.table("episode").update(episode_data).eq("episode_id", episode_id).execute()
             return result.data[0] if result.data else {}
         except Exception as e:
+            logger.error(f"Error updating episode: {str(e)}")
             raise Exception(f"Error updating episode: {str(e)}")
     
     def delete_episode(self, episode_id: str) -> bool:
@@ -144,6 +189,7 @@ class SupabaseService:
             result = self.client.table("episode").delete().eq("episode_id", episode_id).execute()
             return True
         except Exception as e:
+            logger.error(f"Error deleting episode: {str(e)}")
             raise Exception(f"Error deleting episode: {str(e)}")
     
     # Episode type operations
@@ -153,6 +199,7 @@ class SupabaseService:
             result = self.client.table("episode_type").insert(episode_type_data).execute()
             return result.data[0] if result.data else {}
         except Exception as e:
+            logger.error(f"Error creating episode type: {str(e)}")
             raise Exception(f"Error creating episode type: {str(e)}")
     
     def get_episode_types_by_episode(self, episode_id: str) -> List[Dict[str, Any]]:
@@ -161,6 +208,7 @@ class SupabaseService:
             result = self.client.table("episode_type").select("*").eq("episode_id", episode_id).execute()
             return result.data or []
         except Exception as e:
+            logger.error(f"Error getting episode types: {str(e)}")
             raise Exception(f"Error getting episode types: {str(e)}")
 
 # Create a singleton instance

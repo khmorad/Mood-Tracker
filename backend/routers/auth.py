@@ -1,5 +1,4 @@
 from fastapi import APIRouter, HTTPException, Response
-from pydantic import BaseModel
 import sys
 import os
 import time
@@ -7,19 +6,12 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from ..utils.jwt_utils import verify_password, get_password_hash, create_access_token
 from ..middleware.auth import get_current_user_dependency
 from ..services.supabase_service import supabase_service
+from ..schemas.auth_schemas import LoginRequest, RegisterRequest, UserResponse
+from ..models.user import User
 
 router = APIRouter(prefix="/users", tags=["auth"])
 
-class LoginRequest(BaseModel):
-    email: str
-    password: str
-
-class RegisterRequest(BaseModel):
-    email: str
-    password: str
-    name: str
-
-@router.post("/register")
+@router.post("/register", response_model=UserResponse)
 async def register(register_data: RegisterRequest):
     """Register a new user with hashed password"""
     try:
@@ -40,18 +32,24 @@ async def register(register_data: RegisterRequest):
         first_name = name_parts[0] if name_parts else ""
         last_name = name_parts[1] if len(name_parts) > 1 else ""
         
-        # Insert new user using Supabase
-        user_data = {
-            "user_id": user_id,
-            "email": register_data.email,
-            "password": hashed_password,
-            "first_name": first_name,
-            "last_name": last_name
-        }
+        # Create User model instance
+        user = User(
+            user_id=user_id,
+            email=register_data.email,
+            password=hashed_password,
+            first_name=first_name,
+            last_name=last_name
+        )
         
-        supabase_service.create_user(user_data)
+        created_user_dict = supabase_service.create_user(user)
         
-        return {"message": "User registered successfully", "user_id": user_id}
+        return UserResponse(
+            user_id=created_user_dict["user_id"],
+            email=created_user_dict["email"],
+            first_name=created_user_dict.get("first_name", ""),
+            last_name=created_user_dict.get("last_name", ""),
+            message="User registered successfully"
+        )
         
     except HTTPException:
         raise
@@ -62,26 +60,26 @@ async def register(register_data: RegisterRequest):
 async def login(login_data: LoginRequest, response: Response):
     """Login user with email and password, return JWT in cookie"""
     try:
-        # Get user using Supabase
-        user = supabase_service.get_user_by_email(login_data.email)
+        # Get user using Supabase - returns dict
+        user_dict = supabase_service.get_user_by_email(login_data.email)
         
-        if not user:
+        if not user_dict:
             raise HTTPException(status_code=401, detail="Invalid email or password")
         
         # Secure password check
-        if not verify_password(login_data.password, user['password']):
+        if not verify_password(login_data.password, user_dict['password']):
             raise HTTPException(status_code=401, detail="Invalid email or password")
         
         # JWT creation - INCLUDE ALL USER INFO
         # Remove password before creating JWT
-        user_dict_for_jwt = user.copy()
+        user_dict_for_jwt = user_dict.copy()
         user_dict_for_jwt.pop('password', None)
         
         # Create JWT with all user information
         access_token = create_access_token(user_dict_for_jwt)
         
         # Remove password from response
-        user.pop('password', None)
+        user_dict.pop('password', None)
         
         # Set JWT as HTTP-only cookie
         response.set_cookie(
@@ -95,7 +93,7 @@ async def login(login_data: LoginRequest, response: Response):
         
         return {
             "message": "Login successful",
-            "user": user
+            "user": user_dict
         }
     except HTTPException:
         raise

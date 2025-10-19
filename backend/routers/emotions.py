@@ -50,8 +50,33 @@ async def get_dashboard_data(
     logger.info(f"[EmotionsAPI] GET dashboard data for user: {user_id}, days: {days}")
     
     try:
+        # Check if user exists
+        user = supabase_service.get_user_by_id(user_id)
+        if not user:
+            logger.warning(f"[EmotionsAPI] User {user_id} not found")
+            # Return empty data structure instead of error for better UX
+            return {
+                "mood_improvement": {"percentage": 0, "trend": "neutral", "message": "No data available", "days_compared": 0},
+                "mood_journey": {"daily_moods": [], "statistics": {"average_mood": 3, "lowest_mood": 0, "highest_mood": 0, "total_days": 0}},
+                "emotional_landscape": {"emotions": [], "dominant_emotion": "Neutral"},
+                "progress": {
+                    "good_days": {"count": 0, "total": 0, "percentage": 0},
+                    "journaling_streak": {"current_days": 0, "this_period": 0},
+                    "mood_stability": {"percentage": 0, "status": "no_data"},
+                    "total_entries": 0
+                },
+                "journal_entries": {"this_week": 0, "total_period": 0, "average_per_week": 0},
+                "period": {
+                    "start_date": (date.today() - timedelta(days=days-1)).isoformat(),
+                    "end_date": date.today().isoformat(),
+                    "days": days
+                }
+            }
+        
         end_date = date.today()
         start_date = end_date - timedelta(days=days-1)
+        
+        logger.info(f"[EmotionsAPI] Processing data for user {user_id} from {start_date} to {end_date}")
         
         # Get mood improvement data
         mood_improvement = await get_mood_improvement_data(user_id, days)
@@ -81,11 +106,12 @@ async def get_dashboard_data(
             }
         }
         
-        logger.info(f"[EmotionsAPI] ✓ Successfully retrieved dashboard data")
+        logger.info(f"[EmotionsAPI] ✓ Successfully retrieved dashboard data for user {user_id}")
+        logger.info(f"[EmotionsAPI] Data summary: {journal_entries['total_period']} entries, {progress_data['good_days']['count']} good days")
         return dashboard_data
         
     except Exception as e:
-        logger.error(f"[EmotionsAPI] ✗ Error getting dashboard data: {e}")
+        logger.error(f"[EmotionsAPI] ✗ Error getting dashboard data for user {user_id}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 async def get_mood_improvement_data(user_id: str, days: int) -> Dict[str, Any]:
