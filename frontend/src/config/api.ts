@@ -14,6 +14,14 @@ export const API_ENDPOINTS = {
   JOURNAL_ENTRIES_BY_USER: (userId: string) =>
     `${API_BASE_URL}/journal-entries?user_id=${userId}`,
 
+  // Emotions
+  EMOTIONS: `${API_BASE_URL}/emotions`,
+  EMOTIONS_DASHBOARD: (userId: string, days: number = 30) =>
+    `${API_BASE_URL}/emotions/dashboard/${userId}?days=${days}`,
+  EMOTIONS_SUMMARY: (userId: string) =>
+    `${API_BASE_URL}/emotions/summary/${userId}`,
+  EMOTIONS_ANALYZE: `${API_BASE_URL}/emotions/analyze`,
+
   // Health check
   HEALTH: `${API_BASE_URL}/health`,
 };

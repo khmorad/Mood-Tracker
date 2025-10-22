@@ -6,6 +6,7 @@ from pydantic import BaseModel
 from typing import Optional, List
 import os
 from dotenv import load_dotenv
+from pathlib import Path
 import uvicorn
 
 # Add these new imports for background task
@@ -19,8 +20,8 @@ from backend.routers import emotions
 # Add this import for the background scheduler
 from backend.tasks.emotion_scheduler import emotion_scheduler
 
-# Load environment variables
-load_dotenv()
+# Load environment variables from backend/.env explicitly
+load_dotenv(Path(__file__).resolve().parent / ".env")
 
 # Add lifespan event handler for background task
 @asynccontextmanager
@@ -64,7 +65,7 @@ DB_NAME = os.getenv("DB_NAME")
 if not all([DB_HOST, DB_USER, DB_PASSWORD, DB_NAME]):
     raise ValueError("Missing required database environment variables")
 
-DATABASE_URL = f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}"
+DATABASE_URL = f"postgresql+psycopg2://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}"
 
 # Create database engine
 engine = create_engine(DATABASE_URL, pool_pre_ping=True)

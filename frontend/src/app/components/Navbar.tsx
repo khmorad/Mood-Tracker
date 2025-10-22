@@ -13,6 +13,10 @@ function getCookie(name: string): string | null {
   return null;
 }
 
+function deleteCookie(name: string) {
+  document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+}
+
 const EnhancedNavbar: React.FC = () => {
   type DecodedToken = {
     user_id: string;
@@ -59,7 +63,16 @@ const EnhancedNavbar: React.FC = () => {
   };
 
   const handleLogout = () => {
+    // Clear localStorage
     localStorage.removeItem("userInfo");
+
+    // Clear the JWT cookie
+    deleteCookie("access_token");
+
+    // Clear user state
+    setUser(null);
+
+    // Redirect to login page
     window.location.href = "/login";
   };
 
