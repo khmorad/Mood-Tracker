@@ -209,7 +209,8 @@ const Dashboard: React.FC = () => {
               Welcome back! 👋
             </h1>
             <p className="text-gray-600">
-              Here&apos;s your mood journey overview for the last {timeRange} days
+              Here&apos;s your mood journey overview for the last {timeRange}{" "}
+              days
             </p>
           </div>
 

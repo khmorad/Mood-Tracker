@@ -71,7 +71,9 @@ const MoodTrackingPage: React.FC = () => {
   const [isClient, setIsClient] = useState(false);
   const [conversation, setConversation] = useState<Conversation[]>([]);
   const [aiResponses, setAiResponses] = useState<string[]>([]);
-  const [typingMessageIndex, setTypingMessageIndex] = useState<number | null>(null);
+  const [typingMessageIndex, setTypingMessageIndex] = useState<number | null>(
+    null
+  );
 
   const journalInputRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -420,7 +422,7 @@ const MoodTrackingPage: React.FC = () => {
         setConversation(loadedConversation);
         setJournalEntries(loadedUserEntries);
         setAiResponses(loadedAiResponses);
-        
+
         // Clear typing indicator since these are loaded messages
         setTypingMessageIndex(null);
 
@@ -520,7 +522,9 @@ const MoodTrackingPage: React.FC = () => {
                     {typingMessageIndex === 0 ? (
                       <TypingAnimation text={aiResponses[0]} />
                     ) : (
-                      <p className="text-gray-800 leading-relaxed">{aiResponses[0]}</p>
+                      <p className="text-gray-800 leading-relaxed">
+                        {aiResponses[0]}
+                      </p>
                     )}
                   </div>
                 </div>
@@ -548,9 +552,13 @@ const MoodTrackingPage: React.FC = () => {
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
                               {typingMessageIndex === index + 1 ? (
-                                <TypingAnimation text={aiResponses[index + 1]} />
+                                <TypingAnimation
+                                  text={aiResponses[index + 1]}
+                                />
                               ) : (
-                                <p className="text-gray-800 leading-relaxed">{aiResponses[index + 1]}</p>
+                                <p className="text-gray-800 leading-relaxed">
+                                  {aiResponses[index + 1]}
+                                </p>
                               )}
                             </div>
                             <button
