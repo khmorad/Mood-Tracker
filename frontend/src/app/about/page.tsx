@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 
 const AboutUsPage: React.FC = () => {
   return (
@@ -168,9 +169,11 @@ const TeamMember: React.FC<{
     <div className="group bg-white/70 backdrop-blur-sm rounded-3xl p-8 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:scale-105">
       <div className="text-center mb-6">
         <div className="relative inline-block">
-          <img
+          <Image
             src={imageSrc}
             alt={`Profile of ${name}`}
+            width={128}
+            height={128}
             className="w-32 h-32 rounded-full object-cover shadow-lg group-hover:shadow-xl transition-all duration-300"
           />
           <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>

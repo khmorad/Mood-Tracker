@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import Layout from "../layout";
 import axios from "axios";
 import TypingAnimation from "../components/TypingAnimation";
@@ -383,13 +383,7 @@ const MoodTrackingPage: React.FC = () => {
   };
 
   // Load existing journal entries on component mount
-  useEffect(() => {
-    if (user && user.user_id !== "anonymous") {
-      loadExistingEntries();
-    }
-  }, [user]);
-
-  const loadExistingEntries = async () => {
+  const loadExistingEntries = useCallback(async () => {
     try {
       if (!user || user.user_id === "anonymous") return;
 
@@ -436,7 +430,13 @@ const MoodTrackingPage: React.FC = () => {
       console.error("[Load Entries] Error:", error);
       // Don't show error to user for loading existing entries
     }
-  };
+  }, [user, conversation, aiResponses]);
+
+  useEffect(() => {
+    if (user && user.user_id !== "anonymous") {
+      loadExistingEntries();
+    }
+  }, [user, loadExistingEntries]);
 
   const handleMoodSelection = (moodLabel: string) => {
     setCurrentMood((prev) => {

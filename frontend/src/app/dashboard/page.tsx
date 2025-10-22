@@ -19,7 +19,6 @@ const Dashboard: React.FC = () => {
     loading,
     error,
     refetch,
-    userId,
   } = useEmotionData(timeRange);
 
   useEffect(() => {
@@ -210,7 +209,7 @@ const Dashboard: React.FC = () => {
               Welcome back! 👋
             </h1>
             <p className="text-gray-600">
-              Here's your mood journey overview for the last {timeRange} days
+              Here&apos;s your mood journey overview for the last {timeRange} days
             </p>
           </div>
 
