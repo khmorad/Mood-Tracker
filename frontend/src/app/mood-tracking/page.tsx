@@ -603,25 +603,36 @@ const MoodTrackingPage: React.FC = () => {
 
               {/* Current Plan Display for Premium Users */}
               {user?.subscriptionTier && user.subscriptionTier !== "Free" && (
-                <div className="w-full bg-gradient-to-r from-green-100 to-blue-100 border-2 border-green-300 py-3 px-4 rounded-xl flex items-center justify-center space-x-2">
-                  <Crown className="w-5 h-5 text-green-600" />
-                  <div className="text-center">
-                    <div className="text-sm font-semibold text-green-800">
-                      {user.subscriptionTier} Plan Active
+                <>
+                  <div className="w-full bg-gradient-to-r from-green-100 to-blue-100 border-2 border-green-300 py-3 px-4 rounded-xl flex items-center justify-center space-x-2">
+                    <Crown className="w-5 h-5 text-green-600" />
+                    <div className="text-center">
+                      <div className="text-sm font-semibold text-green-800">
+                        {user.subscriptionTier} Plan Active
+                      </div>
+                      {user.subscriptionExpires && user.subscriptionTier !== "Professional" && (
+                        <div className="text-xs text-green-600">
+                          Expires:{" "}
+                          {new Date(user.subscriptionExpires).toLocaleDateString()}
+                        </div>
+                      )}
+                      {user.subscriptionTier === "Professional" && (
+                        <div className="text-xs text-green-600">
+                          Lifetime Access
+                        </div>
+                      )}
                     </div>
-                    {user.subscriptionExpires && user.subscriptionTier !== "Professional" && (
-                      <div className="text-xs text-green-600">
-                        Expires:{" "}
-                        {new Date(user.subscriptionExpires).toLocaleDateString()}
-                      </div>
-                    )}
-                    {user.subscriptionTier === "Professional" && (
-                      <div className="text-xs text-green-600">
-                        Lifetime Access
-                      </div>
-                    )}
                   </div>
-                </div>
+                  
+                  {/* Change Plan Button for Premium Users */}
+                  <Link
+                    href="/pricing"
+                    className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-2 px-4 rounded-xl font-medium hover:from-blue-700 hover:to-purple-700 transition-all duration-200 flex items-center justify-center space-x-2"
+                  >
+                    <Crown className="w-4 h-4" />
+                    <span>Change Plan</span>
+                  </Link>
+                </>
               )}
 
               {/* Dashboard Link */}

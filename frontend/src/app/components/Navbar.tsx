@@ -226,6 +226,24 @@ const EnhancedNavbar: React.FC = () => {
                 </button>
               )}
 
+              {/* Change Plan button for Premium users */}
+              {user.subscriptionTier !== "Free" && (
+                <button
+                  style={{
+                    ...styles.dropdownItem,
+                    background: "linear-gradient(to right, #3b82f6, #8b5cf6)",
+                    color: "white",
+                    fontWeight: "600",
+                  }}
+                  onClick={() => {
+                    closeDropdown();
+                    window.location.href = "/pricing";
+                  }}
+                >
+                  Change Plan
+                </button>
+              )}
+
               <button style={styles.dropdownItem} onClick={closeDropdown}>
                 Account
               </button>
