@@ -142,12 +142,9 @@ const EnhancedNavbar: React.FC = () => {
             onMouseEnter={() => handleMouseEnter("contact")}
             onMouseLeave={handleMouseLeave}
           >
-            <button
-              onClick={() => (window.location.href = "/contact")}
-              style={styles.link}
-            >
+            <a href="/contact" style={styles.link}>
               Contact
-            </button>
+            </a>
           </li>
         </ul>
 
