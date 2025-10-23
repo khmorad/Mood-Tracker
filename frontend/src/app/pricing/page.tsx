@@ -2,17 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import axios from "axios";
+import { jwtDecode } from "jwt-decode";
 import {
   Flower2,
   Sparkles,
   ArrowRight,
   BarChart3,
   Heart,
-  Users,
-  Shield,
   Star,
-  Zap,
-  Crown,
   Check,
 } from "lucide-react";
 import Navbar from "../components/Navbar";
@@ -23,12 +21,55 @@ import SimpleBackground from "../components/SimpleBackground";
 import Safe3DScene from "../components/Safe3DScene";
 import Footer from "../components/Footer";
 
+interface DecodedToken {
+  user_id?: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  [key: string]: unknown;
+}
+
+interface User {
+  user_id?: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+}
+
+function getCookie(name: string): string | null {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop()!.split(";").shift()!;
+  return null;
+}
+
 const PricingPage: React.FC = () => {
   const [isClient, setIsClient] = useState(false);
   const [useSimpleBackground, setUseSimpleBackground] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     setIsClient(true);
+
+    // Initialize user
+    const jwt = getCookie("access_token");
+    if (jwt) {
+      try {
+        const decoded: DecodedToken = jwtDecode(jwt);
+        const userData: User = {
+          user_id: decoded.user_id || decoded.email || "anonymous",
+          firstName: decoded.first_name || "",
+          lastName: decoded.last_name || "",
+          email: decoded.email || "",
+        };
+        setUser(userData);
+      } catch (e) {
+        console.error("Failed to decode JWT:", e);
+      }
+    }
 
     // Check if WebGL is supported
     try {
@@ -43,18 +84,64 @@ const PricingPage: React.FC = () => {
     }
   }, []);
 
-  if (!isClient) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-pink-200 via-purple-200 to-blue-200 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-20 h-20 bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl">
-            <Flower2 className="w-10 h-10 text-white" />
-          </div>
-          <h1 className="text-2xl font-bold text-gray-800">Loading...</h1>
-        </div>
-      </div>
-    );
-  }
+  const clearMessages = () => {
+    setSuccessMessage(null);
+    setErrorMessage(null);
+  };
+
+  const activatePlan = async (planName: string) => {
+    try {
+      clearMessages();
+
+      // Check if user is logged in
+      if (!user || !user.user_id || user.user_id === "anonymous") {
+        setErrorMessage("Please log in to activate a plan.");
+        // Redirect to login page
+        setTimeout(() => {
+          window.location.href = "/auth/signin";
+        }, 2000);
+        return;
+      }
+
+      // Handle Professional plan - redirect to contact
+      if (planName === "Professional") {
+        window.location.href = "/contact";
+        return;
+      }
+
+      setIsLoading(true);
+
+      const response = await axios.post("/api/pricing/activate-plan", {
+        user_id: user.user_id,
+        plan: planName,
+      });
+
+      if (response.data) {
+        setSuccessMessage(response.data.message);
+
+        // Redirect based on plan
+        if (planName === "Free") {
+          setTimeout(() => {
+            window.location.href = "/mood-tracking";
+          }, 2000);
+        } else if (planName === "Plus") {
+          setTimeout(() => {
+            window.location.href = "/mood-tracking";
+          }, 2000);
+        }
+      }
+    } catch (error) {
+      console.error("Plan Activation Error:", error);
+      if (axios.isAxiosError(error)) {
+        const errorMsg = error.response?.data?.detail || error.message;
+        setErrorMessage(`Failed to activate plan: ${errorMsg}`);
+      } else {
+        setErrorMessage("Failed to activate plan. Please try again.");
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -159,6 +246,19 @@ const PricingPage: React.FC = () => {
     },
   ];
 
+  if (!isClient) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-pink-200 via-purple-200 to-blue-200 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-20 h-20 bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl">
+            <Flower2 className="w-10 h-10 text-white" />
+          </div>
+          <h1 className="text-2xl font-bold text-gray-800">Loading...</h1>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
       <Background />
@@ -169,6 +269,46 @@ const PricingPage: React.FC = () => {
 
         {/* 3D Background Scene */}
         {!useSimpleBackground && <Safe3DScene />}
+
+        {/* Success/Error Messages */}
+        {(successMessage || errorMessage) && (
+          <motion.div
+            className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 max-w-md w-full mx-auto"
+            initial={{ opacity: 0, y: -50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -50 }}
+          >
+            <div
+              className={`p-4 rounded-xl shadow-lg backdrop-blur-lg border ${
+                successMessage
+                  ? "bg-green-100/90 border-green-300 text-green-800"
+                  : "bg-red-100/90 border-red-300 text-red-800"
+              }`}
+            >
+              <p className="font-medium text-center">
+                {successMessage || errorMessage}
+              </p>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Loading Overlay */}
+        {isLoading && (
+          <motion.div
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 flex items-center justify-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <div className="bg-white rounded-2xl p-8 shadow-2xl">
+              <div className="flex items-center space-x-4">
+                <div className="w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+                <span className="text-lg font-medium text-gray-800">
+                  Activating your plan...
+                </span>
+              </div>
+            </div>
+          </motion.div>
+        )}
 
         {/* Main Content */}
         <div className="relative z-10 container mx-auto px-6 py-20">
@@ -210,8 +350,8 @@ const PricingPage: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.6 }}
             >
-              Start free and upgrade when you're ready. All plans include our
-              core mood tracking features with no hidden fees.
+              Start free and upgrade when you&apos;re ready. All plans include
+              our core mood tracking features with no hidden fees.
             </motion.p>
           </motion.div>
 
@@ -227,15 +367,7 @@ const PricingPage: React.FC = () => {
                 <motion.div key={index} variants={itemVariants}>
                   <PricingCard
                     {...plan}
-                    onClick={() => {
-                      if (plan.title === "Free") {
-                        window.location.href = "/mood-tracking";
-                      } else if (plan.title === "Professional") {
-                        window.location.href = "/contact";
-                      } else {
-                        window.location.href = "/signup";
-                      }
-                    }}
+                    onClick={() => activatePlan(plan.title)}
                   />
                 </motion.div>
               ))}
@@ -352,7 +484,8 @@ const PricingPage: React.FC = () => {
               className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-8 py-4 rounded-2xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-3 mx-auto"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => (window.location.href = "/mood-tracking")}
+              onClick={() => activatePlan("Free")}
+              disabled={isLoading}
             >
               Get Started Free
               <ArrowRight className="w-5 h-5" />

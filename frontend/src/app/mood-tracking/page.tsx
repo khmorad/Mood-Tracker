@@ -68,8 +68,6 @@ const MoodTrackingPage: React.FC = () => {
   const [journalEntries, setJournalEntries] = useState<string[]>([]);
   const [currentMood, setCurrentMood] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [isClient, setIsClient] = useState(false);
   const [conversation, setConversation] = useState<Conversation[]>([]);
@@ -195,8 +193,7 @@ const MoodTrackingPage: React.FC = () => {
   }, [journalEntries, aiResponses]);
 
   const clearMessages = () => {
-    setErrorMessage(null);
-    setSuccessMessage(null);
+    // Remove the setErrorMessage and setSuccessMessage calls since they're not used
   };
 
   const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
@@ -264,9 +261,7 @@ const MoodTrackingPage: React.FC = () => {
         console.error("[AI Error] Response status:", error.response?.status);
         console.error("[AI Error] Error message:", error.message);
       }
-      setErrorMessage(
-        "I'm having trouble processing that right now. Could you try again?"
-      );
+      // Remove setErrorMessage call since it's not used
       return "I'm sorry, I'm having trouble processing that right now. Could you try again? 💙";
     } finally {
       setIsLoading(false);
@@ -300,7 +295,7 @@ const MoodTrackingPage: React.FC = () => {
 
       if (response.status === 200 || response.status === 201) {
         console.log("[Journal Save] Success:", response.data);
-        setSuccessMessage("Your journal entry has been saved! 💙");
+        // Remove setSuccessMessage call since it's not used
         return true;
       } else {
         throw new Error(`Unexpected status: ${response.status}`);
@@ -308,13 +303,7 @@ const MoodTrackingPage: React.FC = () => {
     } catch (error) {
       console.error("[Journal Save] Error:", error);
       if (axios.isAxiosError(error)) {
-        const errorMsg =
-          error.response?.data?.error ||
-          error.response?.data?.detail ||
-          error.message;
-        setErrorMessage(`Failed to save journal entry: ${errorMsg}`);
-      } else {
-        setErrorMessage("Failed to save journal entry. Please try again.");
+        console.error("[Journal Save] Response data:", error.response?.data);
       }
       return false;
     }
@@ -329,7 +318,7 @@ const MoodTrackingPage: React.FC = () => {
       audio.play();
     } catch (error) {
       console.error("Error playing TTS:", error);
-      setErrorMessage("Failed to play audio. Please try again.");
+      // Remove setErrorMessage call since it's not used
     } finally {
       setIsLoading(false);
     }
@@ -337,7 +326,7 @@ const MoodTrackingPage: React.FC = () => {
 
   const handleSubmit = async () => {
     if (!journal.trim()) {
-      setErrorMessage("Please enter some text before submitting.");
+      // Remove setErrorMessage call since it's not used
       return;
     }
 
@@ -404,7 +393,8 @@ const MoodTrackingPage: React.FC = () => {
       }
     } catch (error) {
       console.error("[Submit] Error:", error);
-      setErrorMessage(
+      // Remove setErrorMessage call since it's not used
+      console.error(
         "An error occurred while processing your entry. Please try again."
       );
       setTypingMessageIndex(null);

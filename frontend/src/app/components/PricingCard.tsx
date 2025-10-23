@@ -13,6 +13,7 @@ interface PricingCardProps {
   buttonText: string;
   gradient: string;
   onClick?: () => void;
+  disabled?: boolean;
 }
 
 const PricingCard: React.FC<PricingCardProps> = ({
@@ -25,6 +26,7 @@ const PricingCard: React.FC<PricingCardProps> = ({
   buttonText,
   gradient,
   onClick,
+  disabled = false,
 }) => {
   return (
     <motion.div
@@ -79,10 +81,13 @@ const PricingCard: React.FC<PricingCardProps> = ({
       </ul>
 
       <motion.button
-        className={`w-full bg-gradient-to-r ${gradient} text-white py-4 rounded-2xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300`}
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
-        onClick={onClick}
+        className={`w-full bg-gradient-to-r ${gradient} text-white py-4 rounded-2xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300 ${
+          disabled ? "opacity-50 cursor-not-allowed" : ""
+        }`}
+        whileHover={disabled ? {} : { scale: 1.02 }}
+        whileTap={disabled ? {} : { scale: 0.98 }}
+        onClick={disabled ? undefined : onClick}
+        disabled={disabled}
       >
         {buttonText}
       </motion.button>
