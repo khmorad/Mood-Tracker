@@ -203,17 +203,6 @@ const Dashboard: React.FC = () => {
     <Layout>
       <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 mt-14">
         <div className="container mx-auto px-4 py-6">
-          {/* User Info Header */}
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-800 mb-2">
-              Welcome back! 👋
-            </h1>
-            <p className="text-gray-600">
-              Here&apos;s your mood journey overview for the last {timeRange}{" "}
-              days
-            </p>
-          </div>
-
           {/* Time Range Selector */}
           <div className="flex justify-center mb-6">
             <div className="bg-white/70 backdrop-blur-sm rounded-xl p-2 shadow-sm">
@@ -260,9 +249,34 @@ const Dashboard: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Mood Trend */}
             <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                Your Mood Journey
-              </h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-800">
+                  Your Mood Journey
+                </h3>
+                <div className="text-sm text-gray-600 font-medium">
+                  {timeRange === 7 && <span>This Week</span>}
+                  {timeRange === 30 && (
+                    <span>
+                      {new Date().toLocaleDateString("en-US", {
+                        month: "long",
+                        year: "numeric",
+                      })}
+                    </span>
+                  )}
+                  {timeRange === 90 && (
+                    <span>
+                      {new Date(
+                        Date.now() - 90 * 24 * 60 * 60 * 1000
+                      ).toLocaleDateString("en-US", { month: "short" })}{" "}
+                      -{" "}
+                      {new Date().toLocaleDateString("en-US", {
+                        month: "short",
+                        year: "numeric",
+                      })}
+                    </span>
+                  )}
+                </div>
+              </div>
               <div className="flex items-end justify-between h-40 mb-4 bg-gray-50 rounded-lg p-4">
                 {displayMoodData.length > 0 ? (
                   displayMoodData.map((day, idx) => (
@@ -523,7 +537,7 @@ const Dashboard: React.FC = () => {
                     } appears to be your dominant emotion recently. Keep up the great work! 💙`,
                   ]}
                   wrapper="p"
-                  speed={60}
+                  speed={90}
                   repeat={0}
                 />
               )}

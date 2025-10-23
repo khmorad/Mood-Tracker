@@ -22,6 +22,9 @@ import {
   User,
   CheckCircle,
   AlertCircle,
+  Menu,
+  X,
+  ChevronRight,
 } from "lucide-react";
 
 function getCookie(name: string): string | null {
@@ -74,50 +77,63 @@ const MoodTrackingPage: React.FC = () => {
   const [typingMessageIndex, setTypingMessageIndex] = useState<number | null>(
     null
   );
+  const [hasLoadedEntries, setHasLoadedEntries] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [savingStates, setSavingStates] = useState<{
+    [key: number]: "saving" | "saved" | "error";
+  }>({});
 
   const journalInputRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const moodEmojis = [
     {
-      icon: <Sun className="w-8 h-8" />,
+      icon: <Sun className="w-6 h-6" />,
       label: "Happy",
-      color: "bg-yellow-50 border-yellow-200 hover:bg-yellow-100",
+      color: "bg-yellow-100 hover:bg-yellow-200 text-yellow-700",
+      selectedColor: "bg-yellow-200 border-yellow-400 text-yellow-800",
     },
     {
-      icon: <Heart className="w-8 h-8" />,
+      icon: <Heart className="w-6 h-6" />,
       label: "Calm",
-      color: "bg-blue-50 border-blue-200 hover:bg-blue-100",
+      color: "bg-blue-100 hover:bg-blue-200 text-blue-700",
+      selectedColor: "bg-blue-200 border-blue-400 text-blue-800",
     },
     {
-      icon: <Meh className="w-8 h-8" />,
+      icon: <Meh className="w-6 h-6" />,
       label: "Neutral",
-      color: "bg-gray-50 border-gray-200 hover:bg-gray-100",
+      color: "bg-gray-100 hover:bg-gray-200 text-gray-700",
+      selectedColor: "bg-gray-200 border-gray-400 text-gray-800",
     },
     {
-      icon: <Frown className="w-8 h-8" />,
+      icon: <Frown className="w-6 h-6" />,
       label: "Sad",
-      color: "bg-indigo-50 border-indigo-200 hover:bg-indigo-100",
+      color: "bg-indigo-100 hover:bg-indigo-200 text-indigo-700",
+      selectedColor: "bg-indigo-200 border-indigo-400 text-indigo-800",
     },
     {
-      icon: <CloudRain className="w-8 h-8" />,
+      icon: <CloudRain className="w-6 h-6" />,
       label: "Anxious",
-      color: "bg-orange-50 border-orange-200 hover:bg-orange-100",
+      color: "bg-orange-100 hover:bg-orange-200 text-orange-700",
+      selectedColor: "bg-orange-200 border-orange-400 text-orange-800",
     },
     {
-      icon: <Zap className="w-8 h-8" />,
+      icon: <Zap className="w-6 h-6" />,
       label: "Angry",
-      color: "bg-red-50 border-red-200 hover:bg-red-100",
+      color: "bg-red-100 hover:bg-red-200 text-red-700",
+      selectedColor: "bg-red-200 border-red-400 text-red-800",
     },
     {
-      icon: <Moon className="w-8 h-8" />,
+      icon: <Moon className="w-6 h-6" />,
       label: "Tired",
-      color: "bg-purple-50 border-purple-200 hover:bg-purple-100",
+      color: "bg-purple-100 hover:bg-purple-200 text-purple-700",
+      selectedColor: "bg-purple-200 border-purple-400 text-purple-800",
     },
     {
-      icon: <Smile className="w-8 h-8" />,
+      icon: <Smile className="w-6 h-6" />,
       label: "Grateful",
-      color: "bg-pink-50 border-pink-200 hover:bg-pink-100",
+      color: "bg-pink-100 hover:bg-pink-200 text-pink-700",
+      selectedColor: "bg-pink-200 border-pink-400 text-pink-800",
     },
   ];
 
@@ -209,7 +225,7 @@ const MoodTrackingPage: React.FC = () => {
       const moodString =
         currentMood.length > 0 ? currentMood.join(", ") : "Not specified";
 
-      const prompt = `You are a supportive mental health assistant. Be encouraging, empathetic, and include nonverbal cues. Always end with a thoughtful question to help the user explore their feelings deeper.
+      const prompt = `You are a supportive mental health assistant. Be encouraging and empathetic. Always end with a thoughtful question to help the user explore their feelings deeper. Keep responses natural and conversational without describing physical gestures or actions.
       
       ${userInfoString}
       Current mood(s): ${moodString}
@@ -336,10 +352,10 @@ const MoodTrackingPage: React.FC = () => {
       const newResponseIndex = aiResponses.length;
       setTypingMessageIndex(newResponseIndex);
 
-      // Get AI response
+      // Get AI response first
       const aiResponse = await getGeminiResponse(journal);
 
-      // Update conversation state
+      // Update conversation state and show AI response
       const newConversation = [
         ...conversation,
         { user: journal, ai: aiResponse },
@@ -352,27 +368,46 @@ const MoodTrackingPage: React.FC = () => {
         setTypingMessageIndex(null);
       }, 100);
 
-      // Save to backend
-      const saved = await saveJournalEntry(journal, aiResponse);
-
-      if (saved) {
-        console.log("[Submit] Journal entry saved successfully");
-      } else {
-        console.warn("[Submit] Journal entry not saved, but continuing...");
-      }
-
-      // Clear input
+      // Clear input immediately after AI response
+      const currentJournal = journal;
       setJournal("");
       if (journalInputRef.current) {
         journalInputRef.current.textContent = "";
+      }
+
+      setIsLoading(false);
+
+      // Now save to backend in the background with loading indicator
+      setSavingStates((prev) => ({ ...prev, [newResponseIndex]: "saving" }));
+
+      try {
+        const saved = await saveJournalEntry(currentJournal, aiResponse);
+
+        if (saved) {
+          console.log("[Submit] Journal entry saved successfully");
+          setSavingStates((prev) => ({ ...prev, [newResponseIndex]: "saved" }));
+          // Remove saved indicator after 3 seconds
+          setTimeout(() => {
+            setSavingStates((prev) => {
+              const newState = { ...prev };
+              delete newState[newResponseIndex];
+              return newState;
+            });
+          }, 3000);
+        } else {
+          console.warn("[Submit] Journal entry not saved");
+          setSavingStates((prev) => ({ ...prev, [newResponseIndex]: "error" }));
+        }
+      } catch (saveError) {
+        console.error("[Submit] Save Error:", saveError);
+        setSavingStates((prev) => ({ ...prev, [newResponseIndex]: "error" }));
       }
     } catch (error) {
       console.error("[Submit] Error:", error);
       setErrorMessage(
         "An error occurred while processing your entry. Please try again."
       );
-      setTypingMessageIndex(null); // Clear typing on error
-    } finally {
+      setTypingMessageIndex(null);
       setIsLoading(false);
     }
   };
@@ -387,7 +422,12 @@ const MoodTrackingPage: React.FC = () => {
   // Load existing journal entries on component mount
   const loadExistingEntries = useCallback(async () => {
     try {
-      if (!user || user.user_id === "anonymous") return;
+      if (!user || user.user_id === "anonymous" || hasLoadedEntries) return;
+
+      console.log(
+        "[Load Entries] Starting to load entries for user:",
+        user.user_id
+      );
 
       const response = await axios.get(
         `/api/journal-entries?userId=${encodeURIComponent(
@@ -405,40 +445,61 @@ const MoodTrackingPage: React.FC = () => {
               new Date(b.journal_date).getTime()
           );
 
-        // Load recent entries into conversation
-        const loadedConversation: Conversation[] = [conversation[0]]; // Keep welcome message
-        const loadedUserEntries: string[] = [];
-        const loadedAiResponses: string[] = [aiResponses[0]]; // Keep welcome message
+        // Only update if we have entries to load
+        if (entries.length > 0) {
+          // Load recent entries into conversation
+          const loadedConversation: Conversation[] = [
+            {
+              user: "",
+              ai: `Hello ${
+                user.firstName || "User"
+              }! How are you feeling today? I'm here to listen and support you. 💙`,
+            },
+          ];
+          const loadedUserEntries: string[] = [];
+          const loadedAiResponses: string[] = [
+            `Hello ${
+              user.firstName || "User"
+            }! How are you feeling today? I'm here to listen and support you. 💙`,
+          ];
 
-        entries.forEach((entry) => {
-          loadedConversation.push({
-            user: entry.entry_text,
-            ai: entry.AI_response,
+          entries.forEach((entry) => {
+            loadedConversation.push({
+              user: entry.entry_text,
+              ai: entry.AI_response,
+            });
+            loadedUserEntries.push(entry.entry_text);
+            loadedAiResponses.push(entry.AI_response);
           });
-          loadedUserEntries.push(entry.entry_text);
-          loadedAiResponses.push(entry.AI_response);
-        });
 
-        setConversation(loadedConversation);
-        setJournalEntries(loadedUserEntries);
-        setAiResponses(loadedAiResponses);
+          setConversation(loadedConversation);
+          setJournalEntries(loadedUserEntries);
+          setAiResponses(loadedAiResponses);
+
+          console.log(
+            "[Load Entries] Loaded",
+            entries.length,
+            "recent entries"
+          );
+        }
+
+        // Mark as loaded regardless of whether we found entries
+        setHasLoadedEntries(true);
 
         // Clear typing indicator since these are loaded messages
         setTypingMessageIndex(null);
-
-        console.log("[Load Entries] Loaded", entries.length, "recent entries");
       }
     } catch (error) {
       console.error("[Load Entries] Error:", error);
-      // Don't show error to user for loading existing entries
+      setHasLoadedEntries(true); // Prevent retry loops
     }
-  }, [user, conversation, aiResponses]);
+  }, [user, hasLoadedEntries]);
 
   useEffect(() => {
-    if (user && user.user_id !== "anonymous") {
+    if (user && user.user_id !== "anonymous" && !hasLoadedEntries) {
       loadExistingEntries();
     }
-  }, [user, loadExistingEntries]);
+  }, [user, hasLoadedEntries, loadExistingEntries]);
 
   const handleMoodSelection = (moodLabel: string) => {
     setCurrentMood((prev) => {
@@ -458,96 +519,162 @@ const MoodTrackingPage: React.FC = () => {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-gradient-to-br from-rose-50 via-purple-50 to-indigo-50">
-        <div className="container mx-auto px-4 py-8">
-          {/* Welcome Section */}
-          <div className="max-w-4xl mx-auto mb-8 mt-10 text-center"></div>
-
-          {/* Mood Selection */}
-          <div className="max-w-4xl mx-auto mb-8">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-6 text-center">
-              How are you feeling right now?
+      <div className="flex h-screen bg-white pt-16 overflow-hidden">
+        {/* Sidebar for Mood Selection */}
+        <div
+          className={`${
+            sidebarOpen ? "translate-x-0" : "-translate-x-full"
+          } fixed inset-y-0 left-0 z-50 w-80 bg-gray-50 border-r border-gray-200 transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 pt-16 lg:pt-0 overflow-hidden`}
+        >
+          <div className="flex items-center justify-between p-4 border-b border-gray-200">
+            <h2 className="text-lg font-semibold text-gray-800">
+              How are you feeling?
             </h2>
-            <div className="grid grid-cols-4 md:grid-cols-8 gap-4">
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          <div
+            className="p-4 space-y-3 overflow-y-auto"
+            style={{ height: "calc(100vh - 140px)" }}
+          >
+            {/* Mood Selection Grid */}
+            <div className="grid grid-cols-2 gap-3">
               {moodEmojis.map((mood, index) => (
                 <button
                   key={index}
                   onClick={() => handleMoodSelection(mood.label)}
-                  className={`p-6 rounded-3xl border-2 transition-all duration-300 hover:scale-105 hover:shadow-lg ${
+                  className={`p-3 rounded-xl border-2 transition-all duration-200 flex flex-col items-center space-y-2 ${
                     currentMood.includes(mood.label)
-                      ? `${mood.color} border-rose-400 shadow-lg`
-                      : `${mood.color} shadow-sm`
+                      ? `${mood.selectedColor} border-current shadow-sm`
+                      : `${mood.color} border-transparent hover:border-gray-300`
                   }`}
                 >
-                  <div className="text-rose-500 mb-3 flex justify-center">
-                    {mood.icon}
-                  </div>
-                  <div className="text-sm font-medium text-gray-700">
+                  <div className="flex-shrink-0">{mood.icon}</div>
+                  <span className="font-medium text-sm text-center">
                     {mood.label}
-                  </div>
+                  </span>
+                  {currentMood.includes(mood.label) && (
+                    <ChevronRight className="w-4 h-4" />
+                  )}
                 </button>
               ))}
             </div>
+
+            {/* Selected Moods Summary */}
+            {currentMood.length > 0 && (
+              <div className="mt-6 p-4 bg-white rounded-xl border border-gray-200">
+                <h3 className="text-sm font-semibold text-gray-700 mb-2">
+                  Current Mood
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {currentMood.map((mood, index) => (
+                    <span
+                      key={index}
+                      className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium"
+                    >
+                      {mood}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Dashboard Link */}
+            <div className="mt-6">
+              <Link
+                href="/dashboard"
+                className="w-full bg-blue-600 text-white py-3 px-4 rounded-xl font-medium hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
+              >
+                <BarChart3 className="w-5 h-5" />
+                <span>View Dashboard</span>
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        {/* Overlay for mobile */}
+        {sidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+
+        {/* Main Chat Area */}
+        <div className="flex-1 flex flex-col h-full bg-white overflow-hidden">
+          {/* Header */}
+          <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-white">
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+            <h1 className="text-xl font-semibold text-gray-800">
+              Mood Journal
+            </h1>
+            <div className="w-10 lg:w-0"></div>
           </div>
 
           {/* Messages */}
-          {errorMessage && (
-            <div className="max-w-4xl mx-auto mb-6">
-              <div className="bg-red-50 border border-red-200 rounded-2xl p-4 flex items-center">
-                <AlertCircle className="w-5 h-5 text-red-500 mr-3 flex-shrink-0" />
-                <span className="text-red-700">{errorMessage}</span>
-              </div>
-            </div>
-          )}
 
-          {successMessage && (
-            <div className="max-w-4xl mx-auto mb-6">
-              <div className="bg-green-50 border border-green-200 rounded-2xl p-4 flex items-center">
-                <CheckCircle className="w-5 h-5 text-green-500 mr-3 flex-shrink-0" />
-                <span className="text-green-700">{successMessage}</span>
-              </div>
-            </div>
-          )}
-
-          {/* Chat Interface */}
-          <div className="max-w-4xl mx-auto">
-            <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-white/50 p-8 mb-6">
-              <div className="space-y-8 max-h-96 overflow-y-auto">
-                {/* Initial AI Message */}
-                <div className="flex items-start space-x-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-rose-400 to-pink-500 rounded-full flex items-center justify-center shadow-lg">
-                    <Bot className="w-6 h-6 text-white" />
-                  </div>
-                  <div className="flex-1 bg-gradient-to-br from-rose-50 to-pink-50 rounded-3xl p-6 shadow-sm border border-rose-100">
+          {/* Chat Messages */}
+          <div className="flex-1 overflow-y-auto p-4 bg-white">
+            <div className="max-w-4xl mx-auto space-y-6">
+              {/* Initial AI Message */}
+              <div className="flex items-start space-x-3">
+                <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+                  <Bot className="w-5 h-5 text-white" />
+                </div>
+                <div className="flex-1 max-w-3xl">
+                  <div className="bg-gray-100 rounded-2xl rounded-tl-sm p-4">
                     {typingMessageIndex === 0 ? (
                       <TypingAnimation text={aiResponses[0]} />
                     ) : (
-                      <p className="text-gray-800 leading-relaxed">
-                        {aiResponses[0]}
-                      </p>
+                      <div className="flex items-start justify-between">
+                        <p className="text-gray-800">{aiResponses[0]}</p>
+                        <div className="flex items-center space-x-2 ml-3">
+                          <button
+                            onClick={() => playTTS(aiResponses[0])}
+                            className="p-1 text-gray-500 hover:text-gray-700 hover:bg-gray-200 rounded-full transition-colors"
+                            aria-label="Play AI Response"
+                          >
+                            <Volume2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
                     )}
                   </div>
                 </div>
+              </div>
 
-                {/* Conversation History */}
-                {journalEntries.map((entry, index) => (
-                  <div key={index} className="space-y-6">
-                    {/* User Message */}
-                    <div className="flex items-start space-x-4 justify-end">
-                      <div className="flex-1 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-3xl p-6 text-right shadow-sm border border-blue-100">
-                        <p className="text-gray-800 leading-relaxed">{entry}</p>
-                      </div>
-                      <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-full flex items-center justify-center shadow-lg">
-                        <User className="w-6 h-6 text-white" />
+              {/* Conversation History */}
+              {journalEntries.map((entry, index) => (
+                <div key={index} className="space-y-6">
+                  {/* User Message */}
+                  <div className="flex items-start space-x-3 justify-end">
+                    <div className="flex-1 max-w-3xl">
+                      <div className="bg-blue-600 text-white rounded-2xl rounded-tr-sm p-4 ml-12">
+                        <p>{entry}</p>
                       </div>
                     </div>
+                    <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+                      <User className="w-5 h-5 text-white" />
+                    </div>
+                  </div>
 
-                    {/* AI Response */}
-                    <div className="flex items-start space-x-4">
-                      <div className="w-12 h-12 bg-gradient-to-br from-rose-400 to-pink-500 rounded-full flex items-center justify-center shadow-lg">
-                        <Bot className="w-6 h-6 text-white" />
-                      </div>
-                      <div className="flex-1 bg-gradient-to-br from-rose-50 to-pink-50 rounded-3xl p-6 shadow-sm border border-rose-100">
+                  {/* AI Response */}
+                  <div className="flex items-start space-x-3">
+                    <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+                      <Bot className="w-5 h-5 text-white" />
+                    </div>
+                    <div className="flex-1 max-w-3xl">
+                      <div className="bg-gray-100 rounded-2xl rounded-tl-sm p-4">
                         {aiResponses[index + 1] ? (
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
@@ -556,28 +683,50 @@ const MoodTrackingPage: React.FC = () => {
                                   text={aiResponses[index + 1]}
                                 />
                               ) : (
-                                <p className="text-gray-800 leading-relaxed">
+                                <p className="text-gray-800">
                                   {aiResponses[index + 1]}
                                 </p>
                               )}
                             </div>
-                            <button
-                              onClick={() => playTTS(aiResponses[index + 1])}
-                              className="ml-4 p-3 text-rose-500 hover:text-rose-700 hover:bg-rose-100 rounded-full transition-colors"
-                              aria-label="Play AI Response"
-                            >
-                              <Volume2 className="w-5 h-5" />
-                            </button>
+                            <div className="flex items-center space-x-2 ml-3">
+                              <button
+                                onClick={() => playTTS(aiResponses[index + 1])}
+                                className="p-1 text-gray-500 hover:text-gray-700 hover:bg-gray-200 rounded-full transition-colors"
+                                aria-label="Play AI Response"
+                              >
+                                <Volume2 className="w-4 h-4" />
+                              </button>
+
+                              {/* Save Status Indicator */}
+                              {savingStates[index + 1] === "saving" && (
+                                <div className="flex items-center space-x-1 text-gray-500">
+                                  <div className="w-3 h-3 border border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+                                  <span className="text-xs">Saving...</span>
+                                </div>
+                              )}
+                              {savingStates[index + 1] === "saved" && (
+                                <div className="flex items-center space-x-1 text-green-600">
+                                  <CheckCircle className="w-3 h-3" />
+                                  <span className="text-xs">Saved</span>
+                                </div>
+                              )}
+                              {savingStates[index + 1] === "error" && (
+                                <div className="flex items-center space-x-1 text-red-500">
+                                  <AlertCircle className="w-3 h-3" />
+                                  <span className="text-xs">Failed</span>
+                                </div>
+                              )}
+                            </div>
                           </div>
                         ) : (
-                          <div className="flex items-center space-x-2">
-                            <div className="w-3 h-3 bg-rose-400 rounded-full animate-bounce"></div>
+                          <div className="flex items-center space-x-1">
+                            <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
                             <div
-                              className="w-3 h-3 bg-rose-400 rounded-full animate-bounce"
+                              className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
                               style={{ animationDelay: "0.1s" }}
                             ></div>
                             <div
-                              className="w-3 h-3 bg-rose-400 rounded-full animate-bounce"
+                              className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
                               style={{ animationDelay: "0.2s" }}
                             ></div>
                           </div>
@@ -585,57 +734,41 @@ const MoodTrackingPage: React.FC = () => {
                       </div>
                     </div>
                   </div>
-                ))}
-                <div ref={messagesEndRef} />
-              </div>
+                </div>
+              ))}
+              <div ref={messagesEndRef} />
             </div>
+          </div>
 
-            {/* Input Area */}
-            <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-white/50 p-8">
+          {/* Input Area */}
+          <div className="border-t border-gray-200 p-4 bg-white flex-shrink-0">
+            <div className="max-w-4xl mx-auto">
               <div className="relative">
                 <div
                   contentEditable
                   onInput={handleInput}
                   onKeyPress={handleKeyPress}
                   ref={journalInputRef}
-                  className="w-full min-h-[140px] max-h-48 overflow-y-auto p-6 text-gray-800 bg-gradient-to-br from-gray-50 to-white border-2 border-gray-200 rounded-3xl focus:border-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-100 transition-all resize-none leading-relaxed"
+                  className="w-full min-h-[60px] max-h-32 overflow-y-auto p-4 pr-12 text-gray-800 bg-white border border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all resize-none"
                   suppressContentEditableWarning={true}
                 />
                 {journal === "" && (
-                  <div className="absolute top-6 left-6 text-gray-400 pointer-events-none">
-                    <TypingAnimation text="Share what's on your heart today..." />
+                  <div className="absolute top-4 left-4 text-gray-400 pointer-events-none">
+                    Message Mood Journal...
                   </div>
                 )}
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row gap-4 mt-8">
                 <button
                   onClick={handleSubmit}
                   disabled={isLoading || !journal.trim()}
-                  className="flex-1 bg-gradient-to-r from-rose-400 to-pink-500 text-white py-4 px-8 rounded-3xl font-semibold hover:shadow-xl transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center"
-                  aria-label="Submit Journal Entry"
+                  className="absolute right-2 bottom-2 p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  aria-label="Send message"
                 >
                   {isLoading ? (
-                    <div className="flex items-center justify-center">
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-3"></div>
-                      Processing with care...
-                    </div>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                   ) : (
-                    <>
-                      <Send className="w-5 h-5 mr-2" />
-                      Share Your Thoughts
-                    </>
+                    <Send className="w-5 h-5" />
                   )}
                 </button>
-
-                <Link
-                  href="/dashboard"
-                  className="flex-1 bg-gradient-to-r from-blue-400 to-indigo-500 text-white py-4 px-8 rounded-3xl font-semibold hover:shadow-xl transition-all duration-300 transform hover:scale-105 text-center flex items-center justify-center"
-                >
-                  <BarChart3 className="w-5 h-5 mr-2" />
-                  View Your Journey
-                </Link>
               </div>
             </div>
           </div>
