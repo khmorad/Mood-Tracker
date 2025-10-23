@@ -26,6 +26,8 @@ interface DecodedToken {
   first_name: string;
   last_name: string;
   email: string;
+  subscription_tier?: string;
+  subscription_expires_at?: string;
   [key: string]: unknown;
 }
 
@@ -34,6 +36,8 @@ interface User {
   firstName: string;
   lastName: string;
   email: string;
+  subscriptionTier?: string;
+  subscriptionExpires?: string;
 }
 
 function getCookie(name: string): string | null {
@@ -64,6 +68,8 @@ const PricingPage: React.FC = () => {
           firstName: decoded.first_name || "",
           lastName: decoded.last_name || "",
           email: decoded.email || "",
+          subscriptionTier: decoded.subscription_tier || "Free",
+          subscriptionExpires: decoded.subscription_expires_at || undefined,
         };
         setUser(userData);
       } catch (e) {
@@ -103,41 +109,99 @@ const PricingPage: React.FC = () => {
         return;
       }
 
-      // Handle Professional plan - redirect to contact
-      if (planName === "Professional") {
-        window.location.href = "/contact";
+      // Check if user already has the plan they're trying to activate
+      if (user.subscriptionTier === planName) {
+        setErrorMessage(`You already have the ${planName} plan active.`);
         return;
       }
 
       setIsLoading(true);
 
+      console.log("[Plans] Activating plan:", {
+        user_id: user.user_id,
+        plan: planName,
+      });
+
+      // Use the correct Next.js API route endpoint
       const response = await axios.post("/api/pricing/activate-plan", {
         user_id: user.user_id,
         plan: planName,
       });
 
-      if (response.data) {
-        setSuccessMessage(response.data.message);
+      console.log("[Plans] Activation response:", response.data);
 
-        // Redirect based on plan
-        if (planName === "Free") {
-          setTimeout(() => {
-            window.location.href = "/mood-tracking";
-          }, 2000);
-        } else if (planName === "Plus") {
-          setTimeout(() => {
-            window.location.href = "/mood-tracking";
-          }, 2000);
+      if (response.data) {
+        const { message, subscription_tier, subscription_expires } =
+          response.data;
+
+        let displayMessage = message;
+        if (subscription_expires) {
+          const expiryDate = new Date(
+            subscription_expires
+          ).toLocaleDateString();
+          displayMessage += ` (Trial expires: ${expiryDate})`;
+        } else if (subscription_tier === "Professional") {
+          displayMessage += " - Lifetime access with no expiration!";
         }
+
+        setSuccessMessage(displayMessage);
+
+        // Force a page refresh to get updated JWT from server
+        setTimeout(() => {
+          window.location.href = "/dashboard"; // This will force a fresh page load
+        }, 2000);
       }
     } catch (error) {
       console.error("Plan Activation Error:", error);
+
+      let errorMessage = "Failed to activate plan. Please try again.";
+
       if (axios.isAxiosError(error)) {
-        const errorMsg = error.response?.data?.detail || error.message;
-        setErrorMessage(`Failed to activate plan: ${errorMsg}`);
-      } else {
-        setErrorMessage("Failed to activate plan. Please try again.");
+        console.error("[Plans] Axios error details:", {
+          status: error.response?.status,
+          data: error.response?.data,
+          message: error.message,
+        });
+
+        // Handle different types of error responses
+        if (error.response?.data) {
+          const errorData = error.response.data;
+
+          // Handle Pydantic validation errors
+          if (Array.isArray(errorData.detail)) {
+            errorMessage = errorData.detail
+              .map((err: any) => {
+                if (typeof err === "object" && err.msg) {
+                  return err.msg;
+                }
+                return String(err);
+              })
+              .join(", ");
+          }
+          // Handle string detail
+          else if (typeof errorData.detail === "string") {
+            errorMessage = errorData.detail;
+          }
+          // Handle object detail
+          else if (typeof errorData.detail === "object") {
+            errorMessage = JSON.stringify(errorData.detail);
+          }
+          // Handle direct message
+          else if (errorData.message) {
+            errorMessage = errorData.message;
+          }
+        }
+        // Fallback to error message
+        else if (error.message) {
+          errorMessage = error.message;
+        }
       }
+      // Handle non-axios errors
+      else if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+
+      setErrorMessage(`Failed to activate plan: ${errorMessage}`);
     } finally {
       setIsLoading(false);
     }
@@ -170,8 +234,10 @@ const PricingPage: React.FC = () => {
         "Simple mood insights",
         "Basic charts and trends",
       ],
-      buttonText: "Get Started Free",
+      buttonText:
+        user?.subscriptionTier === "Free" ? "Current Plan" : "Get Started Free",
       gradient: "from-gray-500 to-gray-600",
+      disabled: user?.subscriptionTier === "Free",
     },
     {
       title: "Plus",
@@ -187,24 +253,33 @@ const PricingPage: React.FC = () => {
         "Enhanced data visualization",
       ],
       isPopular: true,
-      buttonText: "Start 7-Day Free Trial",
+      buttonText:
+        user?.subscriptionTier === "Plus"
+          ? "Current Plan"
+          : "Start 7-Day Free Trial",
       gradient: "from-purple-500 to-pink-500",
+      disabled: user?.subscriptionTier === "Plus",
     },
     {
       title: "Professional",
       price: "$14.99",
-      period: "month",
+      period: "lifetime",
       description: "For therapists and mental health professionals",
       features: [
         "Everything in Plus",
+        "Lifetime access - no expiration",
         "Extended data retention",
         "Professional-grade analytics",
         "Advanced reporting tools",
         "Priority support",
         "API access for integrations",
       ],
-      buttonText: "Contact Sales",
+      buttonText:
+        user?.subscriptionTier === "Professional"
+          ? "Current Plan"
+          : "Get Lifetime Access",
       gradient: "from-blue-500 to-indigo-500",
+      disabled: user?.subscriptionTier === "Professional",
     },
   ];
 
@@ -312,6 +387,31 @@ const PricingPage: React.FC = () => {
 
         {/* Main Content */}
         <div className="relative z-10 container mx-auto px-6 py-20">
+          {/* Current Plan Status */}
+          {user?.subscriptionTier && user.subscriptionTier !== "Free" && (
+            <motion.div
+              className="text-center mb-12"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+            >
+              <div className="inline-flex items-center gap-3 bg-green-100/90 backdrop-blur-md rounded-full px-6 py-3 border border-green-300">
+                <Check className="w-5 h-5 text-green-600" />
+                <span className="text-green-800 font-medium">
+                  You're currently on the {user.subscriptionTier} plan
+                  {user.subscriptionExpires &&
+                  user.subscriptionTier !== "Professional"
+                    ? ` (expires ${new Date(
+                        user.subscriptionExpires
+                      ).toLocaleDateString()})`
+                    : user.subscriptionTier === "Professional"
+                    ? " with lifetime access"
+                    : ""}
+                </span>
+              </div>
+            </motion.div>
+          )}
+
           {/* Hero Section */}
           <motion.div
             className="text-center mb-20"
@@ -327,7 +427,9 @@ const PricingPage: React.FC = () => {
             >
               <Star className="w-5 h-5 text-purple-600" />
               <span className="text-gray-700 font-medium">
-                Choose Your Mental Health Journey
+                {user?.subscriptionTier !== "Free"
+                  ? "Manage Your Subscription"
+                  : "Choose Your Mental Health Journey"}
               </span>
             </motion.div>
 
@@ -337,11 +439,23 @@ const PricingPage: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.4 }}
             >
-              Simple
-              <br />
-              <span className="bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 bg-clip-text text-transparent">
-                Transparent Pricing
-              </span>
+              {user?.subscriptionTier !== "Free" ? (
+                <>
+                  Your
+                  <br />
+                  <span className="bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 bg-clip-text text-transparent">
+                    Current Plan
+                  </span>
+                </>
+              ) : (
+                <>
+                  Simple
+                  <br />
+                  <span className="bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 bg-clip-text text-transparent">
+                    Transparent Pricing
+                  </span>
+                </>
+              )}
             </motion.h1>
 
             <motion.p
@@ -350,8 +464,9 @@ const PricingPage: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.6 }}
             >
-              Start free and upgrade when you&apos;re ready. All plans include
-              our core mood tracking features with no hidden fees.
+              {user?.subscriptionTier !== "Free"
+                ? "You have access to premium features. Explore other plans or manage your current subscription below."
+                : "Start free and upgrade when you're ready. All plans include our core mood tracking features with no hidden fees."}
             </motion.p>
           </motion.div>
 
@@ -473,23 +588,48 @@ const PricingPage: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.5 }}
           >
-            <h3 className="text-3xl font-bold text-gray-800 mb-4">
-              Ready to Start Your Journey?
-            </h3>
-            <p className="text-lg text-gray-700 mb-8 max-w-2xl mx-auto">
-              Join thousands of users who are taking control of their mental
-              health. Start with our free plan and upgrade anytime.
-            </p>
-            <motion.button
-              className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-8 py-4 rounded-2xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-3 mx-auto"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => activatePlan("Free")}
-              disabled={isLoading}
-            >
-              Get Started Free
-              <ArrowRight className="w-5 h-5" />
-            </motion.button>
+            {user?.subscriptionTier === "Free" ? (
+              <>
+                <h3 className="text-3xl font-bold text-gray-800 mb-4">
+                  Ready to Start Your Journey?
+                </h3>
+                <p className="text-lg text-gray-700 mb-8 max-w-2xl mx-auto">
+                  Join thousands of users who are taking control of their mental
+                  health. Start with our free plan and upgrade anytime.
+                </p>
+                <motion.button
+                  className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-8 py-4 rounded-2xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-3 mx-auto"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => activatePlan("Free")}
+                  disabled={isLoading}
+                >
+                  Get Started Free
+                  <ArrowRight className="w-5 h-5" />
+                </motion.button>
+              </>
+            ) : (
+              <>
+                <h3 className="text-3xl font-bold text-gray-800 mb-4">
+                  Enjoying Your {user?.subscriptionTier} Plan?
+                </h3>
+                <p className="text-lg text-gray-700 mb-8 max-w-2xl mx-auto">
+                  You have access to all {user?.subscriptionTier} features.
+                  {user?.subscriptionTier === "Professional"
+                    ? " Continue enjoying your lifetime access!"
+                    : " Continue your mental health journey with premium features."}
+                </p>
+                <motion.button
+                  className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-8 py-4 rounded-2xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-3 mx-auto"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => (window.location.href = "/mood-tracking")}
+                >
+                  Continue to App
+                  <ArrowRight className="w-5 h-5" />
+                </motion.button>
+              </>
+            )}
           </motion.div>
         </div>
       </div>

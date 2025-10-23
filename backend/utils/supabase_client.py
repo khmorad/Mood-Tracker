@@ -7,10 +7,11 @@ from pathlib import Path
 load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 
 SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+# Try both possible key names
+SUPABASE_KEY = os.getenv("SUPABASE_KEY") or os.getenv("SUPABASE_ANON_KEY")
 
 if not SUPABASE_URL or not SUPABASE_KEY:
-    raise ValueError("Missing Supabase credentials. Please set SUPABASE_URL and SUPABASE_KEY in your .env file")
+    raise ValueError("Missing Supabase credentials. Please set SUPABASE_URL and SUPABASE_KEY (or SUPABASE_ANON_KEY) in your .env file")
 
 # Create Supabase client
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)

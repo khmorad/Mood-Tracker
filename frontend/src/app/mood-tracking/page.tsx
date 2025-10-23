@@ -25,6 +25,7 @@ import {
   Menu,
   X,
   ChevronRight,
+  Crown,
 } from "lucide-react";
 
 function getCookie(name: string): string | null {
@@ -39,6 +40,8 @@ interface DecodedToken {
   first_name: string;
   last_name: string;
   email: string;
+  subscription_tier?: string;
+  subscription_expires_at?: string;
   [key: string]: unknown;
 }
 
@@ -47,6 +50,8 @@ interface User {
   firstName: string;
   lastName: string;
   email: string;
+  subscriptionTier?: string;
+  subscriptionExpires?: string;
 }
 
 interface Conversation {
@@ -146,6 +151,8 @@ const MoodTrackingPage: React.FC = () => {
           firstName: decoded.first_name || "",
           lastName: decoded.last_name || "",
           email: decoded.email || "",
+          subscriptionTier: decoded.subscription_tier || "Free",
+          subscriptionExpires: decoded.subscription_expires_at || undefined,
         };
         setUser(userData);
 
@@ -174,6 +181,7 @@ const MoodTrackingPage: React.FC = () => {
       firstName: "Guest",
       lastName: "",
       email: "anonymous@example.com",
+      subscriptionTier: "Free",
     };
     setUser(anonymousUser);
 
@@ -529,7 +537,7 @@ const MoodTrackingPage: React.FC = () => {
           </div>
 
           <div
-            className="p-4 space-y-3 overflow-y-auto"
+            className="p-4 space-y-3 overflow-y-auto flex flex-col"
             style={{ height: "calc(100vh - 140px)" }}
           >
             {/* Mood Selection Grid */}
@@ -574,8 +582,49 @@ const MoodTrackingPage: React.FC = () => {
               </div>
             )}
 
-            {/* Dashboard Link */}
-            <div className="mt-6">
+            {/* Spacer to push buttons to bottom */}
+            <div className="flex-1"></div>
+
+            {/* Divider Line */}
+            <hr className="border-gray-300 my-4" />
+
+            {/* Bottom Action Buttons */}
+            <div className="space-y-3">
+              {/* Upgrade Button - Only show for Free tier users */}
+              {user?.subscriptionTier === "Free" && (
+                <Link
+                  href="/pricing"
+                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 px-4 rounded-xl font-medium hover:from-purple-700 hover:to-pink-700 transition-all duration-200 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105"
+                >
+                  <Crown className="w-5 h-5" />
+                  <span>Upgrade to Plus</span>
+                </Link>
+              )}
+
+              {/* Current Plan Display for Premium Users */}
+              {user?.subscriptionTier && user.subscriptionTier !== "Free" && (
+                <div className="w-full bg-gradient-to-r from-green-100 to-blue-100 border-2 border-green-300 py-3 px-4 rounded-xl flex items-center justify-center space-x-2">
+                  <Crown className="w-5 h-5 text-green-600" />
+                  <div className="text-center">
+                    <div className="text-sm font-semibold text-green-800">
+                      {user.subscriptionTier} Plan Active
+                    </div>
+                    {user.subscriptionExpires && user.subscriptionTier !== "Professional" && (
+                      <div className="text-xs text-green-600">
+                        Expires:{" "}
+                        {new Date(user.subscriptionExpires).toLocaleDateString()}
+                      </div>
+                    )}
+                    {user.subscriptionTier === "Professional" && (
+                      <div className="text-xs text-green-600">
+                        Lifetime Access
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Dashboard Link */}
               <Link
                 href="/dashboard"
                 className="w-full bg-blue-600 text-white py-3 px-4 rounded-xl font-medium hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"

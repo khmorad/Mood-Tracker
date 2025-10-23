@@ -23,12 +23,17 @@ const EnhancedNavbar: React.FC = () => {
     email: string;
     first_name: string;
     last_name: string;
+    subscription_tier?: string;
+    subscription_expires_at?: string;
     // add other fields as needed...
   };
   const [hovered, setHovered] = useState<string | null>(null);
-  const [user, setUser] = useState<{ firstName: string; email: string } | null>(
-    null
-  );
+  const [user, setUser] = useState<{
+    firstName: string;
+    email: string;
+    subscriptionTier?: string;
+    subscriptionExpires?: string;
+  } | null>(null);
   const [dropdownVisible, setDropdownVisible] = useState(false);
 
   useEffect(() => {
@@ -40,6 +45,8 @@ const EnhancedNavbar: React.FC = () => {
         setUser({
           firstName: decoded.first_name || "",
           email: decoded.email || "",
+          subscriptionTier: decoded.subscription_tier || "Free",
+          subscriptionExpires: decoded.subscription_expires_at || undefined,
         });
         console.log("[Navbar] Decoded JWT:", decoded);
       } catch (e) {
@@ -166,6 +173,59 @@ const EnhancedNavbar: React.FC = () => {
               }}
             >
               <p style={styles.dropdownItem}>{user.email}</p>
+
+              {/* Subscription Status */}
+              <div
+                style={{
+                  ...styles.dropdownItem,
+                  padding: "0.5rem 1rem",
+                  borderBottom: "1px solid #f0f0f0",
+                }}
+              >
+                <div style={{ fontSize: "0.75rem", color: "#666" }}>Plan</div>
+                <div
+                  style={{
+                    fontSize: "0.875rem",
+                    fontWeight: "600",
+                    color:
+                      user.subscriptionTier === "Free" ? "#666" : "#10b981",
+                  }}
+                >
+                  {user.subscriptionTier || "Free"}
+                  {user.subscriptionTier !== "Free" && " ✓"}
+                </div>
+                {user.subscriptionExpires &&
+                  user.subscriptionTier !== "Professional" && (
+                    <div style={{ fontSize: "0.7rem", color: "#666" }}>
+                      Expires:{" "}
+                      {new Date(user.subscriptionExpires).toLocaleDateString()}
+                    </div>
+                  )}
+                {user.subscriptionTier === "Professional" && (
+                  <div style={{ fontSize: "0.7rem", color: "#10b981" }}>
+                    Lifetime Access
+                  </div>
+                )}
+              </div>
+
+              {/* Upgrade button for Free users */}
+              {user.subscriptionTier === "Free" && (
+                <button
+                  style={{
+                    ...styles.dropdownItem,
+                    background: "linear-gradient(to right, #8b5cf6, #ec4899)",
+                    color: "white",
+                    fontWeight: "600",
+                  }}
+                  onClick={() => {
+                    closeDropdown();
+                    window.location.href = "/pricing";
+                  }}
+                >
+                  Upgrade Plan
+                </button>
+              )}
+
               <button style={styles.dropdownItem} onClick={closeDropdown}>
                 Account
               </button>

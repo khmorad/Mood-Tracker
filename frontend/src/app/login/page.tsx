@@ -46,6 +46,12 @@ const Login: React.FC = () => {
     setSignupError(null);
     setSignupSuccess(null);
 
+    // Client-side validation
+    if (signupData.password.length < 6) {
+      setSignupError("Password must be at least 6 characters long");
+      return;
+    }
+
     const payload = {
       email: signupData.email,
       password: signupData.password,
@@ -62,11 +68,33 @@ const Login: React.FC = () => {
       const data = await response.json();
 
       if (!response.ok) {
-        setSignupError(data.error || "Registration failed");
+        // Handle validation errors from backend
+        let errorMessage = "Registration failed";
+
+        if (data.error) {
+          errorMessage = data.error;
+        } else if (data.detail) {
+          // Handle Pydantic validation errors
+          if (Array.isArray(data.detail)) {
+            const validationErrors = data.detail.map((err: any) => {
+              if (err.msg) {
+                return err.msg;
+              }
+              return String(err);
+            });
+            errorMessage = validationErrors.join(", ");
+          } else if (typeof data.detail === "string") {
+            errorMessage = data.detail;
+          }
+        }
+
+        setSignupError(errorMessage);
         return;
       }
 
-      setSignupSuccess("Account created successfully!");
+      setSignupSuccess("Account created successfully! Logging you in...");
+
+      // Clear signup form
       setSignupData({
         firstName: "",
         lastName: "",
@@ -74,10 +102,47 @@ const Login: React.FC = () => {
         password: "",
         birthdate: "",
       });
-      // Redirect after successful signup
-      setTimeout(() => {
-        window.location.href = "/login";
-      }, 2000);
+
+      // Auto-login after successful registration
+      try {
+        console.log("Auto-login after registration for:", payload.email);
+        const loginResponse = await fetch("/api/users/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: payload.email,
+            password: payload.password,
+          }),
+          credentials: "include",
+        });
+
+        const loginData = await loginResponse.json();
+
+        if (loginResponse.ok) {
+          // Store user info and redirect
+          localStorage.setItem("userInfo", JSON.stringify(loginData.user));
+          console.log("Auto-login successful, redirecting...");
+
+          // Redirect to mood tracking
+          setTimeout(() => {
+            window.location.href = "/mood-tracking";
+          }, 1500);
+        } else {
+          // If auto-login fails, show success message and redirect to login
+          console.error("Auto-login failed:", loginData);
+          setSignupSuccess("Account created successfully! Please log in.");
+          setTimeout(() => {
+            setRightPanelActive(false); // Switch to login panel
+          }, 2000);
+        }
+      } catch (loginError) {
+        console.error("Auto-login error:", loginError);
+        // If auto-login fails, show success message and redirect to login
+        setSignupSuccess("Account created successfully! Please log in.");
+        setTimeout(() => {
+          setRightPanelActive(false); // Switch to login panel
+        }, 2000);
+      }
     } catch (err: unknown) {
       setSignupError(
         err instanceof Error ? err.message : "An unknown error occurred"

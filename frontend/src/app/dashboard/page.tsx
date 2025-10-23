@@ -24,12 +24,18 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     setMounted(true);
 
-    // Check authentication
+    // Check authentication and get subscription info
     const user = getCurrentUser();
     if (!user) {
       window.location.href = "/login";
       return;
     }
+
+    // Log subscription info
+    console.log("[Dashboard] User subscription:", {
+      tier: user.subscription_tier || "Free",
+      expires: user.subscription_expires_at,
+    });
   }, []);
 
   if (!mounted) return null;
