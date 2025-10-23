@@ -243,7 +243,11 @@ const Dashboard: React.FC = () => {
                         : "text-gray-600 hover:bg-gray-100"
                     }`}
                   >
-                    {days === 7 ? "1 Week" : days === 30 ? "1 Month" : "3 Months"}
+                    {days === 7
+                      ? "1 Week"
+                      : days === 30
+                      ? "1 Month"
+                      : "3 Months"}
                   </button>
                 ))}
               </div>
@@ -358,7 +362,9 @@ const Dashboard: React.FC = () => {
                         Ready to begin your mood journey?
                       </p>
                       <button
-                        onClick={() => (window.location.href = "/mood-tracking")}
+                        onClick={() =>
+                          (window.location.href = "/mood-tracking")
+                        }
                         className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 transform hover:scale-105"
                       >
                         Start Journaling 📝
@@ -451,7 +457,8 @@ const Dashboard: React.FC = () => {
                       <div className="text-4xl mb-4">🎭</div>
                       <p className="mb-4">No emotion data yet</p>
                       <p className="text-sm">
-                        Journal about your feelings to see your emotional patterns!
+                        Journal about your feelings to see your emotional
+                        patterns!
                       </p>
                     </div>
                   )}
@@ -532,7 +539,9 @@ const Dashboard: React.FC = () => {
                   </div>
 
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Mood Stability</span>
+                    <span className="text-sm text-gray-600">
+                      Mood Stability
+                    </span>
                     <span className="text-lg font-bold text-purple-600">
                       {progress?.mood_stability?.percentage || 0}%
                     </span>
