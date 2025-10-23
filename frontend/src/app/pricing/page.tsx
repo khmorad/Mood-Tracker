@@ -399,12 +399,14 @@ const PricingPage: React.FC = () => {
                 <Check className="w-5 h-5 text-green-600" />
                 <span className="text-green-800 font-medium">
                   You're currently on the {user.subscriptionTier} plan
-                  {user.subscriptionExpires && user.subscriptionTier !== "Professional"
-                    ? ` (expires ${new Date(user.subscriptionExpires).toLocaleDateString()})`
+                  {user.subscriptionExpires &&
+                  user.subscriptionTier !== "Professional"
+                    ? ` (expires ${new Date(
+                        user.subscriptionExpires
+                      ).toLocaleDateString()})`
                     : user.subscriptionTier === "Professional"
                     ? " with lifetime access"
-                    : ""
-                  }
+                    : ""}
                 </span>
               </div>
             </motion.div>

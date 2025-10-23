@@ -610,12 +610,15 @@ const MoodTrackingPage: React.FC = () => {
                       <div className="text-sm font-semibold text-green-800">
                         {user.subscriptionTier} Plan Active
                       </div>
-                      {user.subscriptionExpires && user.subscriptionTier !== "Professional" && (
-                        <div className="text-xs text-green-600">
-                          Expires:{" "}
-                          {new Date(user.subscriptionExpires).toLocaleDateString()}
-                        </div>
-                      )}
+                      {user.subscriptionExpires &&
+                        user.subscriptionTier !== "Professional" && (
+                          <div className="text-xs text-green-600">
+                            Expires:{" "}
+                            {new Date(
+                              user.subscriptionExpires
+                            ).toLocaleDateString()}
+                          </div>
+                        )}
                       {user.subscriptionTier === "Professional" && (
                         <div className="text-xs text-green-600">
                           Lifetime Access
@@ -623,7 +626,7 @@ const MoodTrackingPage: React.FC = () => {
                       )}
                     </div>
                   </div>
-                  
+
                   {/* Change Plan Button for Premium Users */}
                   <Link
                     href="/pricing"
