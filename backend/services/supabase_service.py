@@ -2,12 +2,22 @@ from typing import Optional, Dict, Any, List, Union
 from ..utils.supabase_client import get_supabase_client
 from supabase import Client
 import logging
+import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 logger = logging.getLogger(__name__)
 
 class SupabaseService:
     def __init__(self):
-        self.client: Client = get_supabase_client()
+        try:
+            self.client: Client = get_supabase_client()
+            logger.info("[SupabaseService] ✓ Connected to Supabase successfully")
+        except Exception as e:
+            logger.error(f"[SupabaseService] Failed to connect to Supabase: {e}")
+            raise
     
     # User operations
     def create_user(self, user_data: Union[Dict[str, Any], 'User']) -> Dict[str, Any]:
@@ -17,14 +27,29 @@ class SupabaseService:
             if hasattr(user_data, 'to_dict'):
                 data = user_data.to_dict()
             else:
-                data = user_data
-                
+                data = user_data.copy()
+            
+            # Ensure required fields have defaults
+            data.setdefault('subscription_tier', 'Free')
+            data.setdefault('monthly_entries_count', 0)
+            
+            # Handle None values for optional fields - keep them as None for database
+            # Don't remove None values as some database columns allow NULL
+            
+            logger.info(f"[SupabaseService] Creating user with data keys: {list(data.keys())}")
+            logger.info(f"[SupabaseService] User data: {data}")
+            
             result = self.client.table("user").insert(data).execute()
+            
             if result.data:
+                logger.info(f"[SupabaseService] ✓ User created successfully: {result.data[0]['user_id']}")
                 return result.data[0]
-            raise Exception("Failed to create user")
+            
+            logger.error("[SupabaseService] No data returned from user creation")
+            raise Exception("Failed to create user - no data returned")
+            
         except Exception as e:
-            logger.error(f"Error creating user: {str(e)}")
+            logger.error(f"[SupabaseService] Error creating user: {str(e)}")
             raise Exception(f"Error creating user: {str(e)}")
     
     def get_user_by_id(self, user_id: str) -> Optional[Dict[str, Any]]:
@@ -212,4 +237,6 @@ class SupabaseService:
             raise Exception(f"Error getting episode types: {str(e)}")
 
 # Create a singleton instance
+logger.info("[SupabaseService] Creating global supabase_service instance...")
 supabase_service = SupabaseService()
+logger.info("[SupabaseService] ✓ Global supabase_service instance created")

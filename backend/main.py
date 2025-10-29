@@ -8,49 +8,64 @@ import os
 from dotenv import load_dotenv
 from pathlib import Path
 import uvicorn
-
-# Add these new imports for background task
 import asyncio
 from contextlib import asynccontextmanager
 
 # Import routers
-from backend.routers import users, journal_entries, auth
-# Add this new import for emotions router
+from backend.routers import users, journal_entries, auth, plans  # Add plans router
 from backend.routers import emotions
-# Add this import for the background scheduler
-from backend.tasks.emotion_scheduler import emotion_scheduler
 
-# Load environment variables from backend/.env explicitly
+# Import both schedulers
+from backend.tasks.emotion_scheduler import emotion_scheduler
+from backend.tasks.plan_scheduler import plan_scheduler
+
+# Load environment variables
 load_dotenv(Path(__file__).resolve().parent / ".env")
 
-# Add lifespan event handler for background task
+# Update lifespan event handler for both schedulers
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
-    print("Starting emotion analysis scheduler...")
-    # Create background task for emotion analysis
-    task = asyncio.create_task(emotion_scheduler.start_scheduler())
+    print("🚀 Starting background schedulers...")
+    
+    # Create background tasks for both schedulers
+    emotion_task = asyncio.create_task(emotion_scheduler.start_scheduler())
+    plan_task = asyncio.create_task(plan_scheduler.start_scheduler())
+    
+    print("✓ Emotion analysis scheduler started")
+    print("✓ Plan management scheduler started")
+    
     yield
+    
     # Shutdown
-    print("Stopping emotion analysis scheduler...")
+    print("🛑 Stopping background schedulers...")
+    
+    # Stop both schedulers
     emotion_scheduler.stop_scheduler()
+    plan_scheduler.stop_scheduler()
+    
+    # Cancel and await both tasks
     try:
-        task.cancel()
-        await task
+        emotion_task.cancel()
+        plan_task.cancel()
+        await emotion_task
+        await plan_task
     except asyncio.CancelledError:
         pass
+    
+    print("✓ All schedulers stopped successfully")
 
-# Update FastAPI app initialization to include lifespan
+# Update FastAPI app initialization
 app = FastAPI(
     title="Mood Tracker API", 
     version="1.0.0",
-    lifespan=lifespan  # Add this line
+    lifespan=lifespan
 )
 
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:3001"],  # Frontend URLs
+    allow_origins=["http://localhost:3000", "http://localhost:3001"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -75,7 +90,8 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 app.include_router(users.router)
 app.include_router(journal_entries.router)
 app.include_router(auth.router)
-app.include_router(emotions.router)  # Add this line for emotions router
+app.include_router(emotions.router)
+app.include_router(plans.router)  # Add the plans router
 
 # Health check endpoint
 @app.get("/")
@@ -92,6 +108,15 @@ async def health_check():
         return {"status": "healthy", "database": "connected"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database connection failed: {str(e)}")
+
+# Add scheduler status endpoint
+@app.get("/scheduler-status")
+async def scheduler_status():
+    return {
+        "emotion_scheduler": {"running": emotion_scheduler.is_running if hasattr(emotion_scheduler, 'is_running') else "unknown"},
+        "plan_scheduler": {"running": plan_scheduler.is_running if hasattr(plan_scheduler, 'is_running') else "unknown"},
+        "status": "healthy"
+    }
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)

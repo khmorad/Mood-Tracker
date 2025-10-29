@@ -10,6 +10,9 @@ interface JWTPayload {
   middle_name?: string;
   last_name?: string;
   diagnosis_status?: string;
+  subscription_tier?: string;
+  subscription_expires_at?: string;
+  monthly_entries_count?: number;
   exp: number;
 }
 
