@@ -5,6 +5,7 @@ import React, { CSSProperties, useState, useEffect } from "react";
 import bpdLogo from "../assets/bpdLogo.png";
 import "../styles/NavBar.css";
 import { jwtDecode } from "jwt-decode";
+import { clearStoredSubscription } from "../../utils/subscription";
 
 function getCookie(name: string): string | null {
   const value = `; ${document.cookie}`;
@@ -72,6 +73,9 @@ const EnhancedNavbar: React.FC = () => {
   const handleLogout = () => {
     // Clear localStorage
     localStorage.removeItem("userInfo");
+
+    // Clear stored subscription data
+    clearStoredSubscription();
 
     // Clear the JWT cookie
     deleteCookie("access_token");

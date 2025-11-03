@@ -34,8 +34,11 @@ const PricingCard: React.FC<PricingCardProps> = ({
         isPopular
           ? "border-purple-400 scale-105 shadow-2xl"
           : "border-white/30 hover:border-white/50"
-      }`}
-      whileHover={{ y: -5, scale: isPopular ? 1.05 : 1.02 }}
+      } ${disabled ? "opacity-75" : ""}`}
+      whileHover={{
+        y: disabled ? 0 : -5,
+        scale: isPopular ? 1.05 : disabled ? 1 : 1.02,
+      }}
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
@@ -50,6 +53,20 @@ const PricingCard: React.FC<PricingCardProps> = ({
           <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-6 py-2 rounded-full text-sm font-semibold flex items-center gap-2">
             <Star className="w-4 h-4" />
             Most Popular
+          </div>
+        </motion.div>
+      )}
+
+      {disabled && (
+        <motion.div
+          className="absolute top-4 right-4"
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ delay: 0.2 }}
+        >
+          <div className="bg-green-500 text-white px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1">
+            <Check className="w-3 h-3" />
+            Active
           </div>
         </motion.div>
       )}
@@ -81,8 +98,10 @@ const PricingCard: React.FC<PricingCardProps> = ({
       </ul>
 
       <motion.button
-        className={`w-full bg-gradient-to-r ${gradient} text-white py-4 rounded-2xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300 ${
-          disabled ? "opacity-50 cursor-not-allowed" : ""
+        className={`w-full bg-gradient-to-r ${gradient} text-white py-4 rounded-2xl font-semibold text-lg shadow-lg transition-all duration-300 ${
+          disabled
+            ? "opacity-60 cursor-not-allowed bg-gray-400"
+            : "hover:shadow-xl"
         }`}
         whileHover={disabled ? {} : { scale: 1.02 }}
         whileTap={disabled ? {} : { scale: 0.98 }}

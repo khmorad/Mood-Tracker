@@ -67,7 +67,7 @@ export const useEmotionData = (days: number = 30) => {
 
   useEffect(() => {
     const user = getCurrentUser();
-    if (user) {
+    if (user && user.user_id) {
       setUserId(user.user_id);
     } else {
       setError("User not authenticated");
