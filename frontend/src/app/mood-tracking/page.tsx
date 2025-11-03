@@ -5,7 +5,7 @@ import Layout from "../layout";
 import axios from "axios";
 import TypingAnimation from "../components/TypingAnimation";
 import Link from "next/link";
-import { jwtDecode } from "jwt-decode";
+import { getCurrentUser } from "../../utils/auth";
 import {
   Smile,
   Meh,
@@ -27,23 +27,6 @@ import {
   ChevronRight,
   Crown,
 } from "lucide-react";
-
-function getCookie(name: string): string | null {
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) return parts.pop()!.split(";").shift()!;
-  return null;
-}
-
-interface DecodedToken {
-  user_id?: string;
-  first_name: string;
-  last_name: string;
-  email: string;
-  subscription_tier?: string;
-  subscription_expires_at?: string;
-  [key: string]: unknown;
-}
 
 interface User {
   user_id?: string;
@@ -142,35 +125,21 @@ const MoodTrackingPage: React.FC = () => {
 
   // Initialize user and welcome message
   useEffect(() => {
-    const jwt = getCookie("access_token");
-    if (jwt) {
-      try {
-        const decoded: DecodedToken = jwtDecode(jwt);
-        const userData: User = {
-          user_id: decoded.user_id || decoded.email || "anonymous",
-          firstName: decoded.first_name || "",
-          lastName: decoded.last_name || "",
-          email: decoded.email || "",
-          subscriptionTier: decoded.subscription_tier || "Free",
-          subscriptionExpires: decoded.subscription_expires_at || undefined,
-        };
-        setUser(userData);
+    const user = getCurrentUser();
+    if (user) {
+      setUser(user);
 
-        const welcomeMessage = `Hello ${
-          userData.firstName || "User"
-        }! How are you feeling today? I'm here to listen and support you. 💙`;
-        setAiResponses([welcomeMessage]);
-        setConversation([{ user: "", ai: welcomeMessage }]);
-        setTypingMessageIndex(0); // Show typing for welcome message
+      const welcomeMessage = `Hello ${
+        user.firstName || "User"
+      }! How are you feeling today? I'm here to listen and support you. 💙`;
+      setAiResponses([welcomeMessage]);
+      setConversation([{ user: "", ai: welcomeMessage }]);
+      setTypingMessageIndex(0);
 
-        console.log("[MoodTracking] User loaded:", userData);
-      } catch (e) {
-        console.error("[MoodTracking] Failed to decode JWT:", e);
-        handleAnonymousUser();
-      }
+      console.log("[MoodTracking] User loaded:", user);
     } else {
       handleAnonymousUser();
-      console.warn("[MoodTracking] No access_token cookie found.");
+      console.warn("[MoodTracking] No authenticated user found.");
     }
     setIsClient(true);
   }, []);

@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import axios from "axios";
-import { jwtDecode } from "jwt-decode";
+import { getCurrentUser } from "../../utils/auth";
+import { storeSubscription } from "../../utils/subscription";
 import {
   Flower2,
   Sparkles,
@@ -21,16 +22,6 @@ import SimpleBackground from "../components/SimpleBackground";
 import Safe3DScene from "../components/Safe3DScene";
 import Footer from "../components/Footer";
 
-interface DecodedToken {
-  user_id?: string;
-  first_name: string;
-  last_name: string;
-  email: string;
-  subscription_tier?: string;
-  subscription_expires_at?: string;
-  [key: string]: unknown;
-}
-
 interface User {
   user_id?: string;
   firstName: string;
@@ -40,11 +31,9 @@ interface User {
   subscriptionExpires?: string;
 }
 
-function getCookie(name: string): string | null {
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) return parts.pop()!.split(";").shift()!;
-  return null;
+interface ValidationError {
+  msg?: string;
+  [key: string]: unknown;
 }
 
 const PricingPage: React.FC = () => {
@@ -59,22 +48,9 @@ const PricingPage: React.FC = () => {
     setIsClient(true);
 
     // Initialize user
-    const jwt = getCookie("access_token");
-    if (jwt) {
-      try {
-        const decoded: DecodedToken = jwtDecode(jwt);
-        const userData: User = {
-          user_id: decoded.user_id || decoded.email || "anonymous",
-          firstName: decoded.first_name || "",
-          lastName: decoded.last_name || "",
-          email: decoded.email || "",
-          subscriptionTier: decoded.subscription_tier || "Free",
-          subscriptionExpires: decoded.subscription_expires_at || undefined,
-        };
-        setUser(userData);
-      } catch (e) {
-        console.error("Failed to decode JWT:", e);
-      }
+    const user = getCurrentUser();
+    if (user) {
+      setUser(user);
     }
 
     // Check if WebGL is supported
@@ -134,6 +110,20 @@ const PricingPage: React.FC = () => {
         const { message, subscription_tier, subscription_expires } =
           response.data;
 
+        // Immediately update localStorage with new subscription
+        storeSubscription(subscription_tier, subscription_expires);
+
+        // Update local user state for immediate UI feedback
+        setUser((prev) =>
+          prev
+            ? {
+                ...prev,
+                subscriptionTier: subscription_tier,
+                subscriptionExpires: subscription_expires,
+              }
+            : prev
+        );
+
         let displayMessage = message;
         if (subscription_expires) {
           const expiryDate = new Date(
@@ -146,9 +136,9 @@ const PricingPage: React.FC = () => {
 
         setSuccessMessage(displayMessage);
 
-        // Force a page refresh to get updated JWT from server
+        // Redirect to dashboard after a delay
         setTimeout(() => {
-          window.location.href = "/dashboard"; // This will force a fresh page load
+          window.location.href = "/dashboard";
         }, 2000);
       }
     } catch (error) {
@@ -170,7 +160,7 @@ const PricingPage: React.FC = () => {
           // Handle Pydantic validation errors
           if (Array.isArray(errorData.detail)) {
             errorMessage = errorData.detail
-              .map((err: any) => {
+              .map((err: ValidationError) => {
                 if (typeof err === "object" && err.msg) {
                   return err.msg;
                 }
@@ -398,7 +388,7 @@ const PricingPage: React.FC = () => {
               <div className="inline-flex items-center gap-3 bg-green-100/90 backdrop-blur-md rounded-full px-6 py-3 border border-green-300">
                 <Check className="w-5 h-5 text-green-600" />
                 <span className="text-green-800 font-medium">
-                  You're currently on the {user.subscriptionTier} plan
+                  You&apos;re currently on the {user.subscriptionTier} plan
                   {user.subscriptionExpires &&
                   user.subscriptionTier !== "Professional"
                     ? ` (expires ${new Date(

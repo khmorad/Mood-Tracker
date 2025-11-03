@@ -4,6 +4,11 @@ import React, { useState } from "react";
 import styles from "../styles/Auth.module.css";
 import Link from "next/link";
 
+interface ValidationError {
+  msg?: string;
+  [key: string]: unknown;
+}
+
 const Login: React.FC = () => {
   const [rightPanelActive, setRightPanelActive] = useState(false);
   const [signupData, setSignupData] = useState({
@@ -76,7 +81,7 @@ const Login: React.FC = () => {
         } else if (data.detail) {
           // Handle Pydantic validation errors
           if (Array.isArray(data.detail)) {
-            const validationErrors = data.detail.map((err: any) => {
+            const validationErrors = data.detail.map((err: ValidationError) => {
               if (err.msg) {
                 return err.msg;
               }

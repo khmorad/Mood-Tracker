@@ -33,8 +33,8 @@ const Dashboard: React.FC = () => {
 
     // Log subscription info
     console.log("[Dashboard] User subscription:", {
-      tier: user.subscription_tier || "Free",
-      expires: user.subscription_expires_at,
+      tier: user.subscriptionTier || "Free",
+      expires: user.subscriptionExpires,
     });
   }, []);
 

@@ -3,6 +3,11 @@ import { NextResponse } from "next/server";
 const BACKEND_URL =
   process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
 
+interface ValidationError {
+  msg?: string;
+  [key: string]: unknown;
+}
+
 export async function POST(req: Request) {
   try {
     console.log("Frontend API: Received registration request");
@@ -49,7 +54,7 @@ export async function POST(req: Request) {
       if (data.detail) {
         if (Array.isArray(data.detail)) {
           // Handle Pydantic validation errors
-          const validationErrors = data.detail.map((err: any) => {
+          const validationErrors = data.detail.map((err: ValidationError) => {
             if (err.msg) {
               // Make password error more user-friendly
               if (err.msg.includes("Password must be at least")) {
