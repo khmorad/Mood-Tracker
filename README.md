@@ -10,8 +10,6 @@
   <img src="https://img.shields.io/badge/AI-Gemini_API-orange?style=for-the-badge" />
   <img src="https://img.shields.io/badge/Text--to--Speech-OpenAI_API-lightgrey?style=for-the-badge" />
   <img src="https://img.shields.io/badge/Authentication-JWT-yellowgreen?style=for-the-badge" />
-  <img src="https://img.shields.io/badge/Deployment-Cloud-yellow?style=for-the-badge" />
-  <img src="https://img.shields.io/badge/Maintained-Yes-success?style=for-the-badge" />
 </p>
 
 Mood Stabilizer is a journaling app designed to help users track and manage their emotional well-being.  
@@ -37,23 +35,23 @@ This project is structured with separate frontend and backend services:
 
 ```
 Mood-Tracker/
-├── backend/                    # FastAPI backend
-│   ├── main.py                # FastAPI application with lifespan events
-│   ├── routers/               # API route handlers
-│   │   ├── users.py          # User management endpoints
-│   │   ├── journal_entries.py # Journal entry endpoints
-│   │   ├── auth.py           # Authentication endpoints
-│   │   └── emotions.py       # Emotion analysis endpoints
-│   ├── services/              # Business logic services
-│   │   ├── supabase_service.py # Supabase database service
-│   │   └── emotion_analyzer.py # AI emotion analysis service
-│   ├── tasks/                 # Background tasks
+├── backend/                     # FastAPI backend
+│   ├── main.py                  # FastAPI application with lifespan events
+│   ├── routers/                 # API route handlers
+│   │   ├── users.py             # User management endpoints
+│   │   ├── journal_entries.py   # Journal entry endpoints
+│   │   ├── auth.py              # Authentication endpoints
+│   │   └── emotions.py          # Emotion analysis endpoints
+│   ├── services/                # Business logic services
+│   │   ├── supabase_service.py  # Supabase database service
+│   │   └── emotion_analyzer.py  # AI emotion analysis service
+│   ├── tasks/                   # Background tasks
 │   │   └── emotion_scheduler.py # Automated emotion analysis
-│   ├── utils/                 # Utility modules
-│   │   └── supabase_client.py # Supabase client configuration
-│   ├── requirements.txt       # Python dependencies
-│   └── start.py              # Startup script
-├── frontend/                  # Next.js frontend
+│   ├── utils/                   # Utility modules
+│   │   └── supabase_client.py   # Supabase client configuration
+│   ├── requirements.txt         # Python dependencies
+│   └── start.py                 # Startup script
+├── frontend/                    # Next.js frontend
 │   ├── src/
 │   ├── package.json
 │   └── ...

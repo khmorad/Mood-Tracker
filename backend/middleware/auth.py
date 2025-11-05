@@ -15,7 +15,7 @@ async def get_current_user_dependency(
     db: Session = Depends(get_db),
     request: Request = None
 ):
-    """Dependency to get current authenticated user"""
+    """Dependency to get current authenticated user with latest subscription info"""
     token = None
     # Try to get token from Authorization header first
     if credentials:
@@ -36,8 +36,13 @@ async def get_current_user_dependency(
             detail="Invalid authentication credentials",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    # Get user from database
-    query = text("SELECT * FROM \"user\" WHERE user_id = :user_id")
+    # Get user from database with latest subscription info
+    query = text("""
+        SELECT u.*, s.subscription_tier, s.subscription_expires_at 
+        FROM \"user\" u 
+        LEFT JOIN subscription s ON u.user_id = s.user_id 
+        WHERE u.user_id = :user_id
+    """)
     result = db.execute(query, {"user_id": payload.get("user_id")})
     user = result.fetchone()
     if not user:
@@ -48,4 +53,9 @@ async def get_current_user_dependency(
         )
     user_dict = dict(user._mapping)
     user_dict.pop('password', None)  # Remove password from response
+    
+    # Ensure subscription defaults
+    if not user_dict.get('subscription_tier'):
+        user_dict['subscription_tier'] = 'Free'
+    
     return user_dict
