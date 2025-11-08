@@ -7,7 +7,7 @@ import logging
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from ..utils.jwt_utils import verify_password, get_password_hash, create_access_token
 from ..middleware.auth import get_current_user_dependency
-from ..services.supabase_service import supabase_service
+from ..services.users_service import users_service
 from ..schemas.auth_schemas import LoginRequest, RegisterRequest, UserResponse
 from ..models.user import User
 
@@ -24,7 +24,7 @@ async def register(register_data: RegisterRequest):
         logger.info(f"[Auth] Registration attempt for email: {register_data.email}")
         
         # Check if user already exists using Supabase
-        existing_user = supabase_service.get_user_by_email(register_data.email)
+        existing_user = users_service.get_user_by_email(register_data.email)
         
         if existing_user:
             logger.warning(f"[Auth] Registration failed - email already exists: {register_data.email}")
@@ -66,7 +66,7 @@ async def register(register_data: RegisterRequest):
         }
         
         # Create user directly with dictionary
-        created_user_dict = supabase_service.create_user(user_data)
+        created_user_dict = users_service.create_user(user_data)
         
         logger.info(f"[Auth] ✓ User registered successfully: {user_id}")
         
@@ -89,7 +89,7 @@ async def login(login_data: LoginRequest, response: Response):
     """Login user with email and password, return JWT in cookie"""
     try:
         # Get user using Supabase - returns dict
-        user_dict = supabase_service.get_user_by_email(login_data.email)
+        user_dict = users_service.get_user_by_email(login_data.email)
         
         if not user_dict:
             raise HTTPException(status_code=401, detail="Invalid email or password")

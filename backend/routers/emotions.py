@@ -6,7 +6,9 @@ import os
 import logging
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from ..services.supabase_service import supabase_service
+from ..services.emotions_service import emotions_service
+from ..services.users_service import users_service
+from ..services.journals_service import journals_service
 from ..tasks.emotion_scheduler import emotion_scheduler
 
 # Set up logging
@@ -24,7 +26,7 @@ async def get_emotions(
     
     try:
         if user_id:
-            emotions = supabase_service.get_emotions_by_user(user_id)
+            emotions = emotions_service.get_emotions_by_user(user_id)
             # Filter by date if provided
             if journal_date:
                 emotions = [e for e in emotions if e.get('journal_date') == journal_date]
@@ -32,7 +34,7 @@ async def get_emotions(
             return emotions
         else:
             # Get all emotions using Supabase
-            client = supabase_service.client
+            client = emotions_service.client
             result = client.table("emotions").select("*").order("journal_date", desc=True).execute()
             logger.info(f"[EmotionsAPI] Found {len(result.data)} emotion records")
             return result.data or []
@@ -51,7 +53,7 @@ async def get_dashboard_data(
     
     try:
         # Check if user exists
-        user = supabase_service.get_user_by_id(user_id)
+        user = users_service.get_user_by_id(user_id)
         if not user:
             logger.warning(f"[EmotionsAPI] User {user_id} not found")
             # Return empty data structure instead of error for better UX
@@ -118,7 +120,7 @@ async def get_mood_improvement_data(user_id: str, days: int) -> Dict[str, Any]:
     """Calculate mood improvement percentage and trend"""
     try:
         # Get emotions for the period using Supabase
-        emotions = supabase_service.get_emotions_by_user(user_id)
+        emotions = emotions_service.get_emotions_by_user(user_id)
         
         # Filter by date range
         start_date = date.today() - timedelta(days=days-1)
@@ -170,7 +172,7 @@ async def get_mood_journey_data(user_id: str, days: int) -> Dict[str, Any]:
     """Get mood journey data for calendar/chart visualization"""
     try:
         # Get emotions using Supabase
-        emotions = supabase_service.get_emotions_by_user(user_id)
+        emotions = emotions_service.get_emotions_by_user(user_id)
         
         # Filter by date range
         start_date = date.today() - timedelta(days=days-1)
@@ -233,7 +235,7 @@ async def get_emotional_landscape_data(user_id: str, days: int) -> Dict[str, Any
     """Get emotional landscape percentages"""
     try:
         # Get emotions using Supabase
-        emotions = supabase_service.get_emotions_by_user(user_id)
+        emotions = emotions_service.get_emotions_by_user(user_id)
         
         # Filter by date range
         start_date = date.today() - timedelta(days=days-1)
@@ -310,7 +312,7 @@ async def get_progress_data(user_id: str, days: int) -> Dict[str, Any]:
     """Get progress metrics"""
     try:
         # Get journal entries count using Supabase
-        journal_entries = supabase_service.get_journal_entries_by_user(user_id)
+        journal_entries = journals_service.get_journal_entries_by_user(user_id)
         
         # Filter by date range
         start_date = date.today() - timedelta(days=days-1)
@@ -318,7 +320,7 @@ async def get_progress_data(user_id: str, days: int) -> Dict[str, Any]:
         journal_count = len(journal_entries)
         
         # Get emotions using Supabase
-        emotions = supabase_service.get_emotions_by_user(user_id)
+        emotions = emotions_service.get_emotions_by_user(user_id)
         emotions = [e for e in emotions if datetime.fromisoformat(e['journal_date']).date() >= start_date]
         
         good_days = 0
@@ -366,7 +368,7 @@ async def calculate_current_streak(user_id: str) -> int:
     """Calculate current journaling streak"""
     try:
         # Get journal entries using Supabase
-        journal_entries = supabase_service.get_journal_entries_by_user(user_id)
+        journal_entries = journals_service.get_journal_entries_by_user(user_id)
         
         # Get unique dates and sort
         dates = sorted(set(e['journal_date'] for e in journal_entries), reverse=True)[:30]
@@ -432,7 +434,7 @@ async def get_journal_entries_count(user_id: str, days: int) -> Dict[str, Any]:
     """Get journal entries statistics"""
     try:
         # Get journal entries using Supabase
-        journal_entries = supabase_service.get_journal_entries_by_user(user_id)
+        journal_entries = journals_service.get_journal_entries_by_user(user_id)
         
         # Filter by date ranges
         this_week_start = date.today() - timedelta(days=6)
@@ -505,7 +507,7 @@ async def get_emotion_summary(
     
     try:
         # Get emotions using Supabase
-        emotions = supabase_service.get_emotions_by_user(user_id)
+        emotions = emotions_service.get_emotions_by_user(user_id)
         
         # Filter by date range if provided
         if start_date:

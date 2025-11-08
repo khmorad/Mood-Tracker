@@ -136,9 +136,9 @@ const PricingPage: React.FC = () => {
 
         setSuccessMessage(displayMessage);
 
-        // Redirect to dashboard after a delay
+        // Redirect to mood tracking after a delay
         setTimeout(() => {
-          window.location.href = "/dashboard";
+          window.location.href = "/mood-tracking";
         }, 2000);
       }
     } catch (error) {
