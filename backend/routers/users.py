@@ -4,7 +4,7 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from ..schemas.user_schemas import UserCreate, User
-from ..services.supabase_service import supabase_service
+from ..services.users_service import users_service
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -13,11 +13,11 @@ async def get_users(email: Optional[str] = Query(None)):
     """Get all users or filter by email"""
     try:
         if email:
-            user = supabase_service.get_user_by_email(email)
+            user = users_service.get_user_by_email(email)
             return [user] if user else []
         else:
             # Get all users using Supabase
-            client = supabase_service.client
+            client = users_service.client
             result = client.table("user").select("*").execute()
             return result.data or []
     except Exception as e:
@@ -42,7 +42,7 @@ async def create_user(user: UserCreate):
             "diagnosis_status": user.diagnosis_status
         }
         
-        created_user = supabase_service.create_user(user_data)
+        created_user = users_service.create_user(user_data)
         
         return {
             "user_id": user.user_id,
@@ -56,7 +56,7 @@ async def create_user(user: UserCreate):
 async def get_user(user_id: str):
     """Get a specific user by ID"""
     try:
-        user = supabase_service.get_user_by_id(user_id)
+        user = users_service.get_user_by_id(user_id)
         
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
@@ -72,7 +72,7 @@ async def update_user(user_id: str, user_update: UserCreate):
     """Update a user"""
     try:
         # Check if user exists
-        existing_user = supabase_service.get_user_by_id(user_id)
+        existing_user = users_service.get_user_by_id(user_id)
         if not existing_user:
             raise HTTPException(status_code=404, detail="User not found")
         
@@ -90,7 +90,7 @@ async def update_user(user_id: str, user_update: UserCreate):
             "diagnosis_status": user_update.diagnosis_status
         }
         
-        supabase_service.update_user(user_id, user_data)
+        users_service.update_user(user_id, user_data)
         return {"message": "User updated successfully"}
     except HTTPException:
         raise
@@ -102,12 +102,12 @@ async def delete_user(user_id: str):
     """Delete a user"""
     try:
         # First check if user exists
-        existing_user = supabase_service.get_user_by_id(user_id)
+        existing_user = users_service.get_user_by_id(user_id)
         if not existing_user:
             raise HTTPException(status_code=404, detail="User not found")
         
         # Delete the user
-        supabase_service.delete_user(user_id)
+        users_service.delete_user(user_id)
         
         return {"message": "User deleted successfully"}
     except HTTPException:

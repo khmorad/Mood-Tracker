@@ -9,7 +9,7 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
-from backend.services.supabase_service import supabase_service
+from ..services.users_service import users_service
 import logging
 
 # Set up logging
@@ -53,7 +53,7 @@ async def activate_plan(request: PlanActivationRequest):
         
         # Check if user exists - only select columns that exist in the database
         try:
-            response = supabase_service.client.table("user") \
+            response = users_service.client.table("user") \
                 .select("user_id, subscription_tier, subscription_expires_at, monthly_entries_count") \
                 .eq("user_id", request.user_id) \
                 .execute()
@@ -118,7 +118,7 @@ async def activate_plan(request: PlanActivationRequest):
         # Update user in Supabase
         try:
             logger.info(f"[Plans API] Updating user with data: {update_data}")
-            response = supabase_service.client.table("user") \
+            response = users_service.client.table("user") \
                 .update(update_data) \
                 .eq("user_id", request.user_id) \
                 .execute()
@@ -208,7 +208,7 @@ async def get_user_plan(user_id: str):
     """
     try:
         # Only select columns that exist in the database
-        response = supabase_service.client.table("user") \
+        response = users_service.client.table("user") \
             .select("subscription_tier, subscription_expires_at, monthly_entries_count") \
             .eq("user_id", user_id) \
             .execute()
