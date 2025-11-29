@@ -180,7 +180,6 @@ const MoodTrackingPage: React.FC = () => {
 
   const getGeminiResponse = async (entry: string): Promise<string> => {
     try {
-      setIsLoading(true);
       clearMessages();
 
       const conversationHistoryString = conversation
@@ -288,95 +287,53 @@ const MoodTrackingPage: React.FC = () => {
 
   const playTTS = async (text: string) => {
     try {
-      setIsLoading(true);
       const response = await axios.post("/api/text-to-speech", { text });
       const audioUrl = response.data.url;
-      const audio = new Audio(audioUrl);
-      audio.play();
+      new Audio(audioUrl).play();
     } catch (error) {
       console.error("Error playing TTS:", error);
-      // Remove setErrorMessage call since it's not used
-    } finally {
-      setIsLoading(false);
     }
   };
-
   const handleSubmit = async () => {
-    if (!journal.trim()) {
-      // Remove setErrorMessage call since it's not used
-      return;
-    }
+    if (!journal.trim()) return;
 
-    try {
-      setIsLoading(true);
-      clearMessages();
+    const userText = journal;
 
-      // Add user message to UI immediately
-      setJournalEntries((prev) => [...prev, journal]);
+    // 1. Show user message instantly
+    setJournalEntries((prev) => [...prev, userText]);
 
-      // Set typing indicator for the new AI response
-      const newResponseIndex = aiResponses.length;
-      setTypingMessageIndex(newResponseIndex);
+    // 2. Prepare typing index for AI response
+    const aiIndex = conversation.length;
+    setTypingMessageIndex(aiIndex);
 
-      // Get AI response first
-      const aiResponse = await getGeminiResponse(journal);
+    // 3. Clear input immediately
+    setJournal("");
+    if (journalInputRef.current) journalInputRef.current.textContent = "";
 
-      // Update conversation state and show AI response
-      const newConversation = [
-        ...conversation,
-        { user: journal, ai: aiResponse },
-      ];
-      setConversation(newConversation);
-      setAiResponses((prev) => [...prev, aiResponse]);
+    // 4. Process AI response WITHOUT waiting for DB save
+    const aiResponse = await getGeminiResponse(userText);
 
-      // Clear typing indicator after response is complete
-      setTimeout(() => {
-        setTypingMessageIndex(null);
-      }, 100);
+    // 5. Show AI message immediately
+    setConversation((prev) => [...prev, { user: userText, ai: aiResponse }]);
+    setAiResponses((prev) => [...prev, aiResponse]);
+    setTypingMessageIndex(null);
 
-      // Clear input immediately after AI response
-      const currentJournal = journal;
-      setJournal("");
-      if (journalInputRef.current) {
-        journalInputRef.current.textContent = "";
-      }
+    // 6. Save to DB IN BACKGROUND
+    setSavingStates((prev) => ({ ...prev, [aiIndex]: "saving" }));
 
-      setIsLoading(false);
-
-      // Now save to backend in the background with loading indicator
-      setSavingStates((prev) => ({ ...prev, [newResponseIndex]: "saving" }));
-
-      try {
-        const saved = await saveJournalEntry(currentJournal, aiResponse);
-
-        if (saved) {
-          console.log("[Submit] Journal entry saved successfully");
-          setSavingStates((prev) => ({ ...prev, [newResponseIndex]: "saved" }));
-          // Remove saved indicator after 3 seconds
-          setTimeout(() => {
-            setSavingStates((prev) => {
-              const newState = { ...prev };
-              delete newState[newResponseIndex];
-              return newState;
-            });
-          }, 3000);
-        } else {
-          console.warn("[Submit] Journal entry not saved");
-          setSavingStates((prev) => ({ ...prev, [newResponseIndex]: "error" }));
-        }
-      } catch (saveError) {
-        console.error("[Submit] Save Error:", saveError);
-        setSavingStates((prev) => ({ ...prev, [newResponseIndex]: "error" }));
-      }
-    } catch (error) {
-      console.error("[Submit] Error:", error);
-      // Remove setErrorMessage call since it's not used
-      console.error(
-        "An error occurred while processing your entry. Please try again."
-      );
-      setTypingMessageIndex(null);
-      setIsLoading(false);
-    }
+    saveJournalEntry(userText, aiResponse)
+      .then((ok) => {
+        setSavingStates((prev) => ({
+          ...prev,
+          [aiIndex]: ok ? "saved" : "error",
+        }));
+      })
+      .catch(() => {
+        setSavingStates((prev) => ({
+          ...prev,
+          [aiIndex]: "error",
+        }));
+      });
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -781,7 +738,7 @@ const MoodTrackingPage: React.FC = () => {
                 )}
                 <button
                   onClick={handleSubmit}
-                  disabled={isLoading || !journal.trim()}
+                  disabled={!journal.trim()}
                   className="absolute right-2 bottom-2 p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   aria-label="Send message"
                 >

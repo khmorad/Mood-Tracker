@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import Optional
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import sys
 import os
 
@@ -217,7 +217,22 @@ async def get_user_plan(user_id: str):
             raise HTTPException(status_code=404, detail="User not found")
         
         user_data = response.data[0]
-        
+
+        # Auto-downgrade if expired
+        expires_at = user_data.get("subscription_expires_at")
+        tier = user_data.get("subscription_tier", "Free")
+        now = datetime.now(timezone.utc)
+        if tier in ("Plus", "Professional") and expires_at:
+            expires_dt = datetime.fromisoformat(expires_at)
+            if expires_dt < now:
+                # Downgrade to Free
+                users_service.update_user(user_id, {
+                    "subscription_tier": "Free",
+                    "subscription_expires_at": None
+                })
+                user_data["subscription_tier"] = "Free"
+                user_data["subscription_expires_at"] = None
+
         return {
             "user_id": user_id,
             "subscription_tier": user_data.get("subscription_tier", "Free"),

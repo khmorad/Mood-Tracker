@@ -8,12 +8,13 @@ from backend.services.users_service import users_service
 from backend.services.journals_service import journals_service
 from backend.services.emotions_service import emotions_service
 from backend.services.episodes_service import episodes_service
-
+from backend.services.supabase_client import get_supabase_client
 logger = logging.getLogger(__name__)
 
 # Legacy compatibility - combine all services into one interface
 class SupabaseService:
     def __init__(self):
+        self.client = get_supabase_client()
         self.users = users_service
         self.journals = journals_service
         self.emotions = emotions_service
