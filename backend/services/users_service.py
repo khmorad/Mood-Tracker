@@ -23,7 +23,7 @@ class UsersService(BaseService):
             result = self.client.table("user").insert(data).execute()
             
             if result.data:
-                logger.info(f"[UsersService] ✓ User created successfully: {result.data[0]['user_id']}")
+                logger.info({"event": "user_created", "user_id": result.data[0]["user_id"]})
                 return result.data[0]
             
             logger.error("[UsersService] No data returned from user creation")

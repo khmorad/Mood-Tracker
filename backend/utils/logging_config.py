@@ -49,18 +49,23 @@ class StructuredJSONFormatter(logging.Formatter):
     """Serialize every ``LogRecord`` as a single-line JSON object."""
 
     def format(self, record: logging.LogRecord) -> str:  # noqa: A003
-        # Populate record.message (needed before we reference it below)
-        record.message = record.getMessage()
-
         entry: dict[str, Any] = {
             "timestamp": datetime.now(timezone.utc).isoformat(timespec="milliseconds"),
             "level": record.levelname,
             "logger": record.name,
-            "message": record.message,
-            "module": record.module,
-            "function": record.funcName,
-            "line": record.lineno,
         }
+
+        if isinstance(record.msg, dict) and not record.args:
+            # Structured dict message: spread keys directly into the JSON object.
+            # Supports: logger.info({"event": "...", "key": "value"})
+            entry.update(record.msg)
+        else:
+            # Plain string message: include standard source-location fields.
+            record.message = record.getMessage()
+            entry["message"] = record.message
+            entry["module"] = record.module
+            entry["function"] = record.funcName
+            entry["line"] = record.lineno
 
         # Inject request_id when present (populated by RequestIDFilter)
         request_id: str = getattr(record, "request_id", "")

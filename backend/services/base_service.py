@@ -9,7 +9,7 @@ class BaseService:
     def __init__(self):
         try:
             self.client: Client = get_supabase_client()
-            logger.info(f"[{self.__class__.__name__}] ✓ Connected to Supabase successfully")
+            logger.info({"event": "supabase_connected", "service": self.__class__.__name__})
         except Exception as e:
             logger.error(f"[{self.__class__.__name__}] Failed to connect to Supabase: {e}")
             raise
