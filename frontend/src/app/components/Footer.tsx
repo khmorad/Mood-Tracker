@@ -15,6 +15,7 @@ const Footer: React.FC = () => {
     ],
     tools: [
       { name: "Mood Tracker", href: "/mood-tracking" },
+      { name: "Pricing", href: "/pricing" },
       { name: "Wellness Tips", href: "#tips" },
       { name: "Community", href: "#community" },
       { name: "Meditation", href: "#meditation" },

@@ -24,7 +24,6 @@ import {
   AlertCircle,
   Menu,
   X,
-  ChevronRight,
   Crown,
 } from "lucide-react";
 
@@ -68,6 +67,9 @@ const MoodTrackingPage: React.FC = () => {
   const [savingStates, setSavingStates] = useState<{
     [key: number]: "saving" | "saved" | "error";
   }>({});
+  const [guestMessageCount, setGuestMessageCount] = useState(0);
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+  const [moodAutoDetected, setMoodAutoDetected] = useState(false);
 
   const journalInputRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -144,6 +146,8 @@ const MoodTrackingPage: React.FC = () => {
     setIsClient(true);
   }, []);
 
+  const GUEST_MESSAGE_LIMIT = 2;
+
   const handleAnonymousUser = () => {
     const anonymousUser: User = {
       user_id: "anonymous",
@@ -154,11 +158,21 @@ const MoodTrackingPage: React.FC = () => {
     };
     setUser(anonymousUser);
 
+    // Restore previous guest session count
+    const savedCount = parseInt(
+      localStorage.getItem("guest_chat_count") || "0",
+      10
+    );
+    setGuestMessageCount(savedCount);
+    if (savedCount >= GUEST_MESSAGE_LIMIT) {
+      setShowLoginPrompt(true);
+    }
+
     const welcomeMessage =
       "Hello! How are you feeling today? I'm here to listen and support you. 💙";
     setAiResponses([welcomeMessage]);
     setConversation([{ user: "", ai: welcomeMessage }]);
-    setTypingMessageIndex(0); // Show typing for welcome message
+    setTypingMessageIndex(0);
   };
 
   const scrollToBottom = () => {
@@ -294,8 +308,85 @@ const MoodTrackingPage: React.FC = () => {
       console.error("Error playing TTS:", error);
     }
   };
+  // ─── Auto-Emotion Detection ────────────────────────────────────────────────
+  // Runs in the background after each AI response.
+  // Sends a short classification prompt to Gemini and updates mood buttons.
+  const detectEmotions = async (
+    userMessage: string,
+    aiResponse: string
+  ): Promise<void> => {
+    const validMoods = [
+      "Happy",
+      "Calm",
+      "Neutral",
+      "Sad",
+      "Anxious",
+      "Angry",
+      "Tired",
+      "Grateful",
+    ];
+
+    try {
+      const classifyPrompt = `Analyze the USER's emotional state based on the conversation below.
+
+User message: "${userMessage}"
+AI response for context: "${aiResponse}"
+
+Reply with ONLY a valid JSON array containing 1-3 of these exact mood labels that best reflect what the USER is feeling:
+["Happy", "Calm", "Neutral", "Sad", "Anxious", "Angry", "Tired", "Grateful"]
+
+Rules:
+- Return ONLY the JSON array, no explanation or markdown
+- Choose labels that match the USER's emotion, not the AI's tone
+- Prefer specificity: if the message is clearly happy, don't include Neutral
+
+Example: ["Happy", "Grateful"]`;
+
+      const response = await axios.post("/api/generate", {
+        message: classifyPrompt,
+        conversation: [],
+      });
+
+      const rawText: string = response.data.message || "";
+
+      // Parse JSON array from response (Gemini sometimes wraps in markdown)
+      const match = rawText.match(/\[[\s\S]*?\]/);
+      if (!match) return;
+
+      const parsed: unknown = JSON.parse(match[0]);
+      if (!Array.isArray(parsed)) return;
+
+      const detectedMoods = (parsed as unknown[]).filter(
+        (m): m is string => typeof m === "string" && validMoods.includes(m)
+      );
+
+      if (detectedMoods.length > 0) {
+        setCurrentMood(detectedMoods);
+        setMoodAutoDetected(true);
+        console.log("[Emotion Detection] Detected moods:", detectedMoods);
+      }
+    } catch (error) {
+      // Non-critical — silently ignore
+      console.warn("[Emotion Detection] Failed:", error);
+    }
+  };
+
   const handleSubmit = async () => {
     if (!journal.trim()) return;
+
+    const isGuest = user?.user_id === "anonymous";
+
+    // Gate: guest has used all free messages
+    if (isGuest) {
+      const currentCount = parseInt(
+        localStorage.getItem("guest_chat_count") || "0",
+        10
+      );
+      if (currentCount >= GUEST_MESSAGE_LIMIT) {
+        setShowLoginPrompt(true);
+        return;
+      }
+    }
 
     const userText = journal;
 
@@ -310,15 +401,33 @@ const MoodTrackingPage: React.FC = () => {
     setJournal("");
     if (journalInputRef.current) journalInputRef.current.textContent = "";
 
-    // 4. Process AI response WITHOUT waiting for DB save
+    // 4. Get AI response
     const aiResponse = await getGeminiResponse(userText);
 
-    // 5. Show AI message immediately
+    // 5. Show AI message — keep typingMessageIndex set so TypingAnimation plays.
+    //    onComplete on the animation will clear it once typing finishes.
     setConversation((prev) => [...prev, { user: userText, ai: aiResponse }]);
     setAiResponses((prev) => [...prev, aiResponse]);
-    setTypingMessageIndex(null);
 
-    // 6. Save to DB IN BACKGROUND
+    // 6. Auto-detect emotions in background (both guests and logged-in users)
+    detectEmotions(userText, aiResponse);
+
+    if (isGuest) {
+      // Increment guest count — no DB save for anonymous users
+      const currentCount = parseInt(
+        localStorage.getItem("guest_chat_count") || "0",
+        10
+      );
+      const newCount = currentCount + 1;
+      localStorage.setItem("guest_chat_count", String(newCount));
+      setGuestMessageCount(newCount);
+      if (newCount >= GUEST_MESSAGE_LIMIT) {
+        setShowLoginPrompt(true);
+      }
+      return;
+    }
+
+    // 7. Save to DB IN BACKGROUND (logged-in users only)
     setSavingStates((prev) => ({ ...prev, [aiIndex]: "saving" }));
 
     saveJournalEntry(userText, aiResponse)
@@ -426,12 +535,12 @@ const MoodTrackingPage: React.FC = () => {
   }, [user, hasLoadedEntries, loadExistingEntries]);
 
   const handleMoodSelection = (moodLabel: string) => {
+    // Clear auto-detected badge when user manually adjusts moods
+    setMoodAutoDetected(false);
     setCurrentMood((prev) => {
       if (prev.includes(moodLabel)) {
-        // Remove mood if already selected
         return prev.filter((mood) => mood !== moodLabel);
       } else {
-        // Add mood if not selected
         return [...prev, moodLabel];
       }
     });
@@ -467,24 +576,19 @@ const MoodTrackingPage: React.FC = () => {
             style={{ height: "calc(100vh - 140px)" }}
           >
             {/* Mood Selection Grid */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-2">
               {moodEmojis.map((mood, index) => (
                 <button
                   key={index}
                   onClick={() => handleMoodSelection(mood.label)}
-                  className={`p-3 rounded-xl border-2 transition-all duration-200 flex flex-col items-center space-y-2 ${
+                  className={`py-2 px-3 rounded-xl border-2 transition-all duration-200 flex items-center gap-2 ${
                     currentMood.includes(mood.label)
                       ? `${mood.selectedColor} border-current shadow-sm`
                       : `${mood.color} border-transparent hover:border-gray-300`
                   }`}
                 >
                   <div className="flex-shrink-0">{mood.icon}</div>
-                  <span className="font-medium text-sm text-center">
-                    {mood.label}
-                  </span>
-                  {currentMood.includes(mood.label) && (
-                    <ChevronRight className="w-4 h-4" />
-                  )}
+                  <span className="font-medium text-sm">{mood.label}</span>
                 </button>
               ))}
             </div>
@@ -492,9 +596,16 @@ const MoodTrackingPage: React.FC = () => {
             {/* Selected Moods Summary */}
             {currentMood.length > 0 && (
               <div className="mt-6 p-4 bg-white rounded-xl border border-gray-200">
-                <h3 className="text-sm font-semibold text-gray-700 mb-2">
-                  Current Mood
-                </h3>
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-sm font-semibold text-gray-700">
+                    Current Mood
+                  </h3>
+                  {moodAutoDetected && (
+                    <span className="flex items-center gap-1 text-xs font-medium text-purple-600 bg-purple-50 border border-purple-200 px-2 py-0.5 rounded-full animate-pulse">
+                      ✨ AI detected
+                    </span>
+                  )}
+                </div>
                 <div className="flex flex-wrap gap-2">
                   {currentMood.map((mood, index) => (
                     <span
@@ -505,6 +616,11 @@ const MoodTrackingPage: React.FC = () => {
                     </span>
                   ))}
                 </div>
+                {moodAutoDetected && (
+                  <p className="mt-2 text-xs text-gray-400">
+                    Based on your message · click any mood to override
+                  </p>
+                )}
               </div>
             )}
 
@@ -613,7 +729,10 @@ const MoodTrackingPage: React.FC = () => {
                 <div className="flex-1 max-w-3xl">
                   <div className="bg-gray-100 rounded-2xl rounded-tl-sm p-4">
                     {typingMessageIndex === 0 ? (
-                      <TypingAnimation text={aiResponses[0]} />
+                      <TypingAnimation
+                        text={aiResponses[0]}
+                        onComplete={() => setTypingMessageIndex(null)}
+                      />
                     ) : (
                       <div className="flex items-start justify-between">
                         <p className="text-gray-800">{aiResponses[0]}</p>
@@ -660,6 +779,7 @@ const MoodTrackingPage: React.FC = () => {
                               {typingMessageIndex === index + 1 ? (
                                 <TypingAnimation
                                   text={aiResponses[index + 1]}
+                                  onComplete={() => setTypingMessageIndex(null)}
                                 />
                               ) : (
                                 <p className="text-gray-800">
@@ -715,6 +835,40 @@ const MoodTrackingPage: React.FC = () => {
                   </div>
                 </div>
               ))}
+              {/* Login prompt — shown after guest uses free messages */}
+              {showLoginPrompt && (
+                <div className="flex items-start space-x-3">
+                  <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+                    <Bot className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="flex-1 max-w-3xl">
+                    <div className="bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-200 rounded-2xl rounded-tl-sm p-5">
+                      <p className="text-gray-800 mb-1 font-semibold">
+                        You&apos;ve used your {GUEST_MESSAGE_LIMIT} free messages 💙
+                      </p>
+                      <p className="text-gray-600 text-sm mb-4">
+                        Create a free account to keep chatting, save your mood
+                        history, and get personalized insights over time.
+                      </p>
+                      <div className="flex flex-wrap gap-3">
+                        <a
+                          href="/login"
+                          className="px-5 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors text-sm"
+                        >
+                          Log In
+                        </a>
+                        <a
+                          href="/register"
+                          className="px-5 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg font-medium hover:opacity-90 transition-opacity text-sm"
+                        >
+                          Sign Up Free
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div ref={messagesEndRef} />
             </div>
           </div>
@@ -722,33 +876,54 @@ const MoodTrackingPage: React.FC = () => {
           {/* Input Area */}
           <div className="border-t border-gray-200 p-4 bg-white flex-shrink-0">
             <div className="max-w-4xl mx-auto">
-              <div className="relative">
-                <div
-                  contentEditable
-                  onInput={handleInput}
-                  onKeyPress={handleKeyPress}
-                  ref={journalInputRef}
-                  className="w-full min-h-[60px] max-h-32 overflow-y-auto p-4 pr-12 text-gray-800 bg-white border border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all resize-none"
-                  suppressContentEditableWarning={true}
-                />
-                {journal === "" && (
-                  <div className="absolute top-4 left-4 text-gray-400 pointer-events-none">
-                    Message Mood Journal...
-                  </div>
-                )}
-                <button
-                  onClick={handleSubmit}
-                  disabled={!journal.trim()}
-                  className="absolute right-2 bottom-2 p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  aria-label="Send message"
-                >
-                  {isLoading ? (
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  ) : (
-                    <Send className="w-5 h-5" />
+              {showLoginPrompt ? (
+                /* Locked state for guests who've hit the limit */
+                <div className="flex items-center justify-center gap-4 py-3 px-4 bg-purple-50 border border-purple-200 rounded-xl">
+                  <p className="text-sm text-gray-600">
+                    Log in to continue your session
+                  </p>
+                  <a
+                    href="/login"
+                    className="px-4 py-1.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors shrink-0"
+                  >
+                    Log In
+                  </a>
+                  <a
+                    href="/register"
+                    className="px-4 py-1.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity shrink-0"
+                  >
+                    Sign Up Free
+                  </a>
+                </div>
+              ) : (
+                <div className="relative">
+                  <div
+                    contentEditable
+                    onInput={handleInput}
+                    onKeyPress={handleKeyPress}
+                    ref={journalInputRef}
+                    className="w-full min-h-[60px] max-h-32 overflow-y-auto p-4 pr-12 text-gray-800 bg-white border border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all resize-none"
+                    suppressContentEditableWarning={true}
+                  />
+                  {journal === "" && (
+                    <div className="absolute top-4 left-4 text-gray-400 pointer-events-none">
+                      Message Mood Journal...
+                    </div>
                   )}
-                </button>
-              </div>
+                  <button
+                    onClick={handleSubmit}
+                    disabled={!journal.trim()}
+                    className="absolute right-2 bottom-2 p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    aria-label="Send message"
+                  >
+                    {isLoading ? (
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    ) : (
+                      <Send className="w-5 h-5" />
+                    )}
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
