@@ -25,6 +25,9 @@ import {
   Menu,
   X,
   Crown,
+  Plus,
+  SlidersHorizontal,
+  ChevronDown,
 } from "lucide-react";
 
 interface User {
@@ -70,6 +73,8 @@ const MoodTrackingPage: React.FC = () => {
   const [, setGuestMessageCount] = useState(0);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [moodAutoDetected, setMoodAutoDetected] = useState(false);
+  const [dbtToolEnabled, setDbtToolEnabled] = useState(false);
+  const [toolsMenuOpen, setToolsMenuOpen] = useState(false);
 
   const journalInputRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -929,24 +934,109 @@ Example: ["Happy", "Grateful"]`;
                   </a>
                 </div>
               ) : (
-                <div className="relative">
+                <div className="relative rounded-[28px] border border-gray-200 bg-white shadow-sm">
                   <div
                     contentEditable
                     onInput={handleInput}
                     onKeyPress={handleKeyPress}
                     ref={journalInputRef}
-                    className="w-full min-h-[60px] max-h-32 overflow-y-auto p-4 pr-12 text-gray-800 bg-white border border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all resize-none"
+                    className="w-full min-h-[72px] max-h-32 overflow-y-auto px-5 pt-4 pb-3 pr-16 text-gray-800 bg-transparent rounded-t-[28px] focus:outline-none transition-all resize-none"
                     suppressContentEditableWarning={true}
                   />
                   {journal === "" && (
-                    <div className="absolute top-4 left-4 text-gray-400 pointer-events-none">
+                    <div className="absolute top-4 left-5 text-gray-400 pointer-events-none">
                       Message Mood Journal...
                     </div>
                   )}
+                  <div className="border-t border-gray-100 px-4 py-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2 relative">
+                        <button
+                          type="button"
+                          className="flex h-9 w-9 items-center justify-center rounded-full text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700"
+                          aria-label="Add attachment placeholder"
+                        >
+                          <Plus className="w-5 h-5" />
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setToolsMenuOpen((prev) => !prev)}
+                          className="inline-flex items-center gap-2 rounded-full bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-200"
+                        >
+                          <SlidersHorizontal className="w-4 h-4" />
+                          <span>Tools</span>
+                        </button>
+
+                        {toolsMenuOpen && (
+                          <div className="absolute bottom-12 left-0 z-20 w-72 rounded-2xl border border-gray-200 bg-white p-3 shadow-2xl">
+                            <div className="mb-2 px-2 text-sm font-semibold text-gray-800">
+                              Tools
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setDbtToolEnabled((prev) => !prev);
+                                setToolsMenuOpen(false);
+                              }}
+                              className={`flex w-full items-start justify-between rounded-xl px-3 py-3 text-left transition-colors ${
+                                dbtToolEnabled
+                                  ? "bg-blue-50 text-blue-700"
+                                  : "hover:bg-gray-50 text-gray-800"
+                              }`}
+                            >
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm font-semibold">
+                                    DBT
+                                  </span>
+                                  <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-gray-500">
+                                    Placeholder
+                                  </span>
+                                </div>
+                                <p className="mt-1 text-xs text-gray-500">
+                                  Suggest future DBT skills while journaling.
+                                </p>
+                              </div>
+                              <div
+                                className={`mt-1 h-5 w-5 rounded-full border ${
+                                  dbtToolEnabled
+                                    ? "border-blue-600 bg-blue-600"
+                                    : "border-gray-300 bg-white"
+                                }`}
+                              />
+                            </button>
+                          </div>
+                        )}
+
+                        {dbtToolEnabled && (
+                          <div className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-2 text-sm font-medium text-blue-700">
+                            <span>DBT</span>
+                            <button
+                              type="button"
+                              onClick={() => setDbtToolEnabled(false)}
+                              className="rounded-full text-blue-500 transition-colors hover:text-blue-700"
+                              aria-label="Remove DBT tool"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      <button
+                        type="button"
+                        className="inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-800"
+                      >
+                        <span>Thinking</span>
+                        <ChevronDown className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
                   <button
                     onClick={handleSubmit}
                     disabled={!journal.trim()}
-                    className="absolute right-2 bottom-2 p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="absolute right-3 top-4 p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     aria-label="Send message"
                   >
                     {isLoading ? (
