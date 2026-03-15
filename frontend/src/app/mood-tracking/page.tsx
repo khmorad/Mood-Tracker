@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import Layout from "../layout";
 import axios from "axios";
 import TypingAnimation from "../components/TypingAnimation";
@@ -67,7 +67,7 @@ const MoodTrackingPage: React.FC = () => {
   const [savingStates, setSavingStates] = useState<{
     [key: number]: "saving" | "saved" | "error";
   }>({});
-  const [guestMessageCount, setGuestMessageCount] = useState(0);
+  const [, setGuestMessageCount] = useState(0);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [moodAutoDetected, setMoodAutoDetected] = useState(false);
 
@@ -80,48 +80,56 @@ const MoodTrackingPage: React.FC = () => {
       label: "Happy",
       color: "bg-yellow-100 hover:bg-yellow-200 text-yellow-700",
       selectedColor: "bg-yellow-200 border-yellow-400 text-yellow-800",
+      bgColor: "rgba(254, 240, 138, 0.45)",
     },
     {
       icon: <Heart className="w-6 h-6" />,
       label: "Calm",
       color: "bg-blue-100 hover:bg-blue-200 text-blue-700",
       selectedColor: "bg-blue-200 border-blue-400 text-blue-800",
+      bgColor: "rgba(147, 197, 253, 0.45)",
     },
     {
       icon: <Meh className="w-6 h-6" />,
       label: "Neutral",
       color: "bg-gray-100 hover:bg-gray-200 text-gray-700",
       selectedColor: "bg-gray-200 border-gray-400 text-gray-800",
+      bgColor: "rgba(209, 213, 219, 0.45)",
     },
     {
       icon: <Frown className="w-6 h-6" />,
       label: "Sad",
       color: "bg-indigo-100 hover:bg-indigo-200 text-indigo-700",
       selectedColor: "bg-indigo-200 border-indigo-400 text-indigo-800",
+      bgColor: "rgba(165, 180, 252, 0.45)",
     },
     {
       icon: <CloudRain className="w-6 h-6" />,
       label: "Anxious",
       color: "bg-orange-100 hover:bg-orange-200 text-orange-700",
       selectedColor: "bg-orange-200 border-orange-400 text-orange-800",
+      bgColor: "rgba(253, 186, 116, 0.45)",
     },
     {
       icon: <Zap className="w-6 h-6" />,
       label: "Angry",
       color: "bg-red-100 hover:bg-red-200 text-red-700",
       selectedColor: "bg-red-200 border-red-400 text-red-800",
+      bgColor: "rgba(252, 165, 165, 0.45)",
     },
     {
       icon: <Moon className="w-6 h-6" />,
       label: "Tired",
       color: "bg-purple-100 hover:bg-purple-200 text-purple-700",
       selectedColor: "bg-purple-200 border-purple-400 text-purple-800",
+      bgColor: "rgba(216, 180, 254, 0.45)",
     },
     {
       icon: <Smile className="w-6 h-6" />,
       label: "Grateful",
       color: "bg-pink-100 hover:bg-pink-200 text-pink-700",
       selectedColor: "bg-pink-200 border-pink-400 text-pink-800",
+      bgColor: "rgba(249, 168, 212, 0.45)",
     },
   ];
 
@@ -546,6 +554,27 @@ Example: ["Happy", "Grateful"]`;
     });
   };
 
+  // ─── Sidebar dynamic background ────────────────────────────────────────────
+  // Blends the colors of all selected moods into a gradient background.
+  const sidebarBackground = useMemo(() => {
+    const selectedColors = moodEmojis
+      .filter((m) => currentMood.includes(m.label))
+      .map((m) => m.bgColor);
+
+    if (selectedColors.length === 0) return "#f9fafb"; // gray-50 default
+    if (selectedColors.length === 1)
+      return `linear-gradient(160deg, ${selectedColors[0]}, #f9fafb 70%)`;
+
+    // Spread multiple colors evenly across the gradient
+    const stops = selectedColors
+      .map((c, i) => {
+        const pct = Math.round((i / (selectedColors.length - 1)) * 100);
+        return `${c} ${pct}%`;
+      })
+      .join(", ");
+    return `linear-gradient(160deg, ${stops})`;
+  }, [currentMood]); // eslint-disable-line react-hooks/exhaustive-deps
+
   if (!isClient) {
     return null;
   }
@@ -557,7 +586,11 @@ Example: ["Happy", "Grateful"]`;
         <div
           className={`${
             sidebarOpen ? "translate-x-0" : "-translate-x-full"
-          } fixed inset-y-0 left-0 z-50 w-80 bg-gray-50 border-r border-gray-200 transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 pt-16 lg:pt-0 overflow-hidden`}
+          } fixed inset-y-0 left-0 z-50 w-80 border-r border-gray-200 transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 pt-16 lg:pt-0 overflow-hidden`}
+          style={{
+            background: sidebarBackground,
+            transition: "background 1.2s ease, transform 300ms ease-in-out",
+          }}
         >
           <div className="flex items-center justify-between p-4 border-b border-gray-200">
             <h2 className="text-lg font-semibold text-gray-800">
