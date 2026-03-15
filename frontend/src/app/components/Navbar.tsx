@@ -258,7 +258,13 @@ const EnhancedNavbar: React.FC = () => {
                 </button>
               )}
 
-              <button style={styles.dropdownItem} onClick={closeDropdown}>
+              <button
+                style={styles.dropdownItem}
+                onClick={() => {
+                  closeDropdown();
+                  window.location.href = "/account";
+                }}
+              >
                 Account
               </button>
               <button style={styles.dropdownItem} onClick={handleLogout}>

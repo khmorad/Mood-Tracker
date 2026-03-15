@@ -3,8 +3,9 @@ from typing import List, Optional
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from ..schemas.user_schemas import UserCreate, User
+from ..schemas.user_schemas import UserCreate, User, UserUpdate
 from ..services.users_service import users_service
+from ..utils.jwt_utils import get_password_hash
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -68,7 +69,7 @@ async def get_user(user_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.put("/{user_id}", response_model=dict)
-async def update_user(user_id: str, user_update: UserCreate):
+async def update_user(user_id: str, user_update: UserUpdate):
     """Update a user"""
     try:
         # Check if user exists
@@ -76,19 +77,9 @@ async def update_user(user_id: str, user_update: UserCreate):
         if not existing_user:
             raise HTTPException(status_code=404, detail="User not found")
         
-        user_data = {
-            "email": user_update.email,
-            "password": user_update.password,
-            "profile_picture": user_update.profile_picture,
-            "gender": user_update.gender,
-            "preferred_language": user_update.preferred_language,
-            "phone_number": user_update.phone_number,
-            "date_of_birth": user_update.date_of_birth,
-            "first_name": user_update.first_name,
-            "middle_name": user_update.middle_name,
-            "last_name": user_update.last_name,
-            "diagnosis_status": user_update.diagnosis_status
-        }
+        user_data = user_update.model_dump(exclude_unset=True)
+        if user_data.get("password"):
+            user_data["password"] = get_password_hash(user_data["password"])
         
         users_service.update_user(user_id, user_data)
         return {"message": "User updated successfully"}

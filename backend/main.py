@@ -35,6 +35,7 @@ logger = logging.getLogger(__name__)
 # Application imports (after logging is configured)
 # ---------------------------------------------------------------------------
 from backend.routers import auth, emotions, journal_entries, plans, users  # noqa: E402
+from backend.routers.account import router as account_router  # noqa: E402
 from backend.tasks.emotion_scheduler import emotion_scheduler  # noqa: E402
 from backend.tasks.plan_scheduler import plan_scheduler  # noqa: E402
 from backend.middleware.logging_middleware import RequestLoggingMiddleware  # noqa: E402
@@ -119,6 +120,7 @@ app.include_router(journal_entries.router)
 app.include_router(auth.router)
 app.include_router(emotions.router)
 app.include_router(plans.router)
+app.include_router(account_router)
 
 
 # ---------------------------------------------------------------------------

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Response
+from fastapi import APIRouter, Depends, HTTPException, Response
 import sys
 import os
 import time
@@ -107,7 +107,9 @@ async def login(login_data: LoginRequest, response: Response):
 
 
 @router.get("/me")
-async def get_current_user_info(current_user: dict = get_current_user_dependency):
+async def get_current_user_info(
+    current_user: dict = Depends(get_current_user_dependency),
+):
     """Get current user information from JWT token"""
     return {"user": current_user}
 

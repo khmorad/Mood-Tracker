@@ -76,7 +76,6 @@ const MoodTrackingPage: React.FC = () => {
   const [dbtToolEnabled, setDbtToolEnabled] = useState(false);
   const [toolsMenuOpen, setToolsMenuOpen] = useState(false);
 
-  const journalInputRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const moodEmojis = [
@@ -200,8 +199,8 @@ const MoodTrackingPage: React.FC = () => {
     // Remove the setErrorMessage and setSuccessMessage calls since they're not used
   };
 
-  const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
-    setJournal(e.currentTarget.textContent || "");
+  const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setJournal(e.target.value);
     clearMessages();
   };
 
@@ -412,7 +411,6 @@ Example: ["Happy", "Grateful"]`;
 
     // 3. Clear input immediately
     setJournal("");
-    if (journalInputRef.current) journalInputRef.current.textContent = "";
 
     // 4. Get AI response
     const aiResponse = await getGeminiResponse(userText);
@@ -935,19 +933,14 @@ Example: ["Happy", "Grateful"]`;
                 </div>
               ) : (
                 <div className="relative rounded-[28px] border border-gray-200 bg-white shadow-sm">
-                  <div
-                    contentEditable
-                    onInput={handleInput}
-                    onKeyPress={handleKeyPress}
-                    ref={journalInputRef}
+                  <textarea
+                    value={journal}
+                    onChange={handleInput}
+                    onKeyDown={handleKeyPress}
+                    rows={3}
                     className="w-full min-h-[72px] max-h-32 overflow-y-auto px-5 pt-4 pb-3 pr-16 text-gray-800 bg-transparent rounded-t-[28px] focus:outline-none transition-all resize-none"
-                    suppressContentEditableWarning={true}
+                    placeholder="Message Mood Journal..."
                   />
-                  {journal === "" && (
-                    <div className="absolute top-4 left-5 text-gray-400 pointer-events-none">
-                      Message Mood Journal...
-                    </div>
-                  )}
                   <div className="border-t border-gray-100 px-4 py-3">
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-2 relative">
