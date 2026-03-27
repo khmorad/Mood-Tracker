@@ -40,7 +40,7 @@ async def get_emotions(
             return result.data or []
         
     except Exception as e:
-        logger.error(f"[EmotionsAPI] ✗ Error getting emotions: {e}")
+        logger.exception({"event": "get_emotions_error"})
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/dashboard/{user_id}")
@@ -108,12 +108,11 @@ async def get_dashboard_data(
             }
         }
         
-        logger.info(f"[EmotionsAPI] ✓ Successfully retrieved dashboard data for user {user_id}")
-        logger.info(f"[EmotionsAPI] Data summary: {journal_entries['total_period']} entries, {progress_data['good_days']['count']} good days")
+        logger.info({"event": "dashboard_ok", "user_id": user_id, "entries": journal_entries["total_period"], "good_days": progress_data["good_days"]["count"]})
         return dashboard_data
         
     except Exception as e:
-        logger.error(f"[EmotionsAPI] ✗ Error getting dashboard data for user {user_id}: {e}")
+        logger.exception({"event": "dashboard_error", "user_id": user_id})
         raise HTTPException(status_code=500, detail=str(e))
 
 async def get_mood_improvement_data(user_id: str, days: int) -> Dict[str, Any]:
@@ -487,13 +486,13 @@ async def trigger_emotion_analysis(
         
         logger.info(f"[EmotionsAPI] Triggering manual analysis...")
         result = await emotion_scheduler.run_manual_analysis(user_id, analysis_date)
-        logger.info(f"[EmotionsAPI] ✓ Manual analysis completed: {result}")
+        logger.info({"event": "manual_analysis_ok", "result": result})
         return result
         
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"[EmotionsAPI] ✗ Error triggering analysis: {e}")
+        logger.exception({"event": "manual_analysis_error"})
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/summary/{user_id}")
@@ -517,12 +516,11 @@ async def get_emotion_summary(
         
         emotions.sort(key=lambda x: x['journal_date'])
         
-        logger.info(f"[EmotionsAPI] Found {len(emotions)} emotion records for summary")
-        logger.info(f"[EmotionsAPI] ✓ Successfully retrieved emotion summary")
+        logger.info({"event": "summary_ok", "user_id": user_id, "count": len(emotions)})
         return emotions
         
     except Exception as e:
-        logger.error(f"[EmotionsAPI] ✗ Error getting emotion summary: {e}")
+        logger.exception({"event": "summary_error", "user_id": user_id})
         raise HTTPException(status_code=500, detail=str(e))
 
 # Health check endpoint for emotions
@@ -541,9 +539,9 @@ async def emotions_health_check():
             "timestamp": datetime.now().isoformat()
         }
         
-        logger.info(f"[EmotionsAPI] ✓ Health check result: {result}")
+        logger.info({"event": "health_check_ok", "scheduler_running": scheduler_status})
         return result
         
     except Exception as e:
-        logger.error(f"[EmotionsAPI] ✗ Health check failed: {e}")
+        logger.exception({"event": "health_check_error"})
         raise HTTPException(status_code=500, detail=str(e))

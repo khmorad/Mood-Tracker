@@ -1,26 +1,45 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 
 interface TypingAnimationProps {
   text: string;
+  speed?: number;        // ms per character — lower = faster
+  onComplete?: () => void; // fires once when all characters are shown
 }
 
-const TypingAnimation: React.FC<TypingAnimationProps> = ({ text }) => {
-  const [renderText, setRenderText] = useState<string>("");
-  const [index, setIndex] = useState<number>(0);
+const TypingAnimation: React.FC<TypingAnimationProps> = ({
+  text,
+  speed = 22,
+  onComplete,
+}) => {
+  const [displayText, setDisplayText] = useState("");
+  const [charIndex, setCharIndex] = useState(0);
+  const completedRef = useRef(false); // guard so onComplete fires exactly once
 
   useEffect(() => {
-    if (index < text.length) {
-      const timeoutId = setTimeout(() => {
-        setRenderText((prev) => prev + text.charAt(index));
-        setIndex(index + 1);
-      }, 10); 
-      //in case speed needs to be changed the lower the number the faster
-      return () => clearTimeout(timeoutId);
-    }
-  }, [index, text]);
+    // Reset if text prop changes (e.g. component reused)
+    setDisplayText("");
+    setCharIndex(0);
+    completedRef.current = false;
+  }, [text]);
 
-  return <ReactMarkdown>{renderText}</ReactMarkdown>;
+  useEffect(() => {
+    if (charIndex < text.length) {
+      const id = setTimeout(() => {
+        setDisplayText((prev) => prev + text[charIndex]);
+        setCharIndex((prev) => prev + 1);
+      }, speed);
+      return () => clearTimeout(id);
+    }
+
+    // All characters shown — call onComplete exactly once
+    if (text.length > 0 && !completedRef.current) {
+      completedRef.current = true;
+      onComplete?.();
+    }
+  }, [charIndex, text, speed, onComplete]);
+
+  return <ReactMarkdown>{displayText}</ReactMarkdown>;
 };
 
 export default TypingAnimation;

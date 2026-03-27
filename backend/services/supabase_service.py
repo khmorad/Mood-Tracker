@@ -19,7 +19,7 @@ class SupabaseService:
         self.journals = journals_service
         self.emotions = emotions_service
         self.episodes = episodes_service
-        logger.info("[SupabaseService] ✓ All services initialized")
+        logger.info({"event": "init_ok", "service": "supabase_service"})
     
     # User operations - delegate to users service
     def create_user(self, user_data):

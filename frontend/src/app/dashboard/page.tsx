@@ -5,6 +5,18 @@ import dynamic from "next/dynamic";
 import Layout from "../layout";
 import { useEmotionData } from "../../hooks/useEmotionData";
 import { getCurrentUser } from "../../utils/auth";
+import {
+  TrendingUp,
+  TrendingDown,
+  Minus,
+  BookOpen,
+  Smile,
+  Flame,
+  RefreshCw,
+  PenLine,
+  Activity,
+  ChevronRight,
+} from "lucide-react";
 
 const TypeAnimation = dynamic(
   () => import("react-type-animation").then((mod) => mod.TypeAnimation),
@@ -14,95 +26,68 @@ const TypeAnimation = dynamic(
 const Dashboard: React.FC = () => {
   const [mounted, setMounted] = useState(false);
   const [timeRange, setTimeRange] = useState<7 | 30 | 90>(30);
-  const {
-    data: emotionData,
-    loading,
-    error,
-    refetch,
-  } = useEmotionData(timeRange);
+  const [hoveredBar, setHoveredBar] = useState<number | null>(null);
+  const { data: emotionData, loading, error, refetch } = useEmotionData(timeRange);
 
   useEffect(() => {
     setMounted(true);
-
-    // Check authentication and get subscription info
     const user = getCurrentUser();
     if (!user) {
       window.location.href = "/login";
-      return;
     }
-
-    // Log subscription info
-    console.log("[Dashboard] User subscription:", {
-      tier: user.subscriptionTier || "Free",
-      expires: user.subscriptionExpires,
-    });
   }, []);
 
   if (!mounted) return null;
 
-  // Loading state
+  /* ── Loading ─────────────────────────────────────────────── */
   if (loading) {
     return (
       <Layout>
-        <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 mt-14">
-          <div className="container mx-auto px-4 py-6">
-            <div className="flex items-center justify-center h-64">
-              <div className="text-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto mb-4"></div>
-                <p className="text-gray-600">Loading your mood insights...</p>
-              </div>
-            </div>
+        <div className="min-h-screen bg-gray-50 mt-14 flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-10 h-10 border-2 border-violet-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+            <p className="text-sm text-gray-400">Loading your insights…</p>
           </div>
         </div>
       </Layout>
     );
   }
 
-  // Error state
+  /* ── Error ───────────────────────────────────────────────── */
   if (error) {
     return (
       <Layout>
-        <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 mt-14">
-          <div className="container mx-auto px-4 py-6">
-            <div className="flex items-center justify-center h-64">
-              <div className="text-center">
-                <div className="text-red-500 text-4xl mb-4">⚠️</div>
-                <p className="text-gray-600 mb-4">
-                  Failed to load dashboard data
-                </p>
-                <p className="text-sm text-gray-500 mb-4">{error}</p>
-                <button
-                  onClick={refetch}
-                  className="bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600"
-                >
-                  Try Again
-                </button>
-              </div>
+        <div className="min-h-screen bg-gray-50 mt-14 flex items-center justify-center">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 max-w-sm w-full text-center">
+            <div className="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Activity className="w-5 h-5 text-red-400" />
             </div>
+            <p className="font-semibold text-gray-800 mb-1">Failed to load data</p>
+            <p className="text-sm text-gray-400 mb-5">{error}</p>
+            <button
+              onClick={refetch}
+              className="bg-violet-600 text-white px-5 py-2 rounded-xl text-sm font-medium hover:bg-violet-700 transition-colors"
+            >
+              Try Again
+            </button>
           </div>
         </div>
       </Layout>
     );
   }
 
-  // Calculate good days based on emotional landscape
+  /* ── Data helpers ────────────────────────────────────────── */
   const calculateGoodDays = () => {
     if (!emotionData?.emotional_landscape?.emotions) {
       return { count: 0, total: 0, percentage: 0 };
     }
-
     const emotions = emotionData.emotional_landscape.emotions;
     const positiveEmotions = ["Happy", "Calm", "Grateful"];
-
-    // Calculate percentage of positive emotions
     const positivePercentage = emotions
-      .filter((emotion) => positiveEmotions.includes(emotion.name))
-      .reduce((sum, emotion) => sum + emotion.percentage, 0);
-
+      .filter((e) => positiveEmotions.includes(e.name))
+      .reduce((sum, e) => sum + e.percentage, 0);
     const totalDays = emotionData?.period?.days || timeRange;
-    // If positive emotions make up more than 40% of emotional landscape, consider it good
     const goodDaysCount = Math.round((positivePercentage / 100) * totalDays);
-
     return {
       count: goodDaysCount,
       total: totalDays,
@@ -111,501 +96,444 @@ const Dashboard: React.FC = () => {
   };
 
   const goodDaysData = calculateGoodDays();
-
-  // Use real data or fallback to defaults
   const moodJourney = emotionData?.mood_journey?.daily_moods || [];
   const emotionalLandscape = emotionData?.emotional_landscape?.emotions || [];
-  const progress = {
-    ...emotionData?.progress,
-    good_days: goodDaysData,
-  };
+  const progress = { ...emotionData?.progress, good_days: goodDaysData };
   const moodImprovement = emotionData?.mood_improvement;
   const journalEntries = emotionData?.journal_entries;
-
-  // Console log mood journey data for debugging
-  console.log("=== MOOD JOURNEY DEBUG ===");
-  console.log("Full emotion data:", emotionData);
-  console.log("Mood journey array:", moodJourney);
-  console.log("Mood journey length:", moodJourney.length);
-  console.log("Sample mood entry:", moodJourney[0]);
-  console.log("Time range:", timeRange);
-  console.log("========================");
-
-  // Use real data only - no mock data
-  const getMoodJourneyData = () => {
-    if (moodJourney.length > 0) {
-      return moodJourney.slice(-14);
-    }
-    // Return empty array if no real data
-    return [];
-  };
-
-  const displayMoodData = getMoodJourneyData();
-  console.log("Display mood data:", displayMoodData);
-
-  // Check if user has any journal data at all
   const hasAnyData =
     moodJourney.length > 0 ||
     emotionalLandscape.length > 0 ||
     (journalEntries?.total_period || 0) > 0;
+  const displayMoodData = moodJourney.slice(-14);
+  const trend = moodImprovement?.trend || "neutral";
+  const improvementValue = moodImprovement?.percentage ?? 0;
 
-  // Create insights from real data
-  const insights = [
+  /* ── Stat cards config ───────────────────────────────────── */
+  const TrendIcon =
+    trend === "improving" ? TrendingUp : trend === "declining" ? TrendingDown : Minus;
+
+  const stats = [
     {
-      icon: "📈",
-      title: "Mood Improvement",
-      description:
-        moodImprovement?.message ||
-        (hasAnyData ? "Calculating..." : "Start journaling to see trends"),
-      color:
-        moodImprovement?.trend === "improving"
-          ? "bg-green-100 border-green-300"
-          : moodImprovement?.trend === "declining"
-          ? "bg-red-100 border-red-300"
-          : "bg-blue-100 border-blue-300",
+      label: "Mood Trend",
       value: hasAnyData
-        ? `${(moodImprovement?.percentage ?? 0) >= 0 ? "+" : ""}${
-            moodImprovement?.percentage ?? 0
-          }%`
-        : "--",
+        ? `${improvementValue >= 0 ? "+" : ""}${improvementValue}%`
+        : "—",
+      sub: moodImprovement?.message || "No data yet",
+      Icon: TrendIcon,
+      iconBg:
+        trend === "improving"
+          ? "bg-emerald-50"
+          : trend === "declining"
+          ? "bg-red-50"
+          : "bg-gray-50",
+      iconColor:
+        trend === "improving"
+          ? "text-emerald-500"
+          : trend === "declining"
+          ? "text-red-400"
+          : "text-gray-400",
+      valueColor:
+        trend === "improving"
+          ? "text-emerald-600"
+          : trend === "declining"
+          ? "text-red-500"
+          : "text-gray-900",
     },
     {
-      icon: "📝",
-      title: "Journal Entries",
-      description: hasAnyData
-        ? `${journalEntries?.this_week || 0} entries this week`
-        : "No entries yet",
-      color: "bg-blue-100 border-blue-300",
+      label: "Journal Entries",
       value: `${journalEntries?.total_period || 0}`,
+      sub: `${journalEntries?.this_week || 0} this week`,
+      Icon: BookOpen,
+      iconBg: "bg-sky-50",
+      iconColor: "text-sky-500",
+      valueColor: "text-gray-900",
     },
     {
-      icon: "🌟",
-      title: "Good Days",
-      description: hasAnyData
-        ? `Out of ${goodDaysData.total} analyzed days`
-        : "Start tracking to see good days",
-      color: "bg-purple-100 border-purple-300",
-      value: hasAnyData ? `${goodDaysData.count}` : "--",
+      label: "Good Days",
+      value: hasAnyData ? `${goodDaysData.count}` : "—",
+      sub: hasAnyData ? `of ${goodDaysData.total} analyzed` : "Start tracking",
+      Icon: Smile,
+      iconBg: "bg-amber-50",
+      iconColor: "text-amber-500",
+      valueColor: "text-gray-900",
     },
     {
-      icon: "🔥",
-      title: "Current Streak",
-      description: hasAnyData ? "Keep it going!" : "Begin your journey",
-      color: "bg-pink-100 border-pink-300",
+      label: "Current Streak",
       value: `${progress?.journaling_streak?.current_days || 0}`,
+      sub: "days in a row",
+      Icon: Flame,
+      iconBg: "bg-orange-50",
+      iconColor: "text-orange-500",
+      valueColor: "text-gray-900",
     },
   ];
 
-  // Activity data (you might want to add this to your backend later)
-  const activityData = [
-    { name: "Exercise", value: 12, color: "#10b981" },
-    { name: "Meditation", value: 8, color: "#8b5cf6" },
-    { name: "Social", value: 15, color: "#3b82f6" },
-    { name: "Work", value: 20, color: "#ec4899" },
-    { name: "Self-Care", value: 10, color: "#f59e0b" },
+  /* ── Progress bars config ────────────────────────────────── */
+  const progressMetrics = [
+    {
+      label: "Good Days",
+      value: `${goodDaysData.count}/${goodDaysData.total}`,
+      percentage: goodDaysData.percentage,
+      barColor: "bg-emerald-500",
+      textColor: "text-emerald-600",
+    },
+    {
+      label: "Journaling Streak",
+      value: `${progress?.journaling_streak?.current_days || 0} days`,
+      percentage: Math.min(
+        100,
+        (progress?.journaling_streak?.current_days || 0) * 14
+      ),
+      barColor: "bg-sky-500",
+      textColor: "text-sky-600",
+    },
+    {
+      label: "Mood Stability",
+      value: `${progress?.mood_stability?.percentage || 0}%`,
+      percentage: progress?.mood_stability?.percentage || 0,
+      barColor: "bg-violet-500",
+      textColor: "text-violet-600",
+    },
   ];
 
+  /* ── Render ──────────────────────────────────────────────── */
   return (
     <Layout>
-      <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 mt-14">
-        <div className="container mx-auto px-4 py-6">
-          {/* Show welcome message for new users with no data */}
+      <div className="min-h-screen bg-gray-50 mt-14">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+
+          {/* ── Header ─────────────────────────────────────── */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+              <p className="text-sm text-gray-400 mt-0.5">
+                {new Date().toLocaleDateString("en-US", {
+                  weekday: "long",
+                  month: "long",
+                  day: "numeric",
+                  year: "numeric",
+                })}
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="flex bg-white rounded-xl border border-gray-200 p-1">
+                {([7, 30, 90] as const).map((d) => (
+                  <button
+                    key={d}
+                    onClick={() => setTimeRange(d)}
+                    className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                      timeRange === d
+                        ? "bg-violet-600 text-white shadow-sm"
+                        : "text-gray-500 hover:text-gray-800"
+                    }`}
+                  >
+                    {d === 7 ? "1 Week" : d === 30 ? "1 Month" : "3 Months"}
+                  </button>
+                ))}
+              </div>
+              <button
+                onClick={refetch}
+                className="p-2.5 rounded-xl bg-white border border-gray-200 text-gray-400 hover:text-gray-600 transition-colors"
+                title="Refresh data"
+              >
+                <RefreshCw className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          {/* ── Empty state ────────────────────────────────── */}
           {!hasAnyData && (
-            <div className="text-center mb-8 bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg p-8">
-              <div className="text-6xl mb-4">📊</div>
-              <h2 className="text-3xl font-bold text-gray-800 mb-4">
-                Welcome to Your Dashboard!
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-10 text-center mb-8">
+              <div className="w-16 h-16 bg-violet-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <PenLine className="w-7 h-7 text-violet-400" />
+              </div>
+              <h2 className="text-xl font-bold text-gray-900 mb-2">
+                Start your mood journey
               </h2>
-              <p className="text-lg text-gray-600 mb-6 max-w-2xl mx-auto">
-                Your mood insights will appear here once you start journaling.
-                Begin your mental health journey today!
+              <p className="text-gray-400 text-sm mb-6 max-w-md mx-auto">
+                Your insights will appear here once you begin journaling. Track
+                how you feel each day to unlock personalized analytics.
               </p>
               <button
                 onClick={() => (window.location.href = "/mood-tracking")}
-                className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-8 py-4 rounded-2xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                className="inline-flex items-center gap-2 bg-violet-600 text-white px-6 py-2.5 rounded-xl font-medium text-sm hover:bg-violet-700 transition-colors"
               >
-                Start Your First Journal Entry 📝
+                Write First Entry <ChevronRight className="w-4 h-4" />
               </button>
             </div>
           )}
 
-          {/* Time Range Selector - only show if user has data */}
-          {hasAnyData && (
-            <div className="flex justify-center mb-6">
-              <div className="bg-white/70 backdrop-blur-sm rounded-xl p-2 shadow-sm">
-                {[7, 30, 90].map((days) => (
-                  <button
-                    key={days}
-                    onClick={() => setTimeRange(days as 7 | 30 | 90)}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                      timeRange === days
-                        ? "bg-purple-500 text-white shadow-sm"
-                        : "text-gray-600 hover:bg-gray-100"
-                    }`}
-                  >
-                    {days === 7
-                      ? "1 Week"
-                      : days === 30
-                      ? "1 Month"
-                      : "3 Months"}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Quick Stats */}
+          {/* ── Stat Cards ─────────────────────────────────── */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            {insights.map((insight, idx) => (
+            {stats.map(({ label, value, sub, Icon, iconBg, iconColor, valueColor }, i) => (
               <div
-                key={idx}
-                className={`${insight.color} border-2 rounded-xl p-4 shadow-sm`}
+                key={i}
+                className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5"
               >
-                <div className="flex items-center justify-between">
-                  <div className="text-2xl">{insight.icon}</div>
-                  <div className="text-right">
-                    <p className="text-xs text-gray-600">{insight.title}</p>
-                    <p className="text-xl font-bold text-gray-800">
-                      {insight.value}
-                    </p>
+                <div className="flex items-start justify-between mb-4">
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                    {label}
+                  </p>
+                  <div
+                    className={`w-8 h-8 rounded-lg flex items-center justify-center ${iconBg}`}
+                  >
+                    <Icon className={`w-4 h-4 ${iconColor}`} />
                   </div>
                 </div>
-                <p className="text-xs text-gray-600 mt-2">
-                  {insight.description}
-                </p>
+                <p className={`text-3xl font-bold ${valueColor}`}>{value}</p>
+                <p className="text-xs text-gray-400 mt-1 leading-tight">{sub}</p>
               </div>
             ))}
           </div>
 
-          {/* Main Content Grid - only show if user has data */}
+          {/* ── Main content (only with data) ──────────────── */}
           {hasAnyData && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Mood Trend */}
-              <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-gray-800">
-                    Your Mood Journey
-                  </h3>
-                  <div className="text-sm text-gray-600 font-medium">
-                    {timeRange === 7 && <span>This Week</span>}
-                    {timeRange === 30 && (
-                      <span>
-                        {new Date().toLocaleDateString("en-US", {
-                          month: "long",
-                          year: "numeric",
-                        })}
-                      </span>
-                    )}
-                    {timeRange === 90 && (
-                      <span>
-                        {new Date(
-                          Date.now() - 90 * 24 * 60 * 60 * 1000
-                        ).toLocaleDateString("en-US", { month: "short" })}{" "}
-                        -{" "}
-                        {new Date().toLocaleDateString("en-US", {
-                          month: "short",
-                          year: "numeric",
-                        })}
-                      </span>
-                    )}
+            <>
+              {/* Row 1: Mood Journey (2/3) + Emotional Landscape (1/3) */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+
+                {/* Mood Journey Chart */}
+                <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="font-semibold text-gray-900">Mood Journey</h2>
+                    <span className="text-xs text-gray-400">
+                      {timeRange === 7
+                        ? "This Week"
+                        : timeRange === 30
+                        ? new Date().toLocaleDateString("en-US", {
+                            month: "long",
+                            year: "numeric",
+                          })
+                        : `${new Date(
+                            Date.now() - 90 * 24 * 60 * 60 * 1000
+                          ).toLocaleDateString("en-US", {
+                            month: "short",
+                          })} – ${new Date().toLocaleDateString("en-US", {
+                            month: "short",
+                            year: "numeric",
+                          })}`}
+                    </span>
                   </div>
-                </div>
-                <div className="flex items-end justify-between h-40 mb-4 bg-gray-50 rounded-lg p-4">
+
                   {displayMoodData.length > 0 ? (
-                    displayMoodData.map((day, idx) => (
-                      <div
-                        key={idx}
-                        className="flex flex-col items-center justify-end h-full"
-                        style={{ width: `${100 / displayMoodData.length}%` }}
-                      >
-                        <div
-                          className="w-7 bg-gradient-to-t from-purple-400 to-pink-400 transition-all hover:from-purple-500 hover:to-pink-500 cursor-pointer shadow-sm"
-                          style={{
-                            height: `${Math.max(
-                              8,
-                              (day.mood_score / 5) * 120
-                            )}px`,
-                          }}
-                          title={`${
-                            day.dominant_emotion
-                          }: ${day.mood_score.toFixed(1)}/5 on ${new Date(
-                            day.date
-                          ).toLocaleDateString()}`}
-                        ></div>
-                        <span className="text-xs text-gray-600 mt-2 font-medium">
-                          {timeRange <= 7
-                            ? new Date(day.date).toLocaleDateString("en", {
-                                weekday: "short",
-                              })
-                            : new Date(day.date).getDate()}
-                        </span>
+                    <>
+                      {/* Bar chart */}
+                      <div className="flex items-end gap-1 h-36">
+                        {displayMoodData.map((day, idx) => {
+                          const pct = Math.max(5, (day.mood_score / 5) * 100);
+                          const isHovered = hoveredBar === idx;
+                          return (
+                            <div
+                              key={idx}
+                              className="relative flex-1 flex flex-col items-center justify-end h-full cursor-pointer"
+                              onMouseEnter={() => setHoveredBar(idx)}
+                              onMouseLeave={() => setHoveredBar(null)}
+                            >
+                              {/* Tooltip */}
+                              {isHovered && (
+                                <div className="absolute bottom-full mb-1.5 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-[10px] font-medium px-2 py-1 rounded-lg whitespace-nowrap z-10">
+                                  {day.mood_score.toFixed(1)}/5
+                                  <br />
+                                  <span className="text-gray-400">
+                                    {day.dominant_emotion}
+                                  </span>
+                                </div>
+                              )}
+                              {/* Bar */}
+                              <div
+                                className={`w-full rounded-t-md transition-colors duration-150 ${
+                                  isHovered ? "bg-violet-500" : "bg-violet-200"
+                                }`}
+                                style={{ height: `${pct}%` }}
+                              />
+                              {/* Label */}
+                              <span className="text-[9px] text-gray-400 mt-1.5 select-none">
+                                {timeRange <= 7
+                                  ? new Date(day.date).toLocaleDateString(
+                                      "en",
+                                      { weekday: "short" }
+                                    )
+                                  : new Date(day.date).getDate()}
+                              </span>
+                            </div>
+                          );
+                        })}
                       </div>
-                    ))
+
+                      {/* Low / Avg / High */}
+                      <div className="grid grid-cols-3 gap-2 mt-5 pt-4 border-t border-gray-50">
+                        {[
+                          {
+                            label: "Low",
+                            val: Math.min(
+                              ...displayMoodData.map((d) => d.mood_score)
+                            ).toFixed(1),
+                          },
+                          {
+                            label: "Avg",
+                            val: (
+                              displayMoodData.reduce(
+                                (s, d) => s + d.mood_score,
+                                0
+                              ) / displayMoodData.length
+                            ).toFixed(1),
+                          },
+                          {
+                            label: "High",
+                            val: Math.max(
+                              ...displayMoodData.map((d) => d.mood_score)
+                            ).toFixed(1),
+                          },
+                        ].map((s) => (
+                          <div key={s.label} className="text-center">
+                            <p className="text-xs text-gray-400">{s.label}</p>
+                            <p className="text-sm font-semibold text-gray-700">
+                              {s.val}
+                              <span className="text-xs font-normal text-gray-400">
+                                /5
+                              </span>
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </>
                   ) : (
-                    <div className="w-full text-center text-gray-500 py-8">
-                      <div className="mb-4">
-                        <svg
-                          className="w-16 h-16 mx-auto text-gray-300"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="1"
-                            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                          ></path>
-                        </svg>
-                      </div>
-                      <p className="mb-4 font-medium text-lg">
-                        Ready to begin your mood journey?
-                      </p>
+                    <div className="h-36 flex flex-col items-center justify-center text-gray-400 gap-3">
+                      <p className="text-sm">No mood data for this period</p>
                       <button
-                        onClick={() =>
-                          (window.location.href = "/mood-tracking")
-                        }
-                        className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 transform hover:scale-105"
+                        onClick={() => (window.location.href = "/mood-tracking")}
+                        className="text-xs text-violet-600 hover:underline"
                       >
-                        Start Journaling 📝
+                        Start journaling →
                       </button>
                     </div>
                   )}
                 </div>
 
-                {/* Mood Scale Legend - only show if there's data */}
-                {displayMoodData.length > 0 && (
-                  <>
-                    <div className="flex justify-between items-center text-xs text-gray-500 mb-4">
-                      <div className="flex items-center space-x-4">
-                        <span>😢 1</span>
-                        <span>😐 3</span>
-                        <span>😊 5</span>
-                      </div>
-                      <span className="text-gray-400">Mood Scale</span>
-                    </div>
-
-                    <div className="flex justify-between text-sm text-gray-600 bg-gray-50 rounded-lg p-3">
-                      <span className="font-medium">
-                        Low:{" "}
-                        {Math.min(
-                          ...displayMoodData.map((d) => d.mood_score)
-                        ).toFixed(1)}
-                        /5
-                      </span>
-                      <span className="font-medium">
-                        Avg:{" "}
-                        {(
-                          displayMoodData.reduce(
-                            (sum, d) => sum + d.mood_score,
-                            0
-                          ) / displayMoodData.length
-                        ).toFixed(1)}
-                        /5
-                      </span>
-                      <span className="font-medium">
-                        High:{" "}
-                        {Math.max(
-                          ...displayMoodData.map((d) => d.mood_score)
-                        ).toFixed(1)}
-                        /5
-                      </span>
-                    </div>
-                  </>
-                )}
-              </div>
-
-              {/* Emotional Distribution */}
-              <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg p-6">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                  Emotional Landscape
-                </h3>
-                <div className="space-y-3">
+                {/* Emotional Landscape */}
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                  <h2 className="font-semibold text-gray-900 mb-5">Emotions</h2>
                   {emotionalLandscape.length > 0 ? (
-                    emotionalLandscape.map((emotion, idx) => (
-                      <div
-                        key={idx}
-                        className="flex items-center justify-between"
-                      >
-                        <div className="flex items-center space-x-2">
-                          <div
-                            className="w-3 h-3 rounded-full"
-                            style={{ backgroundColor: emotion.color }}
-                          ></div>
-                          <span className="text-sm text-gray-700">
-                            {emotion.name}
-                          </span>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <div className="w-20 bg-gray-200 rounded-full h-2">
+                    <div className="space-y-4">
+                      {emotionalLandscape.map((emotion, idx) => (
+                        <div key={idx}>
+                          <div className="flex items-center justify-between mb-1.5">
+                            <div className="flex items-center gap-2">
+                              <span
+                                className="w-2 h-2 rounded-full flex-shrink-0"
+                                style={{ backgroundColor: emotion.color }}
+                              />
+                              <span className="text-sm text-gray-600">
+                                {emotion.name}
+                              </span>
+                            </div>
+                            <span className="text-sm font-semibold text-gray-800">
+                              {emotion.percentage}%
+                            </span>
+                          </div>
+                          <div className="w-full bg-gray-100 rounded-full h-1.5">
                             <div
-                              className="h-2 rounded-full"
+                              className="h-1.5 rounded-full"
                               style={{
                                 width: `${emotion.percentage}%`,
                                 backgroundColor: emotion.color,
                               }}
-                            ></div>
+                            />
                           </div>
-                          <span className="text-sm font-medium text-gray-800">
-                            {emotion.percentage}%
-                          </span>
                         </div>
-                      </div>
-                    ))
+                      ))}
+                    </div>
                   ) : (
-                    <div className="text-center text-gray-500 py-8">
-                      <div className="text-4xl mb-4">🎭</div>
-                      <p className="mb-4">No emotion data yet</p>
-                      <p className="text-sm">
-                        Journal about your feelings to see your emotional
-                        patterns!
+                    <div className="flex items-center justify-center h-32 text-sm text-gray-400">
+                      No emotion data yet
+                    </div>
+                  )}
+
+                  {emotionData?.emotional_landscape?.dominant_emotion && (
+                    <div className="mt-5 pt-4 border-t border-gray-50">
+                      <p className="text-xs text-gray-400 mb-0.5">
+                        Dominant emotion
+                      </p>
+                      <p className="text-sm font-semibold text-gray-800">
+                        {emotionData.emotional_landscape.dominant_emotion}
                       </p>
                     </div>
                   )}
                 </div>
               </div>
 
-              {/* Activity Balance */}
-              <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg p-6">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                  Activity Balance
-                </h3>
-                <div className="grid grid-cols-2 gap-4">
-                  {activityData.map((activity, idx) => (
-                    <div key={idx} className="flex items-center space-x-3">
-                      <div
-                        className="w-4 h-4 rounded-full"
-                        style={{ backgroundColor: activity.color }}
-                      ></div>
-                      <div className="flex-1">
-                        <p className="text-sm text-gray-700">{activity.name}</p>
-                        <div className="w-full bg-gray-200 rounded-full h-1.5 mt-1">
-                          <div
-                            className="h-1.5 rounded-full"
-                            style={{
-                              width: `${(activity.value / 20) * 100}%`,
-                              backgroundColor: activity.color,
-                            }}
-                          ></div>
-                        </div>
-                      </div>
-                      <span className="text-sm font-medium text-gray-800">
-                        {activity.value}
-                      </span>
+              {/* Row 2: Progress Metrics */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                {progressMetrics.map((m, i) => (
+                  <div
+                    key={i}
+                    className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5"
+                  >
+                    <div className="flex items-center justify-between mb-3">
+                      <p className="text-sm text-gray-500">{m.label}</p>
+                      <p className={`text-lg font-bold ${m.textColor}`}>
+                        {m.value}
+                      </p>
                     </div>
-                  ))}
-                </div>
+                    <div className="w-full bg-gray-100 rounded-full h-2">
+                      <div
+                        className={`h-2 rounded-full ${m.barColor}`}
+                        style={{ width: `${m.percentage}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
               </div>
 
-              {/* Progress Summary */}
-              <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg p-6">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                  Your Progress
-                </h3>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Good Days</span>
-                    <span className="text-lg font-bold text-green-600">
-                      {goodDaysData.count}/{goodDaysData.total}
-                    </span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div
-                      className="bg-green-500 h-2 rounded-full"
-                      style={{
-                        width: `${goodDaysData.percentage}%`,
-                      }}
-                    ></div>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">
-                      Journaling Streak
-                    </span>
-                    <span className="text-lg font-bold text-blue-600">
-                      {progress?.journaling_streak?.current_days || 0} days
-                    </span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div
-                      className="bg-blue-500 h-2 rounded-full"
-                      style={{
-                        width: `${Math.min(
-                          100,
-                          (progress?.journaling_streak?.current_days || 0) * 14
-                        )}%`,
-                      }}
-                    ></div>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">
-                      Mood Stability
-                    </span>
-                    <span className="text-lg font-bold text-purple-600">
-                      {progress?.mood_stability?.percentage || 0}%
-                    </span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div
-                      className="bg-purple-500 h-2 rounded-full"
-                      style={{
-                        width: `${progress?.mood_stability?.percentage || 0}%`,
-                      }}
-                    ></div>
-                  </div>
+              {/* Row 3: Analysis */}
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-6">
+                <div className="flex items-center gap-2 mb-3">
+                  <Activity className="w-4 h-4 text-violet-400" />
+                  <h2 className="font-semibold text-gray-900">
+                    Progress Analysis
+                  </h2>
                 </div>
+                <p className="text-sm text-gray-500 leading-relaxed">
+                  {mounted && emotionData ? (
+                    <TypeAnimation
+                      sequence={[
+                        `Your mood tracking shows ${goodDaysData.percentage}% good days over the last ${timeRange} days. ${
+                          moodImprovement?.message || ""
+                        } Your journaling streak is ${
+                          progress?.journaling_streak?.current_days || 0
+                        } days, with a mood stability of ${
+                          progress?.mood_stability?.percentage || 0
+                        }%. ${
+                          emotionalLandscape[0]?.name || "Neutral"
+                        } is your dominant emotion recently.`,
+                      ]}
+                      wrapper="span"
+                      speed={90}
+                      repeat={0}
+                    />
+                  ) : null}
+                </p>
               </div>
-            </div>
+            </>
           )}
 
-          {/* Analysis Section - only show if user has data */}
-          {hasAnyData && (
-            <div className="mt-6 bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-800 mb-3">
-                Your Progress Analysis
-              </h3>
-              <div className="text-sm text-gray-600 leading-relaxed">
-                {mounted && emotionData && (
-                  <TypeAnimation
-                    sequence={[
-                      `Your mood tracking reveals ${
-                        goodDaysData.percentage
-                      }% good days over the last ${timeRange} days. ${
-                        moodImprovement?.message || ""
-                      } Your current journaling streak is ${
-                        progress?.journaling_streak?.current_days || 0
-                      } days, and your mood stability is at ${
-                        progress?.mood_stability?.percentage || 0
-                      }%. ${
-                        emotionalLandscape[0]?.name || "Neutral"
-                      } appears to be your dominant emotion recently. Keep up the great work! 💙`,
-                    ]}
-                    wrapper="p"
-                    speed={90}
-                    repeat={0}
-                  />
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-3 justify-center mt-6">
+          {/* ── Actions ────────────────────────────────────── */}
+          <div className="flex items-center gap-3">
             <button
               onClick={() => (window.location.href = "/mood-tracking")}
-              className="bg-gradient-to-r from-purple-400 to-pink-400 text-white px-6 py-2 rounded-full text-sm font-semibold hover:shadow-lg transition-all duration-300 transform hover:scale-105"
+              className="inline-flex items-center gap-2 bg-violet-600 text-white px-5 py-2.5 rounded-xl text-sm font-medium hover:bg-violet-700 transition-colors"
             >
-              {hasAnyData
-                ? "Continue Journaling 📝"
-                : "Start Your First Entry 📝"}
+              <PenLine className="w-4 h-4" />
+              {hasAnyData ? "New Entry" : "Start Journaling"}
             </button>
             {hasAnyData && (
               <button
                 onClick={refetch}
-                className="bg-gradient-to-r from-blue-400 to-purple-400 text-white px-6 py-2 rounded-full text-sm font-semibold hover:shadow-lg transition-all duration-300 transform hover:scale-105"
+                className="inline-flex items-center gap-2 bg-white border border-gray-200 text-gray-600 px-5 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors"
               >
-                Refresh Data 🔄
+                <RefreshCw className="w-4 h-4" />
+                Refresh
               </button>
             )}
           </div>

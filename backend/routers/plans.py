@@ -12,8 +12,6 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from ..services.users_service import users_service
 import logging
 
-# Set up logging
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api")
@@ -135,7 +133,7 @@ async def activate_plan(request: PlanActivationRequest):
                 detail="Failed to update user plan. No data returned from database."
             )
         
-        logger.info(f"[Plans API] ✓ Successfully activated {request.plan} plan for user {request.user_id}")
+        logger.info({"event": "plan_activated", "user_id": request.user_id, "plan": request.plan})
         
         return PlanActivationResponse(
             message=message,

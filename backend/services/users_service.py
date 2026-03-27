@@ -23,7 +23,7 @@ class UsersService(BaseService):
             result = self.client.table("user").insert(data).execute()
             
             if result.data:
-                logger.info(f"[UsersService] ✓ User created successfully: {result.data[0]['user_id']}")
+                logger.info({"event": "user_created", "user_id": result.data[0]["user_id"]})
                 return result.data[0]
             
             logger.error("[UsersService] No data returned from user creation")
@@ -52,6 +52,7 @@ class UsersService(BaseService):
         """Update user"""
         try:
             data = self._convert_to_dict(user_data)
+            data = {key: value for key, value in data.items() if value is not None}
             result = self.client.table("user").update(data).eq("user_id", user_id).execute()
             return result.data[0] if result.data else {}
         except Exception as e:

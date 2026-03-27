@@ -150,6 +150,19 @@ const EnhancedNavbar: React.FC = () => {
               Contact
             </a>
           </li>
+          <li
+            style={{
+              ...styles.li,
+              backgroundColor:
+                hovered === "pricing" ? "#2d333b" : "transparent",
+            }}
+            onMouseEnter={() => handleMouseEnter("pricing")}
+            onMouseLeave={handleMouseLeave}
+          >
+            <a href="/pricing" style={styles.link}>
+              Pricing
+            </a>
+          </li>
         </ul>
 
         {user ? (
@@ -245,7 +258,13 @@ const EnhancedNavbar: React.FC = () => {
                 </button>
               )}
 
-              <button style={styles.dropdownItem} onClick={closeDropdown}>
+              <button
+                style={styles.dropdownItem}
+                onClick={() => {
+                  closeDropdown();
+                  window.location.href = "/account";
+                }}
+              >
                 Account
               </button>
               <button style={styles.dropdownItem} onClick={handleLogout}>
